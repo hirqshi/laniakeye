@@ -1,0 +1,13 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://br8ck0w1aix6o"]
+
+[ext_resource type="Texture2D" uid="uid://dvvlav0carqdp" path="res://assets/textures/ship/glass/Concrete024_4K_Color_resized.jpg" id="1_1qafm"]
+
+[resource]
+transparency = 1
+cull_mode = 2
+shading_mode = 0
+albedo_color = Color(1, 1, 1, 0.023529412)
+albedo_texture = ExtResource("1_1qafm")
+uv1_scale = Vector3(-0.1, -0.1, -0.1)
+uv1_triplanar = true
+texture_filter = 0

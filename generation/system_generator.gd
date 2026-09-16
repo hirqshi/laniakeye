@@ -45,12 +45,15 @@ func generate(system_seed: int) -> SystemData:
 	var previous_radius_m: float = 0.0
 
 	for i in range(planet_count):
-		var planet: PlanetData = _generate_body_data(true, false)
+		var planet: PlanetData = _generate_body_data(false, false)
+
+		var base_radius_m: float = settings.star_radius_m if i == 0 else previous_radius_m
+		var base_gap_m: float = settings.star_surface_gap_m if i == 0 else settings.orbit_surface_gap_m
 
 		var min_center_distance: float = (
 			previous_orbit_distance_m
-			+ previous_radius_m
-			+ settings.orbit_surface_gap_m
+			+ base_radius_m
+			+ base_gap_m
 			+ planet.radius_m
 		)
 
@@ -60,12 +63,10 @@ func generate(system_seed: int) -> SystemData:
 		)
 
 		var candidate_distance: float = previous_orbit_distance_m + desired_step
-		var orbit_distance_m: float = max(
-			max(candidate_distance, min_center_distance),
-			settings.min_orbit_distance_m
-		)
+		var orbit_distance_m: float = max(candidate_distance, min_center_distance)
 
 		planet.orbit_distance_m = orbit_distance_m
+		planet.moons = _generate_moons(planet.radius_m, orbit_distance_m)
 		system_data.planets.append(planet)
 
 		previous_orbit_distance_m = orbit_distance_m
@@ -76,7 +77,7 @@ func generate(system_seed: int) -> SystemData:
 ## Generates all of a body's data EXCEPT orbit_distance_m, which the
 ## caller assigns afterward once it knows the body's actual radius_m -
 ## this ordering is what makes correct spacing possible in the first place.
-func _generate_body_data(allow_moons: bool, is_moon: bool) -> PlanetData:
+func _generate_body_data(unused_allow_moons: bool, is_moon: bool) -> PlanetData:
 	var body: PlanetData = PlanetData.new()
 	body.planet_seed = rng.randi()
 	body.radius_m = rng.randf_range(settings.planet_radius_min_m, settings.planet_radius_max_m)
@@ -99,12 +100,9 @@ func _generate_body_data(allow_moons: bool, is_moon: bool) -> PlanetData:
 
 	body.terrain_height_m = profile.get_random_terrain_height(rng) if profile else rng.randf_range(2.0, 12.0)
 
-	if allow_moons:
-		body.moons = _generate_moons(body.radius_m)
-
 	return body
 
-func _generate_moons(planet_radius_m: float) -> Array[PlanetData]:
+func _generate_moons(planet_radius_m: float, planet_orbit_distance_m: float) -> Array[PlanetData]:
 	var moons: Array[PlanetData] = []
 	if rng.randf() > settings.moon_chance:
 		return moons
@@ -113,6 +111,13 @@ func _generate_moons(planet_radius_m: float) -> Array[PlanetData]:
 	var previous_orbit_distance_m: float = 0.0
 	var previous_radius_m: float = 0.0
 
+	# hard ceiling: even a moon sitting exactly between the planet and the
+	# star must not cross into the star's surface + gap.
+	var max_moon_orbit_distance_m: float = max(
+		0.0,
+		planet_orbit_distance_m - settings.star_radius_m - settings.star_surface_gap_m
+	)
+
 	for i in range(moon_count):
 		var moon: PlanetData = _generate_body_data(false, true)
 		moon.radius_m = rng.randf_range(5.0, planet_radius_m * settings.moon_radius_ratio_max)
@@ -120,9 +125,6 @@ func _generate_moons(planet_radius_m: float) -> Array[PlanetData]:
 		moon.orbit_speed_rad_s = rng.randf_range(settings.moon_orbit_speed_min, settings.moon_orbit_speed_max) * (1.0 if rng.randf() > 0.5 else -1.0)
 		moon.rotation_speed_rad_s = rng.randf_range(settings.moon_rotation_speed_min, settings.moon_rotation_speed_max)
 
-		# first moon must clear the PARENT PLANET's own surface, not just
-		# the previous moon - the base case (i == 0) uses planet_radius_m
-		# as the "previous body" to measure the gap against.
 		var base_radius_m: float = planet_radius_m if i == 0 else previous_radius_m
 		var base_distance_m: float = 0.0 if i == 0 else previous_orbit_distance_m
 
@@ -140,6 +142,15 @@ func _generate_moons(planet_radius_m: float) -> Array[PlanetData]:
 
 		var candidate_distance: float = base_distance_m + base_radius_m + desired_step
 		var orbit_distance_m: float = max(candidate_distance, min_center_distance)
+
+		# clamp to the star-safety ceiling - if min_center_distance itself
+		# already exceeds the ceiling, this moon (and all further ones,
+		# since distances only grow) simply can't fit safely; stop here
+		# instead of forcing an unsafe orbit.
+		if min_center_distance > max_moon_orbit_distance_m:
+			break
+
+		orbit_distance_m = min(orbit_distance_m, max_moon_orbit_distance_m)
 
 		moon.orbit_distance_m = orbit_distance_m
 		moons.append(moon)

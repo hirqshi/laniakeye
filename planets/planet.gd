@@ -282,3 +282,11 @@ func _apply_surface_profile(
 		"emission",
 		profile.emission_texture
 	)
+
+func get_landscape_type() -> String:
+	if planet_data == null or planet_data.surface_profile == null:
+		return "unknown"
+	return planet_data.surface_profile.profile_name
+
+func get_moon_nodes() -> Array[Node3D]:
+	return moon_nodes

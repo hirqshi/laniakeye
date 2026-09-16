@@ -9,7 +9,7 @@
 
 [resource]
 script = ExtResource("6_jnwxl")
-profile_name = "rocky"
+profile_name = "forest"
 albedo_texture = ExtResource("1_ty0cb")
 normal_texture = ExtResource("4_ynfew")
 roughness_texture = ExtResource("5_cg5sw")

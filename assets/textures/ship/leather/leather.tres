@@ -1,0 +1,15 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://b3hc2g1ulh1sq"]
+
+[ext_resource type="Texture2D" uid="uid://dacpr3tcutvje" path="res://assets/textures/ship/leather/Leather013_4K_Color_resized.jpg" id="1_wvxxg"]
+[ext_resource type="Texture2D" uid="uid://b80mommqayo1a" path="res://assets/textures/ship/leather/Leather013_4K_NormalGL_resized.jpg" id="2_5rik5"]
+[ext_resource type="Texture2D" uid="uid://wwprv6duhtc3" path="res://assets/textures/ship/leather/Leather013_4K_Roughness_resized.jpg" id="3_0y6xd"]
+
+[resource]
+albedo_color = Color(1.5111723, 1.5111723, 1.5111723, 1)
+albedo_texture = ExtResource("1_wvxxg")
+roughness_texture = ExtResource("3_0y6xd")
+normal_enabled = true
+normal_texture = ExtResource("2_5rik5")
+uv1_scale = Vector3(0.405, 0.405, 0.405)
+uv1_triplanar = true
+texture_filter = 0

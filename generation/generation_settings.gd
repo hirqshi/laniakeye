@@ -9,6 +9,8 @@ extends Resource
 @export_group("System")
 @export var min_planets: int = 4
 @export var max_planets: int = 9
+@export var star_radius_m: float = 300.0
+@export var star_surface_gap_m: float = 100.0
 @export var min_orbit_distance_m: float = 250.0
 @export var orbit_distance_step_m: float = 180.0
 @export var orbit_distance_jitter_m: float = 60.0

@@ -5,9 +5,11 @@
 [resource]
 script = ExtResource("1_4iryo")
 min_planets = 6
+star_surface_gap_m = 300.0
 min_orbit_distance_m = 400.0
 orbit_distance_step_m = 400.0
-planet_radius_max_m = 200.0
+planet_radius_min_m = 80.0
+planet_radius_max_m = 300.0
 planet_gravity_max = 6.0
 moon_gravity_min = 1.115
 moon_gravity_max = 2.54

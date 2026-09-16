@@ -26,6 +26,8 @@ extends Node
 @export var ship_spawn_body_clearance_m: float = 30.0
 @export var ship_spawn_max_attempts: int = 64
 
+@export var hud: HudController
+
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 
 func _ready() -> void:
@@ -39,6 +41,7 @@ func _ready() -> void:
 	ship.velocity = Vector3.ZERO
 
 	_teleport_player_to_ship_seat()
+	_setup_hud()
 
 func _validate_exports() -> bool:
 	var all_valid: bool = true
@@ -161,3 +164,37 @@ func _is_position_clear(candidate: Vector3, system_data: SystemData, star_center
 				return false
 
 	return true
+
+func _setup_hud() -> void:
+	if hud == null:
+		push_warning("World: 'Hud' export is not assigned")
+		return
+
+	var player_camera: Camera3D = player.get("player_camera")
+	if player_camera == null:
+		push_error("World: player has no 'player_camera' property")
+		return
+
+	hud.set_star_system(star_system)
+	hud.set_ship_reference(player_camera, ship)
+	hud.set_player_and_ship(player, ship)
+	hud.set_piloting_ship(false)
+
+	if ship.has_signal("player_seated"):
+		ship.connect("player_seated", _on_player_seated)
+	if ship.has_signal("player_unseated"):
+		ship.connect("player_unseated", _on_player_unseated)
+
+func _on_player_seated() -> void:
+	if hud == null:
+		return
+	hud.set_ship_reference(ship.call("get_seat_camera"), ship)
+	hud.set_piloting_ship(true)
+
+func _on_player_unseated() -> void:
+	if hud == null:
+		return
+	var player_camera: Camera3D = player.get("player_camera")
+	if player_camera:
+		hud.set_ship_reference(player_camera, ship)
+	hud.set_piloting_ship(false)

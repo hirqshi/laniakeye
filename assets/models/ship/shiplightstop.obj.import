@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://bo8hvguusejko"
+path="res://.godot/imported/shiplightstop.obj-55294f1b45a99fd76e338db813f2bfbb.mesh"
+
+[deps]
+
+files=["res://.godot/imported/shiplightstop.obj-55294f1b45a99fd76e338db813f2bfbb.mesh"]
+
+source_file="res://assets/models/ship/shiplightstop.obj"
+dest_files=["res://.godot/imported/shiplightstop.obj-55294f1b45a99fd76e338db813f2bfbb.mesh", "res://.godot/imported/shiplightstop.obj-55294f1b45a99fd76e338db813f2bfbb.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false

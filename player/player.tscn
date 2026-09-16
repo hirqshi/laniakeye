@@ -5,7 +5,7 @@
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_6m30h"]
 radius = 0.2
-height = 1.5
+height = 1.165
 
 [node name="Player" type="CharacterBody3D" unique_id=1674303530 node_paths=PackedStringArray("body_pivot", "camera_pivot", "player_camera") groups=["player"]]
 floor_max_angle = 0.9599311
@@ -15,10 +15,8 @@ body_pivot = NodePath("BodyPivot")
 camera_pivot = NodePath("BodyPivot/CameraPivot")
 player_camera = NodePath("BodyPivot/CameraPivot/PlayerCamera")
 jump_velocity = 7.0
-gravity_multiplier = 1.4849999999999999
+gravity_multiplier = 1.485
 collision_safe_margin_m = 0.17
-camera_vertical_smoothing_speed = 6.2
-camera_vertical_offset_clamp_m = 1.0
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1661267911]
 shape = SubResource("CapsuleShape3D_6m30h")
@@ -26,6 +24,7 @@ shape = SubResource("CapsuleShape3D_6m30h")
 [node name="BodyPivot" type="Node3D" parent="." unique_id=1728800295]
 
 [node name="CameraPivot" type="Node3D" parent="BodyPivot" unique_id=989218076]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.39062613, 0)
 
 [node name="PlayerCamera" type="Camera3D" parent="BodyPivot/CameraPivot" unique_id=585074050 node_paths=PackedStringArray("player_camera", "player_controller")]
 far = 20000.0

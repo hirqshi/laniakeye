@@ -1,0 +1,18 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://dlaka8dqq4chg"]
+
+[ext_resource type="Texture2D" uid="uid://b3dpe2hvlkthv" path="res://assets/textures/ship/rust/Metal023_4K_Color_resized.jpg" id="1_i5sb1"]
+[ext_resource type="Texture2D" uid="uid://0upa71xd3vdh" path="res://assets/textures/ship/rust/Metal023_4K_Metalness_resized.jpg" id="2_adl2e"]
+[ext_resource type="Texture2D" uid="uid://cihucq7mob7u8" path="res://assets/textures/ship/rust/Metal023_4K_NormalGL_resized.jpg" id="3_1sqpb"]
+[ext_resource type="Texture2D" uid="uid://c0glnoau30w7t" path="res://assets/textures/ship/rust/Metal023_4K_Roughness_resized.jpg" id="4_cakxn"]
+
+[resource]
+cull_mode = 2
+albedo_texture = ExtResource("1_i5sb1")
+metallic = 1.0
+metallic_texture = ExtResource("2_adl2e")
+roughness_texture = ExtResource("4_cakxn")
+normal_enabled = true
+normal_texture = ExtResource("3_1sqpb")
+uv1_scale = Vector3(0.07, 0.07, 0.07)
+uv1_triplanar = true
+texture_filter = 0

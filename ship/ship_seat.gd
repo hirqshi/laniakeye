@@ -1,5 +1,5 @@
 extends Area3D
-
+class_name ShipSeat
 ## Seat the player can enter to pilot the ship.
 ##
 ## RADICALLY SIMPLIFIED: no reparenting, no manual camera transform lerp,

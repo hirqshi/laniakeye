@@ -54,3 +54,16 @@ func _physics_process(delta: float) -> void:
 		planet_data.orbit_angle_rad += planet_data.orbit_speed_rad_s * delta
 		planet_node.global_position = planet_data.get_orbit_position(global_position)
 		planet_node.rotate_y(planet_data.rotation_speed_rad_s * delta)
+
+func get_all_celestial_nodes() -> Array[Node3D]:
+	var all_nodes: Array[Node3D] = []
+	for planet_node in planet_nodes:
+		if not is_instance_valid(planet_node):
+			continue
+		all_nodes.append(planet_node)
+		if planet_node.has_method("get_moon_nodes"):
+			var moons: Array = planet_node.call("get_moon_nodes")
+			for moon_node in moons:
+				if is_instance_valid(moon_node):
+					all_nodes.append(moon_node)
+	return all_nodes

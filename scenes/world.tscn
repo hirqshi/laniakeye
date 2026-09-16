@@ -5,6 +5,8 @@
 [ext_resource type="PackedScene" uid="uid://xv6bny4xvn7w" path="res://ship/ship.tscn" id="2_k0juu"]
 [ext_resource type="PackedScene" uid="uid://dqfhr40i8k8k5" path="res://scenes/star_system.tscn" id="3_71j4m"]
 [ext_resource type="Shader" uid="uid://fmjogccimpms" path="res://shaders/starfield.gdshader" id="5_71j4m"]
+[ext_resource type="PackedScene" uid="uid://denq0liqcr01g" path="res://ui/hud.tscn" id="6_qfnet"]
+[ext_resource type="Shader" uid="uid://byjjf5cs3tag7" path="res://shaders/postprocess.gdshader" id="7_i7141"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_k0juu"]
 shader = ExtResource("5_71j4m")
@@ -30,15 +32,33 @@ ambient_light_color = Color(1, 1, 1, 1)
 ambient_light_energy = 0.01
 glow_enabled = true
 glow_intensity = 0.1
-glow_strength = 0.92
-glow_bloom = 0.5
+glow_strength = 1.48
+glow_bloom = 1.0
 volumetric_fog_albedo = Color(0, 0, 0, 1)
 
-[node name="World" type="Node3D" unique_id=1083926892 node_paths=PackedStringArray("star_system", "ship", "player")]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_6m30h"]
+shader = ExtResource("7_i7141")
+shader_parameter/resolution = Vector2(300, 300)
+shader_parameter/scan_line_amount = 0.0630000029925
+shader_parameter/warp_amount = 0.10000000475
+shader_parameter/noise_amount = 0.0310000014725
+shader_parameter/interference_amount = 0.350000016625
+shader_parameter/grille_amount = 0.1
+shader_parameter/grille_size = 1.0
+shader_parameter/vignette_amount = 0.6
+shader_parameter/vignette_intensity = 0.14400000684
+shader_parameter/aberation_amount = 0.610000028975
+shader_parameter/roll_line_amount = 0.0
+shader_parameter/roll_speed = 3.7999999946691787e-07
+shader_parameter/scan_line_strength = -9.28399987099
+shader_parameter/pixel_strength = -2.58799993293
+
+[node name="World" type="Node3D" unique_id=1083926892 node_paths=PackedStringArray("star_system", "ship", "player", "hud")]
 script = ExtResource("1_k0juu")
 star_system = NodePath("StarSystem")
 ship = NodePath("Ship")
 player = NodePath("Player")
+hud = NodePath("Hud")
 
 [node name="Player" parent="." unique_id=1674303530 instance=ExtResource("1_4wyf3")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7941934, 0)
@@ -49,3 +69,16 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7941934, 0)
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1624348766]
 environment = SubResource("Environment_6m30h")
+
+[node name="Hud" parent="." unique_id=772229164 instance=ExtResource("6_qfnet")]
+
+[node name="PostProcessing" type="CanvasLayer" parent="." unique_id=153071619]
+
+[node name="ColorRect" type="ColorRect" parent="PostProcessing" unique_id=201122214]
+material = SubResource("ShaderMaterial_6m30h")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2

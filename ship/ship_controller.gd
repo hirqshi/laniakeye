@@ -9,44 +9,35 @@ extends CharacterBody3D
 ## explicitly below, same for up/down.
 ##
 ## GRAVITY: implements the same duck-typed interface the player uses
-## (set_planet_gravity / set_zero_g / get_current_gravity_source), so the
-## planet gravity Area3D can notify the ship the same way it notifies the
-## player. Applied as acceleration added to velocity every frame the ship
-## isn't magnet-locked/parked, using the same inverse-falloff curve as the
-## player controller.
+## (set_planet_gravity / set_zero_g / get_current_gravity_source).
 ##
 ## PARKED ANCHOR: while parked, BOTH position and orientation are tracked
 ## relative to gravity_source's own local space and re-derived from
-## gravity_source's current transform every frame - a landed ship rides
-## along with the planet's rotation/translation exactly.
-##
-## FIX (ship stays fixed in world space, "planet spins under it"): the
-## anchor was only ever ESTABLISHED inside _run_magnet_landing_frame(),
-## which only runs while is_piloted is true. If gravity_source hadn't been
-## assigned yet at the exact moment the pilot exited the seat (e.g. the
-## planet gravity zone's deferred reevaluation hadn't caught up yet),
-## _parked_anchor_valid stayed false forever after - the unpiloted branch
-## then just froze the ship at a fixed world transform with no way to ever
-## recover, since it never re-attempted to establish the anchor once
-## unpiloted. Fixed by lazily establishing the anchor in _process_unpiloted
-## itself the moment gravity_source becomes valid, instead of requiring it
-## to have already been valid during the last piloted frame.
+## gravity_source's current transform every frame.
 ##
 ## LANDING MAGNET: uses an exported RayCast3D (landing_raycast) pointed
-## along the ship's local -Y. Orientation aligns to the surface normal via
-## slerp; position eases onto the surface via lerp instead of snapping
-## instantly.
+## along the ship's local -Y.
 ##
-## IMPORTANT: landing_offset_m must match the distance from this body's
-## origin to its actual hull belly, or the ship will hover above or clip
-## into the ground when landed.
+## SEAT BRIDGE: exposes get_seat_exit_transform() so World can teleport the
+## player back to the ship's seat exit point without reaching into the
+## ship's internal node structure directly.
 ##
-## SCENE SETUP REQUIRED: add a RayCast3D child, point it straight down in
-## local space (target_position = Vector3(0, -X, 0), X > landing_engage_
-## distance_m), enable it, set its collision_mask to your terrain/deck
-## layers, and assign it to landing_raycast below.
+## HULL LAG (fix): the previous version overwrote ship_model.transform.
+## basis DIRECTLY with the lag basis, which wiped out whatever rotation
+## was already set on ship_model in the editor (e.g. a 90 degree offset
+## to align an off-axis model). Fixed by capturing ship_model's ORIGINAL
+## local basis once in _ready() and always composing the lag on TOP of
+## it (base_basis * lag_basis) instead of replacing it outright - the
+## inspector-set orientation is now preserved and the lag is purely
+## additive on top of it.
 
 signal speed_changed(speed_ratio: float)
+
+signal player_seated
+signal player_unseated
+
+@export var ship_model: Node3D
+@export var ship_seat: Node3D
 
 @export var thrust_acceleration: float = 20.0
 @export var strafe_acceleration: float = 14.0
@@ -55,9 +46,11 @@ signal speed_changed(speed_ratio: float)
 @export var rotation_speed: float = 1.5
 @export var mouse_sensitivity: float = 0.002
 
+## hull lag (visual only, see class comment above)
+@export var hull_lag_amount_deg: float = 6.0
+@export var hull_lag_recovery_speed: float = 4.0
+
 ## landing magnet settings - TUNE landing_offset_m to your hull shape.
-## landing_raycast's length/mask/exceptions are set on the RayCast3D node
-## itself in the inspector, not here.
 @export var landing_raycast: RayCast3D
 @export var landing_offset_m: float = 1.0
 @export var landing_engage_distance_m: float = 6.0
@@ -70,8 +63,6 @@ signal speed_changed(speed_ratio: float)
 @export var gravity_fade_curve_power: float = 1.5
 @export var gravity_multiplier: float = 1.0
 
-@export var ship_seat: Node3D
-
 var is_piloted: bool = false
 var _is_parked: bool = false
 
@@ -79,11 +70,15 @@ var gravity_source: Node3D = null
 var surface_gravity_strength: float = 9.8
 
 # parked anchor - keeps a landed ship glued to its spot on a
-# rotating/moving gravity_source, in BOTH position and orientation,
-# instead of freezing at a fixed world transform.
+# rotating/moving gravity_source, in BOTH position and orientation.
 var _parked_local_offset: Vector3 = Vector3.ZERO
 var _parked_local_basis: Basis = Basis.IDENTITY
 var _parked_anchor_valid: bool = false
+
+# hull lag state - local counter-rotation applied on top of ship_model's
+# ORIGINAL (inspector-set) basis, never replacing it.
+var _ship_model_base_basis: Basis = Basis.IDENTITY
+var _hull_lag_basis: Basis = Basis.IDENTITY
 
 func _ready() -> void:
 	if landing_raycast == null:
@@ -91,11 +86,26 @@ func _ready() -> void:
 	elif not landing_raycast.enabled:
 		push_warning("ShipController (%s): landing_raycast is disabled, landing magnet will never engage" % name)
 
+	if ship_seat:
+		if ship_seat.has_signal("player_seated"):
+			ship_seat.connect("player_seated", func(): player_seated.emit())
+		if ship_seat.has_signal("player_unseated"):
+			ship_seat.connect("player_unseated", func(): player_unseated.emit())
+
+	if ship_model == null:
+		push_warning("ShipController (%s): 'Ship Model' export is not assigned, hull lag effect will not run" % name)
+	else:
+		_ship_model_base_basis = ship_model.transform.basis
+
 func set_piloted(value: bool) -> void:
 	is_piloted = value
 
-## Duck-typed gravity interface, matching what the player exposes - the
-## planet's gravity Area3D calls this the same way it calls the player.
+func get_seat_camera() -> Camera3D:
+	if ship_seat == null:
+		return null
+	return ship_seat.get("seat_camera")
+	
+## Duck-typed gravity interface, matching what the player exposes.
 func set_planet_gravity(source: Node3D, strength: float) -> void:
 	gravity_source = source
 	surface_gravity_strength = strength
@@ -107,9 +117,25 @@ func set_zero_g() -> void:
 func get_current_gravity_source() -> Node3D:
 	return gravity_source
 
+## Exposes the ship seat's exit transform to external systems (World's
+## spawn/"return to ship" logic) without them needing to know ShipSeat's
+## internal node path or reach into the ship's scene structure directly.
+func get_seat_exit_transform() -> Transform3D:
+	if ship_seat == null:
+		push_error("ShipController (%s): 'Ship Seat' export is not assigned" % name)
+		return global_transform
+
+	var exit_position: Node3D = ship_seat.get("exit_position")
+	if exit_position == null:
+		push_error("ShipController (%s): ship_seat has no valid 'exit_position' assigned" % name)
+		return global_transform
+
+	return exit_position.global_transform
+
 func _physics_process(delta: float) -> void:
 	if not is_piloted:
 		_process_unpiloted(delta)
+		_update_hull_lag(delta)
 		return
 
 	var strafe_input: float = Input.get_axis("move_left", "move_right")
@@ -126,6 +152,7 @@ func _physics_process(delta: float) -> void:
 
 	if can_magnet:
 		_run_magnet_landing_frame(input_dir, probe, delta)
+		_update_hull_lag(delta)
 		return
 
 	_is_parked = false
@@ -145,15 +172,14 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 
+	_update_hull_lag(delta)
+
 	var speed_ratio: float = clamp(velocity.length() / max_speed, 0.0, 1.0)
 	speed_changed.emit(speed_ratio)
 
 ## Handles the unpiloted case: either the ship is parked (glued to its
 ## spot on gravity_source in both position AND orientation) or it's
-## coasting/falling freely. If parked but the anchor was never
-## established (gravity_source wasn't assigned yet at the moment the
-## pilot exited), it's lazily established here the moment gravity_source
-## becomes valid, instead of staying permanently frozen in world space.
+## coasting/falling freely.
 func _process_unpiloted(delta: float) -> void:
 	if _is_parked and is_instance_valid(gravity_source):
 		if not _parked_anchor_valid:
@@ -169,9 +195,6 @@ func _process_unpiloted(delta: float) -> void:
 		return
 
 	if _is_parked:
-		# parked with no gravity_source at all (e.g. docked in deep space,
-		# or gravity_source genuinely never assigned) - nothing to follow,
-		# just stay bit-exact in place.
 		velocity = Vector3.ZERO
 		move_and_slide()
 		speed_changed.emit(0.0)
@@ -220,9 +243,7 @@ func _get_falloff_gravity_strength(distance_to_center: float) -> float:
 
 ## Runs one frame of magnet-locked landing: orientation smoothly aligns to
 ## the surface normal, horizontal thrust input still allows taxiing, and
-## position eases onto the surface via lerp. Also refreshes the parked
-## anchor (position AND orientation expressed in gravity_source's local
-## space) so an unpiloted parked ship can keep following a rotating body.
+## position eases onto the surface via lerp.
 func _run_magnet_landing_frame(input_dir: Vector3, probe: Dictionary, delta: float) -> void:
 	var safe_current_basis: Basis = global_transform.basis.orthonormalized()
 	var target_basis: Basis = _basis_from_up(probe.normal, safe_current_basis)
@@ -258,8 +279,6 @@ func _run_magnet_landing_frame(input_dir: Vector3, probe: Dictionary, delta: flo
 	speed_changed.emit(speed_ratio)
 
 ## Reads the exported RayCast3D to look for a nearby surface to land on.
-## Rejects degenerate normals and hits that would require too extreme a
-## reorientation from the ship's current up (landing_max_reorientation_deg).
 func _probe_landing_surface() -> Dictionary:
 	var not_found: Dictionary = {"found": false, "hit_point": Vector3.ZERO, "normal": Vector3.ZERO, "distance": INF}
 
@@ -285,9 +304,7 @@ func _probe_landing_surface() -> Dictionary:
 	return {"found": true, "hit_point": hit_point, "normal": normal, "distance": distance}
 
 ## Builds an orthonormal basis with the given up direction, preserving as
-## much of the current forward heading as possible. new_up is defensively
-## normalized; current_basis is assumed already orthonormal (callers must
-## pass a sanitized basis - see safe_current_basis above).
+## much of the current forward heading as possible.
 func _basis_from_up(raw_new_up: Vector3, current_basis: Basis) -> Basis:
 	var new_up: Vector3 = raw_new_up.normalized()
 	if new_up.length_squared() < 0.0001:
@@ -306,25 +323,35 @@ func _basis_from_up(raw_new_up: Vector3, current_basis: Basis) -> Basis:
 	var right: Vector3 = forward.cross(new_up).normalized()
 	return Basis(right, new_up, -forward)
 
+## Decays the hull's local counter-rotation back toward identity every
+## frame, then composes it ON TOP OF ship_model's original inspector-set
+## basis - never replaces that base orientation outright.
+func _update_hull_lag(delta: float) -> void:
+	if ship_model == null:
+		return
+
+	_hull_lag_basis = _hull_lag_basis.slerp(Basis.IDENTITY, clamp(hull_lag_recovery_speed * delta, 0.0, 1.0)).orthonormalized()
+	ship_model.transform.basis = (_hull_lag_basis * _ship_model_base_basis).orthonormalized()
+
 func _unhandled_input(event: InputEvent) -> void:
 	if not is_piloted:
 		return
 	if event is InputEventMouseMotion:
-		rotate_object_local(Vector3.UP, -event.relative.x * mouse_sensitivity)
-		rotate_object_local(Vector3.RIGHT, -event.relative.y * mouse_sensitivity)
-		# periodically re-orthonormalize to prevent float32 drift from many
-		# accumulated incremental rotations over a long play session from
-		# ever exceeding Godot's strict is_rotation() tolerance later.
+		var yaw_delta: float = -event.relative.x * mouse_sensitivity
+		var pitch_delta: float = -event.relative.y * mouse_sensitivity
+
+		rotate_object_local(Vector3.UP, yaw_delta)
+		rotate_object_local(Vector3.RIGHT, pitch_delta)
 		global_transform.basis = global_transform.basis.orthonormalized()
 
-func get_seat_exit_transform() -> Transform3D:
-	if ship_seat == null:
-		push_error("ShipController (%s): 'Ship Seat' export is not assigned" % name)
-		return global_transform
+		# hull lag: counter-rotate the visual mesh by roughly the turn we
+		# just applied to the body (scaled/clamped by hull_lag_amount_deg),
+		# so the immediate visible result is the hull staying behind while
+		# the body (and therefore flight direction) has already turned -
+		# _update_hull_lag() then eases this back to zero every frame.
+		if ship_model != null:
+			var lag_yaw: float = clamp(yaw_delta, -deg_to_rad(hull_lag_amount_deg), deg_to_rad(hull_lag_amount_deg))
+			var lag_pitch: float = clamp(pitch_delta, -deg_to_rad(hull_lag_amount_deg), deg_to_rad(hull_lag_amount_deg))
 
-	var exit_position: Node3D = ship_seat.get("exit_position")
-	if exit_position == null:
-		push_error("ShipController (%s): ship_seat has no valid 'exit_position' assigned" % name)
-		return global_transform
-
-	return exit_position.global_transform
+			var counter_rotation: Basis = Basis(Vector3.UP, -lag_yaw) * Basis(Vector3.RIGHT, -lag_pitch)
+			_hull_lag_basis = (counter_rotation * _hull_lag_basis).orthonormalized()

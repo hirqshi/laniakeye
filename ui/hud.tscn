@@ -1,0 +1,258 @@
+[gd_scene format=3 uid="uid://denq0liqcr01g"]
+
+[ext_resource type="Script" uid="uid://dfcokrdjdjgsp" path="res://ui/hud_controller.gd" id="1_rbyyf"]
+[ext_resource type="Script" uid="uid://cxmdo8wtpasfb" path="res://ui/ship_marker.gd" id="2_546lt"]
+[ext_resource type="Texture2D" uid="uid://cjofmm1pjqchi" path="res://assets/ui/shipmarker.png" id="3_7ihmi"]
+[ext_resource type="Script" uid="uid://7mb7uy5mdu7d" path="res://ui/crosshair.gd" id="4_1v5rv"]
+[ext_resource type="Texture2D" uid="uid://cw4wjo748epei" path="res://assets/ui/crosshair.png" id="5_q43x7"]
+[ext_resource type="Texture2D" uid="uid://bade1mr6y54o8" path="res://assets/ui/frame.png" id="6_srpbi"]
+[ext_resource type="FontFile" uid="uid://qtgl5e38up3a" path="res://assets/ui/Tiny5-Regular.ttf" id="7_q43x7"]
+[ext_resource type="Script" uid="uid://caxj8ijer5i3q" path="res://ui/speed_label.gd" id="8_srpbi"]
+[ext_resource type="Script" uid="uid://dus2g3mi0qvv" path="res://ui/planet_target_frame.gd" id="9_spcu4"]
+[ext_resource type="Texture2D" uid="uid://fwfo2w8xvpia" path="res://assets/ui/planetframe.png" id="10_ff8ar"]
+[ext_resource type="Script" uid="uid://lxmsfm38164k" path="res://ui/ship_hint_panel.gd" id="11_m0eg6"]
+[ext_resource type="Script" uid="uid://dcxlmrl6epv37" path="res://ui/system_map.gd" id="12_b00kl"]
+[ext_resource type="Texture2D" uid="uid://ddsdqgiidt62x" path="res://assets/ui/PlanetIcon.png" id="13_mp5xd"]
+[ext_resource type="Texture2D" uid="uid://civkmut58jc17" path="res://assets/ui/player_marker.png" id="13_so1yu"]
+[ext_resource type="Texture2D" uid="uid://dx11yn7j7xcbp" path="res://assets/ui/starIcon.png" id="14_u6vop"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_6m30h"]
+font = ExtResource("7_q43x7")
+
+[sub_resource type="LabelSettings" id="LabelSettings_ff8ar"]
+font = ExtResource("7_q43x7")
+font_size = 8
+
+[sub_resource type="LabelSettings" id="LabelSettings_m0eg6"]
+font = ExtResource("7_q43x7")
+
+[sub_resource type="LabelSettings" id="LabelSettings_b00kl"]
+font = ExtResource("7_q43x7")
+
+[node name="Hud" type="CanvasLayer" unique_id=772229164 node_paths=PackedStringArray("root", "ship_marker", "crosshair", "speed_label", "planet_target_frame", "ship_hint_panel", "system_map")]
+script = ExtResource("1_rbyyf")
+ui_color = Color(1, 0.8333334, 0, 0.627451)
+root = NodePath("Root")
+ship_marker = NodePath("Root/ShipMarker")
+crosshair = NodePath("Root/Crosshair")
+speed_label = NodePath("Root/SpeedLabel")
+planet_target_frame = NodePath("Root/PlanetTargetFrame")
+ship_hint_panel = NodePath("Root/ShipHintPanel")
+system_map = NodePath("Root/SystemMap")
+
+[node name="Root" type="Control" parent="." unique_id=220350574]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="ShipMarker" type="Control" parent="Root" unique_id=1055553509]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+mouse_filter = 2
+script = ExtResource("2_546lt")
+alpha_on_screen = 0.415
+alpha_off_screen = 0.275
+
+[node name="Icon" type="TextureRect" parent="Root/ShipMarker" unique_id=446350280]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+texture = ExtResource("3_7ihmi")
+
+[node name="Crosshair" type="Control" parent="Root" unique_id=597234063]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("4_1v5rv")
+lag_push_strength = 400.0
+lag_max_offset_px = 20.0
+
+[node name="Dot" type="TextureRect" parent="Root/Crosshair" unique_id=86412619]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -7.5
+offset_top = -2.5
+offset_right = 7.5
+offset_bottom = 2.5
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(2, 2)
+pivot_offset_ratio = Vector2(0.5, 0.5)
+texture = ExtResource("5_q43x7")
+
+[node name="Frame" type="TextureRect" parent="Root/Crosshair" unique_id=1325967818]
+modulate = Color(1, 1, 1, 0.35686275)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -24.0
+offset_top = -24.0
+offset_right = 24.0
+offset_bottom = 24.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(2, 2)
+pivot_offset_ratio = Vector2(0.5, 0.5)
+texture = ExtResource("6_srpbi")
+
+[node name="SpeedLabel" type="Label" parent="Root" unique_id=267050232]
+modulate = Color(1, 1, 1, 0.4862745)
+layout_mode = 0
+offset_left = 12.0
+offset_top = 418.0
+offset_right = 84.0
+offset_bottom = 441.0
+text = "speed:15.6"
+label_settings = SubResource("LabelSettings_6m30h")
+script = ExtResource("8_srpbi")
+
+[node name="PlanetTargetFrame" type="Control" parent="Root" unique_id=1082109443]
+modulate = Color(1, 1, 1, 0.3254902)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("9_spcu4")
+corner_atlas = ExtResource("10_ff8ar")
+
+[node name="CornerTopLeft" type="TextureRect" parent="Root/PlanetTargetFrame" unique_id=1496355957]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -7.5
+offset_top = -2.5
+offset_right = 7.5
+offset_bottom = 2.5
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset_ratio = Vector2(0.5, 0.5)
+
+[node name="CornerTopRight" type="TextureRect" parent="Root/PlanetTargetFrame" unique_id=624282782]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -7.5
+offset_top = -2.5
+offset_right = 7.5
+offset_bottom = 2.5
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset_ratio = Vector2(0.5, 0.5)
+
+[node name="CornerBottomLeft" type="TextureRect" parent="Root/PlanetTargetFrame" unique_id=760763472]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -7.5
+offset_top = -2.5
+offset_right = 7.5
+offset_bottom = 2.5
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset_ratio = Vector2(0.5, 0.5)
+
+[node name="CornerBottomRight" type="TextureRect" parent="Root/PlanetTargetFrame" unique_id=1486370223]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -7.5
+offset_top = -2.5
+offset_right = 7.5
+offset_bottom = 2.5
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset_ratio = Vector2(0.5, 0.5)
+
+[node name="InfoLabel" type="Label" parent="Root/PlanetTargetFrame" unique_id=1570746584]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -36.0
+offset_top = 57.0
+offset_right = 36.0
+offset_bottom = 80.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "speed:15.6"
+label_settings = SubResource("LabelSettings_ff8ar")
+horizontal_alignment = 1
+
+[node name="ShipHintPanel" type="Control" parent="Root" unique_id=1334515182]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("11_m0eg6")
+distance_format = "distance to ship: %.0f m"
+
+[node name="HintLabel" type="Label" parent="Root/ShipHintPanel" unique_id=1871088498]
+modulate = Color(1, 1, 1, 0.4862745)
+layout_mode = 0
+offset_left = 394.0
+offset_top = 5.0
+offset_right = 596.0
+offset_bottom = 28.0
+text = "speed:15.6"
+label_settings = SubResource("LabelSettings_m0eg6")
+horizontal_alignment = 2
+
+[node name="DistanceLabel" type="Label" parent="Root/ShipHintPanel" unique_id=1238487107]
+modulate = Color(1, 1, 1, 0.4862745)
+layout_mode = 0
+offset_left = 350.0
+offset_top = 27.0
+offset_right = 595.0
+offset_bottom = 50.0
+text = "speed:15.6"
+label_settings = SubResource("LabelSettings_b00kl")
+horizontal_alignment = 2
+
+[node name="SystemMap" type="Control" parent="Root" unique_id=1782319824]
+modulate = Color(1, 0.8333334, 0, 0.39607844)
+anchors_preset = 0
+offset_left = 453.0
+offset_top = 302.0
+offset_right = 592.0
+offset_bottom = 441.0
+script = ExtResource("12_b00kl")
+planet_icon_texture = ExtResource("13_mp5xd")
+star_icon_texture = ExtResource("14_u6vop")
+player_icon_texture = ExtResource("13_so1yu")
+map_radius_px = 50.0
+star_dot_radius_px = 3.0
+planet_dot_min_radius_px = 0.765
+planet_dot_max_radius_px = 3.0
+orbit_line_width = 0.6
