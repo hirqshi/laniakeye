@@ -1,0 +1,36 @@
+[gd_scene format=3 uid="uid://dtdgcw1yhj6l6"]
+
+[ext_resource type="Script" uid="uid://br6nlledfrnvk" path="res://player/player_controller.gd" id="1_rkbax"]
+[ext_resource type="Script" uid="uid://cbaaoxtggsguj" path="res://player/player_camera.gd" id="2_g1dw6"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_6m30h"]
+radius = 0.2
+height = 1.5
+
+[node name="Player" type="CharacterBody3D" unique_id=1674303530 node_paths=PackedStringArray("body_pivot", "camera_pivot", "player_camera") groups=["player"]]
+floor_max_angle = 0.9599311
+safe_margin = 0.156
+script = ExtResource("1_rkbax")
+body_pivot = NodePath("BodyPivot")
+camera_pivot = NodePath("BodyPivot/CameraPivot")
+player_camera = NodePath("BodyPivot/CameraPivot/PlayerCamera")
+jump_velocity = 7.0
+gravity_multiplier = 1.4849999999999999
+collision_safe_margin_m = 0.17
+camera_vertical_smoothing_speed = 6.2
+camera_vertical_offset_clamp_m = 1.0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1661267911]
+shape = SubResource("CapsuleShape3D_6m30h")
+
+[node name="BodyPivot" type="Node3D" parent="." unique_id=1728800295]
+
+[node name="CameraPivot" type="Node3D" parent="BodyPivot" unique_id=989218076]
+
+[node name="PlayerCamera" type="Camera3D" parent="BodyPivot/CameraPivot" unique_id=585074050 node_paths=PackedStringArray("player_camera", "player_controller")]
+far = 20000.0
+script = ExtResource("2_g1dw6")
+player_camera = NodePath(".")
+player_controller = NodePath("../../..")
+bob_walk_amplitude = 0.07
+bob_run_amplitude = 0.12

@@ -1,0 +1,51 @@
+[gd_scene format=3 uid="uid://d15yu8c7rucw"]
+
+[ext_resource type="PackedScene" uid="uid://dtdgcw1yhj6l6" path="res://player/player.tscn" id="1_4wyf3"]
+[ext_resource type="Script" uid="uid://caxatl3t1mk8c" path="res://generation/world.gd" id="1_k0juu"]
+[ext_resource type="PackedScene" uid="uid://xv6bny4xvn7w" path="res://ship/ship.tscn" id="2_k0juu"]
+[ext_resource type="PackedScene" uid="uid://dqfhr40i8k8k5" path="res://scenes/star_system.tscn" id="3_71j4m"]
+[ext_resource type="Shader" uid="uid://fmjogccimpms" path="res://shaders/starfield.gdshader" id="5_71j4m"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_k0juu"]
+shader = ExtResource("5_71j4m")
+shader_parameter/star_density = 0.0
+shader_parameter/star_cell_scale = 15.8130007036175
+shader_parameter/star_size = 0.01999999955297
+shader_parameter/star_brightness_min = 2.1110001002725
+shader_parameter/star_brightness_max = 8.0
+shader_parameter/star_color_a = Color(1, 1, 1, 1)
+shader_parameter/star_color_b = Color(0.7, 0.8, 1, 1)
+shader_parameter/sky_background_color = Color(0, 0, 0, 1)
+shader_parameter/twinkle_speed = 0.0
+shader_parameter/twinkle_amount = 0.0
+
+[sub_resource type="Sky" id="Sky_e6m2j"]
+sky_material = SubResource("ShaderMaterial_k0juu")
+
+[sub_resource type="Environment" id="Environment_6m30h"]
+background_mode = 2
+sky = SubResource("Sky_e6m2j")
+ambient_light_source = 2
+ambient_light_color = Color(1, 1, 1, 1)
+ambient_light_energy = 0.01
+glow_enabled = true
+glow_intensity = 0.1
+glow_strength = 0.92
+glow_bloom = 0.5
+volumetric_fog_albedo = Color(0, 0, 0, 1)
+
+[node name="World" type="Node3D" unique_id=1083926892 node_paths=PackedStringArray("star_system", "ship", "player")]
+script = ExtResource("1_k0juu")
+star_system = NodePath("StarSystem")
+ship = NodePath("Ship")
+player = NodePath("Player")
+
+[node name="Player" parent="." unique_id=1674303530 instance=ExtResource("1_4wyf3")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7941934, 0)
+
+[node name="Ship" parent="." unique_id=1384390134 instance=ExtResource("2_k0juu")]
+
+[node name="StarSystem" parent="." unique_id=696955812 instance=ExtResource("3_71j4m")]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1624348766]
+environment = SubResource("Environment_6m30h")

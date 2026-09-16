@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="SurfaceProfile" format=3 uid="uid://dnd43df0y4umn"]
+
+[ext_resource type="Texture2D" uid="uid://dxal5mumkfmpk" path="res://assets/textures/grass/coast_sand_rocks_02_diff_4k_resized.jpg" id="1_ty0cb"]
+[ext_resource type="Texture2D" uid="uid://dycxuodb270vi" path="res://assets/textures/grass/coast_sand_rocks_02_ao_4k_resized.jpg" id="2_35iq8"]
+[ext_resource type="Texture2D" uid="uid://bd8wogbsc0l66" path="res://assets/textures/grass/coast_sand_rocks_02_disp_4k_resized.jpg" id="3_raji8"]
+[ext_resource type="Texture2D" uid="uid://bbrcy6o33e18y" path="res://assets/textures/grass/coast_sand_rocks_02_nor_gl_4k_resized.jpg" id="4_ynfew"]
+[ext_resource type="Texture2D" uid="uid://w660s3mu1n65" path="res://assets/textures/grass/coast_sand_rocks_02_rough_4k_resized.jpg" id="5_cg5sw"]
+[ext_resource type="Script" uid="uid://1t0wbuevh1oe" path="res://generation/surface_profile.gd" id="6_jnwxl"]
+
+[resource]
+script = ExtResource("6_jnwxl")
+profile_name = "rocky"
+albedo_texture = ExtResource("1_ty0cb")
+normal_texture = ExtResource("4_ynfew")
+roughness_texture = ExtResource("5_cg5sw")
+ao_texture = ExtResource("2_35iq8")
+height_texture = ExtResource("3_raji8")
+texture_filter = 3
+normal_strength = 1.0
+triplanar_scale = 0.105
+color_min = Color(0.05, 0.05, 0.05, 1)
+color_max = Color(0.2, 0.2, 0.2, 1)
+metadata/_custom_type_script = "uid://1t0wbuevh1oe"

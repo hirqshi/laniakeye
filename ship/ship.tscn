@@ -1,0 +1,112 @@
+[gd_scene format=3 uid="uid://xv6bny4xvn7w"]
+
+[ext_resource type="Script" uid="uid://wngusb5kyx84" path="res://ship/ship_controller.gd" id="1_2jgil"]
+[ext_resource type="Script" uid="uid://dpgnb6aqkm7jr" path="res://ship/ship_seat.gd" id="2_1vtf4"]
+[ext_resource type="ArrayMesh" uid="uid://gy5n6dvmunme" path="res://ship/ship.obj" id="2_r4tgf"]
+[ext_resource type="Script" uid="uid://bbukag3vecwud" path="res://planets/gravity_zone.gd" id="4_r4tgf"]
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_6v61j"]
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_niecj"]
+noise = SubResource("FastNoiseLite_6v61j")
+seamless = true
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_54674"]
+cull_mode = 2
+albedo_color = Color(0.29, 0.29, 0.29, 1)
+albedo_texture = SubResource("NoiseTexture2D_niecj")
+uv1_scale = Vector3(0.14, 0.14, 0.14)
+uv1_triplanar = true
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_h8ms6"]
+size = Vector3(4.6118164, 0.7335205, 4.503662)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1vtf4"]
+size = Vector3(4.6118164, 4.4839478, 0.80914307)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_r4tgf"]
+size = Vector3(0.71899414, 4.4839478, 3.6847076)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_6m30h"]
+size = Vector3(5, 5, 5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_lfved"]
+size = Vector3(1, 1, 0.22998047)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_lfved"]
+size = Vector3(3.4932861, 3.6827393, 3.9920654)
+
+[node name="Ship" type="CharacterBody3D" unique_id=390583042 node_paths=PackedStringArray("landing_raycast", "ship_seat")]
+script = ExtResource("1_2jgil")
+max_speed = 88.0
+landing_raycast = NodePath("LandingRayCast")
+landing_offset_m = 0.215
+ship_seat = NodePath("Seat")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=684156245]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, 0)
+mesh = ExtResource("2_r4tgf")
+surface_material_override/0 = SubResource("StandardMaterial3D_54674")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=33658226]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.03942873, -0.13323975, 0.06665039)
+shape = SubResource("BoxShape3D_h8ms6")
+
+[node name="CollisionShape3D2" type="CollisionShape3D" parent="." unique_id=212865440]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.03942873, 3.6451576, 0.06665039)
+shape = SubResource("BoxShape3D_h8ms6")
+
+[node name="CollisionShape3D3" type="CollisionShape3D" parent="." unique_id=1148862961]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -1.8866882, 1.769944, 0.066650465)
+shape = SubResource("BoxShape3D_1vtf4")
+
+[node name="CollisionShape3D4" type="CollisionShape3D" parent="." unique_id=1758491987]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 1.9191508, 1.769944, 0.066650465)
+shape = SubResource("BoxShape3D_1vtf4")
+
+[node name="CollisionShape3D5" type="CollisionShape3D" parent="." unique_id=1056406202]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.028316861, 1.769944, 2.0130615)
+shape = SubResource("BoxShape3D_r4tgf")
+
+[node name="Seat" type="Area3D" parent="." unique_id=1246366054 node_paths=PackedStringArray("seat_camera", "interaction_prompt_label", "ship_controller", "exit_position")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.39298433, -0.50940025)
+script = ExtResource("2_1vtf4")
+seat_camera = NodePath("SeatCamera")
+interaction_prompt_label = NodePath("InteractionLabel")
+ship_controller = NodePath("..")
+exit_position = NodePath("ExitPosition")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Seat" unique_id=1966543829]
+shape = SubResource("BoxShape3D_6m30h")
+
+[node name="ExitPosition" type="Node3D" parent="Seat" unique_id=1071301006]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.542465, 1.4403727)
+
+[node name="InteractionLabel" type="Label3D" parent="Seat" unique_id=433132358]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7317036, 0)
+billboard = 1
+text = "seat"
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Seat" unique_id=909927728]
+transform = Transform3D(1, 0, 0, 0, 0.9101716, -0.41423133, 0, 0.41423133, 0.9101716, 0, 0, -0.0700326)
+mesh = SubResource("BoxMesh_lfved")
+
+[node name="SeatCamera" type="Camera3D" parent="Seat" unique_id=1499846475]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.3211939, 0.65252733)
+far = 20000.0
+
+[node name="OmniLight3D" type="OmniLight3D" parent="." unique_id=1346513125]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6895299, 0)
+light_color = Color(1, 0.7751667, 0.29000002, 1)
+light_energy = 3.072
+
+[node name="ShipGravity" type="Area3D" parent="." unique_id=390492872 node_paths=PackedStringArray("ship_root")]
+script = ExtResource("4_r4tgf")
+ship_root = NodePath("..")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ShipGravity" unique_id=346242871]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.10748291, 1.6536255, 0.008239746)
+shape = SubResource("BoxShape3D_lfved")
+
+[node name="LandingRayCast" type="RayCast3D" parent="." unique_id=1406749029]
+target_position = Vector3(0, -6, 0)

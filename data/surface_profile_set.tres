@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SurfaceProfileSet" format=3 uid="uid://c07ye3u42k3ye"]
+
+[ext_resource type="Script" uid="uid://1t0wbuevh1oe" path="res://generation/surface_profile.gd" id="1_kcblx"]
+[ext_resource type="Resource" uid="uid://burfaflo83pod" path="res://data/surface_profiles/rocky.tres" id="2_d55q8"]
+[ext_resource type="Script" uid="uid://cj2w8n4sxvjw4" path="res://generation/surface_profile_set.gd" id="2_yknc1"]
+[ext_resource type="Resource" uid="uid://dnd43df0y4umn" path="res://data/surface_profiles/grass.tres" id="3_pg1gt"]
+[ext_resource type="Resource" uid="uid://ca37y8s01x74p" path="res://data/surface_profiles/desert.tres" id="4_vsa1o"]
+[ext_resource type="Resource" uid="uid://cxlg731uyudsj" path="res://data/surface_profiles/wasteland.tres" id="5_g78sh"]
+
+[resource]
+script = ExtResource("2_yknc1")
+profiles = Array[ExtResource("1_kcblx")]([ExtResource("2_d55q8"), ExtResource("3_pg1gt"), ExtResource("4_vsa1o"), ExtResource("5_g78sh")])
+metadata/_custom_type_script = "uid://cj2w8n4sxvjw4"

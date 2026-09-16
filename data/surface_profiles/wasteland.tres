@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="SurfaceProfile" format=3 uid="uid://cxlg731uyudsj"]
+
+[ext_resource type="Texture2D" uid="uid://b0p4ywj0oojtf" path="res://assets/textures/mud/mud_cracked_dry_03_diff_4k_resized.jpg" id="1_auhju"]
+[ext_resource type="Texture2D" uid="uid://dkkpfnikq4xr0" path="res://assets/textures/mud/mud_cracked_dry_03_ao_4k_resized.jpg" id="2_t5emb"]
+[ext_resource type="Texture2D" uid="uid://cgqj1ge2ilxkm" path="res://assets/textures/mud/mud_cracked_dry_03_disp_4k_resized.jpg" id="3_b2hhw"]
+[ext_resource type="Texture2D" uid="uid://bmefpi2q1mp80" path="res://assets/textures/mud/mud_cracked_dry_03_nor_gl_4k_resized.jpg" id="4_rnbuw"]
+[ext_resource type="Texture2D" uid="uid://0csbmlfgx2p4" path="res://assets/textures/mud/mud_cracked_dry_03_rough_4k_resized.jpg" id="5_lpofn"]
+[ext_resource type="Script" uid="uid://1t0wbuevh1oe" path="res://generation/surface_profile.gd" id="6_7e3bw"]
+
+[resource]
+script = ExtResource("6_7e3bw")
+profile_name = "rocky"
+albedo_texture = ExtResource("1_auhju")
+normal_texture = ExtResource("4_rnbuw")
+roughness_texture = ExtResource("5_lpofn")
+ao_texture = ExtResource("2_t5emb")
+height_texture = ExtResource("3_b2hhw")
+texture_filter = 3
+normal_strength = 1.0
+triplanar_scale = 0.105
+color_min = Color(0.05, 0.05, 0.05, 1)
+color_max = Color(0.2, 0.2, 0.2, 1)
+metadata/_custom_type_script = "uid://1t0wbuevh1oe"

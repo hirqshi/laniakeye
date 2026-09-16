@@ -1,0 +1,20 @@
+[gd_scene format=3 uid="uid://dqfhr40i8k8k5"]
+
+[ext_resource type="Script" uid="uid://cuhfx7ypmylfy" path="res://planets/star_system.gd" id="1_lcs5o"]
+[ext_resource type="PackedScene" uid="uid://cjxyp1mirj6jw" path="res://scenes/planet.tscn" id="2_xyphy"]
+[ext_resource type="PackedScene" uid="uid://k0djvfny6fcb" path="res://scenes/eye.tscn" id="3_eh6l5"]
+[ext_resource type="Resource" uid="uid://c07ye3u42k3ye" path="res://data/surface_profile_set.tres" id="4_igb27"]
+[ext_resource type="Resource" uid="uid://bwixgh4txf2lt" path="res://data/generation_settings.tres" id="5_xyphy"]
+
+[node name="StarSystem" type="Node3D" unique_id=696955812 node_paths=PackedStringArray("planets_container", "star_eye_container")]
+script = ExtResource("1_lcs5o")
+planets_container = NodePath("PlanetContainer")
+star_eye_container = NodePath("StarEyeContainer")
+planet_scene = ExtResource("2_xyphy")
+star_eye_scene = ExtResource("3_eh6l5")
+surface_profile_set = ExtResource("4_igb27")
+generation_settings = ExtResource("5_xyphy")
+
+[node name="PlanetContainer" type="Node3D" parent="." unique_id=299560113]
+
+[node name="StarEyeContainer" type="Node3D" parent="." unique_id=69163368]

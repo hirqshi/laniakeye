@@ -1,0 +1,32 @@
+[gd_scene format=3 uid="uid://k0djvfny6fcb"]
+
+[ext_resource type="ArrayMesh" uid="uid://b7j5xeipr4ydj" path="res://assets/eye.obj" id="1_60o0r"]
+[ext_resource type="Script" uid="uid://dprpjxpjrhipd" path="res://planets/eye_lookat.gd" id="1_e6m2j"]
+[ext_resource type="Texture2D" uid="uid://b72mn4vngfsnm" path="res://assets/eyetexture.png" id="2_e6m2j"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gd3i8"]
+shading_mode = 0
+specular_mode = 1
+albedo_texture = ExtResource("2_e6m2j")
+texture_filter = 0
+billboard_keep_scale = true
+stencil_flags = 2
+stencil_outline_thickness = 0.0
+
+[node name="Eye" type="Node3D" unique_id=2010017464]
+script = ExtResource("1_e6m2j")
+
+[node name="EyeMesh" type="MeshInstance3D" parent="." unique_id=1091211683]
+transform = Transform3D(-50, 0, -4.371139e-06, 0, 50, 0, 4.371139e-06, 0, -50, 0, 0, 0)
+mesh = ExtResource("1_60o0r")
+surface_material_override/0 = SubResource("StandardMaterial3D_gd3i8")
+
+[node name="OmniLight3D" type="OmniLight3D" parent="." unique_id=1921935190]
+light_energy = 3.171
+light_indirect_energy = 0.375
+shadow_enabled = true
+shadow_bias = 0.584
+shadow_normal_bias = 0.36
+shadow_blur = 3.151
+omni_range = 10000.0
+omni_attenuation = 0.186
