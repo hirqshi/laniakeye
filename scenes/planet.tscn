@@ -32,7 +32,7 @@ shader_parameter/planet_radius_m = 120.0
 shader_parameter/light_direction = Vector3(1, 0, 0)
 shader_parameter/shadow_strength = 0.62400002964
 
-[node name="Planet" type="Node3D" unique_id=581055455 node_paths=PackedStringArray("mesh_instance", "ring_mesh_instance", "collision_shape", "gravity_area", "gravity_collision_shape", "moons_container", "atmosphere_mesh_instance")]
+[node name="Planet" type="Node3D" unique_id=581055455 node_paths=PackedStringArray("mesh_instance", "ring_mesh_instance", "collision_shape", "gravity_area", "gravity_collision_shape", "moons_container", "atmosphere_mesh_instance", "water_mesh_instance")]
 script = ExtResource("1_cktii")
 mesh_instance = NodePath("PlanetMesh")
 ring_mesh_instance = NodePath("RingMesh")
@@ -41,6 +41,7 @@ gravity_area = NodePath("GravityArea")
 gravity_collision_shape = NodePath("GravityArea/CollisionShape3D")
 moons_container = NodePath("MoonsContainer")
 atmosphere_mesh_instance = NodePath("AtmosphereMesh")
+water_mesh_instance = NodePath("WaterMesh")
 moon_scene = ExtResource("2_ggt7d")
 
 [node name="PlanetMesh" type="MeshInstance3D" parent="." unique_id=1771692712]
@@ -49,6 +50,8 @@ moon_scene = ExtResource("2_ggt7d")
 material_override = SubResource("ShaderMaterial_5lcxi")
 
 [node name="AtmosphereMesh" type="MeshInstance3D" parent="." unique_id=1399107122]
+
+[node name="WaterMesh" type="MeshInstance3D" parent="." unique_id=820272717]
 
 [node name="StaticBody3D" type="StaticBody3D" parent="." unique_id=1602399982]
 

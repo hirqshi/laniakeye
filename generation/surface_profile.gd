@@ -100,31 +100,65 @@ enum TerrainNoiseType {
 @export var atmosphere_density: float = 1.0
 @export var atmosphere_intensity: float = 6.0
 @export var atmosphere_outer_edge_softness: float = 0.4
-@export var atmosphere_inner_edge_softness: float = 0.3
 @export var atmosphere_surface_tint_strength: float = 0.3
 @export var atmosphere_day_color: Color = Color(0.4, 0.7, 1.0)
 @export var atmosphere_sunset_color: Color = Color(1.0, 0.5, 0.2)
 @export var atmosphere_terminator_width: float = 0.3
 @export var atmosphere_sunset_strength: float = 1.5
 
+## an ocean is a spherical shell of water at sea_level_radius_ratio *
+## radius_m. NOT restricted to the "ocean" preset - has_ocean can be
+## turned on for any profile (e.g. a forest preset with small seas)
+## since basin placement/coverage is controlled by the noise/threshold
+## fields below, not by the preset identity itself.
+@export_category("procedural ocean")
+@export var has_ocean: bool = false
+@export var sea_level_radius_ratio: float = 0.98
+@export var ocean_basin_noise_scale: float = 1.5
+@export var ocean_basin_threshold: float = 0.5
+@export var ocean_basin_seed_offset: int = 900001
+@export var ocean_basin_depth_m: float = 60.0
+@export var ocean_basin_edge_softness: float = 0.05
+@export var water_gradient: Gradient
+@export var water_sky_color: Color = Color(0.5, 0.7, 0.9)
+@export var water_surface_color: Color = Color(0.05, 0.25, 0.35)
+@export var water_high_color: Color = Color(0.2, 0.5, 0.6)
+@export var water_low_color: Color = Color(0.02, 0.1, 0.2)
+@export var water_transmit_color: Color = Color(0.1, 0.3, 0.4)
+@export var underwater_gravity_multiplier: float = 0.35
+@export var underwater_speed_multiplier: float = 0.6
+@export var depth_fade_distance_ratio: float = 0.4
+
+
 func should_generate_rings(rng: RandomNumberGenerator) -> bool:
 	return allow_rings and rng.randf() <= ring_chance
-	
+
+
 func get_random_crater_count(rng: RandomNumberGenerator) -> int:
 	return rng.randi_range(crater_count_min, crater_count_max)
-	
+
+
 func get_random_albedo_color(rng: RandomNumberGenerator) -> Color:
 	if albedo_gradient == null:
 		return Color.WHITE
 	return albedo_gradient.sample(rng.randf())
+
 
 func get_random_vegetation_density(rng: RandomNumberGenerator) -> float:
 	if not allow_vegetation:
 		return 0.0
 	return rng.randf_range(vegetation_density_min, vegetation_density_max)
 
+
 func get_random_terrain_height(rng: RandomNumberGenerator) -> float:
 	return rng.randf_range(terrain_height_min_m, terrain_height_max_m)
 
+
 func get_random_terrain_noise_scale(rng: RandomNumberGenerator) -> float:
 	return rng.randf_range(terrain_noise_scale_min, terrain_noise_scale_max)
+
+
+func get_random_water_color(rng: RandomNumberGenerator) -> Color:
+	if water_gradient == null:
+		return water_surface_color
+	return water_gradient.sample(rng.randf())

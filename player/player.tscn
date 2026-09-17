@@ -2,10 +2,18 @@
 
 [ext_resource type="Script" uid="uid://br6nlledfrnvk" path="res://player/player_controller.gd" id="1_rkbax"]
 [ext_resource type="Script" uid="uid://cbaaoxtggsguj" path="res://player/player_camera.gd" id="2_g1dw6"]
+[ext_resource type="Script" uid="uid://brjg73r6ik832" path="res://player/underwater_effects.gd" id="3_g1dw6"]
+[ext_resource type="Shader" uid="uid://opeslr3j7kca" path="res://shaders/underwater_tint.gdshader" id="4_yw30f"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_6m30h"]
 radius = 0.2
 height = 1.165
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_g1dw6"]
+shader = ExtResource("4_yw30f")
+shader_parameter/tint_color = Color(0.1, 0.3, 0.4, 1)
+shader_parameter/tint_alpha = 1.0
+shader_parameter/darkness_multiplier = 0.4810000228475
 
 [node name="Player" type="CharacterBody3D" unique_id=1674303530 node_paths=PackedStringArray("body_pivot", "camera_pivot", "player_camera") groups=["player"]]
 floor_max_angle = 0.9599311
@@ -33,3 +41,17 @@ player_camera = NodePath(".")
 player_controller = NodePath("../../..")
 bob_walk_amplitude = 0.07
 bob_run_amplitude = 0.12
+
+[node name="UnderwaterEffects" type="Node" parent="." unique_id=299771196 node_paths=PackedStringArray("player", "tint_color_rect")]
+script = ExtResource("3_g1dw6")
+player = NodePath("..")
+tint_color_rect = NodePath("../ColorRect")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=1291006580]
+material = SubResource("ShaderMaterial_g1dw6")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2

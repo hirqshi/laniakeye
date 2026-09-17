@@ -65,7 +65,9 @@ size = Vector3(0.77459717, 0.22650146, 3.8873463)
 script = ExtResource("1_2jgil")
 ship_model = NodePath("ShipMesh")
 ship_seat = NodePath("Seat")
-max_speed = 88.0
+thrust_acceleration = 41.475
+strafe_acceleration = 64.645
+max_speed = 220.0
 hull_lag_amount_deg = 4.805
 hull_lag_recovery_speed = 6.59
 landing_raycast = NodePath("LandingRayCast")
@@ -149,11 +151,15 @@ light_color = Color(1, 0.7751667, 0.29000002, 1)
 light_energy = 2.085
 
 [node name="OmniLight3D4" type="SpotLight3D" parent="." unique_id=1333462858]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.019163, -4.002427)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.019163, -4.05062)
 light_color = Color(1, 0.7751667, 0.29000002, 1)
-light_energy = 2.562
-spot_range = 7.2954183
-spot_angle = 26.08697
+light_energy = 16.0
+light_indirect_energy = 3.012
+light_size = 0.243
+spot_range = 29.873
+spot_attenuation = 0.3
+spot_angle = 74.3
+spot_angle_attenuation = 0.6155715
 
 [node name="ShipGravity" type="Area3D" parent="." unique_id=390492872 node_paths=PackedStringArray("ship_root")]
 script = ExtResource("4_r4tgf")

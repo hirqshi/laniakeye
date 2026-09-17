@@ -13,6 +13,7 @@ extends Node3D
 const TRIPLANAR_SHADER: Shader = preload("res://shaders/triplanar.gdshader")
 const RING_SHADER: Shader = preload("res://shaders/ring.gdshader")
 const ATMOSPHERE_SHADER: Shader = preload("res://shaders/atmosphere.gdshader")
+const SPHERE_WATER_SHADER: Shader = preload("res://shaders/sphere_water.gdshader")
 const ATMOSPHERE_SPHERE_RINGS: int = 32
 const ATMOSPHERE_SPHERE_RADIAL_SEGMENTS: int = 32
 
@@ -23,6 +24,7 @@ const ATMOSPHERE_SPHERE_RADIAL_SEGMENTS: int = 32
 @export var gravity_collision_shape: CollisionShape3D
 @export var moons_container: Node3D
 @export var atmosphere_mesh_instance: MeshInstance3D
+@export var water_mesh_instance: MeshInstance3D
 
 @export var moon_scene: PackedScene
 @export var is_moon: bool = false
@@ -34,6 +36,10 @@ var planet_data: PlanetData
 var moon_nodes: Array[Node3D] = []
 var mesh_generator: PlanetMeshGenerator = PlanetMeshGenerator.new()
 var ring_mesh_generator: RingMeshGenerator = RingMeshGenerator.new()
+var water_mesh_generator: WaterMeshGenerator = WaterMeshGenerator.new()
+
+var sea_level_radius_m: float = 0.0
+var has_ocean: bool = false
 
 
 func _process(_delta: float) -> void:
@@ -91,6 +97,7 @@ func setup(data: PlanetData) -> void:
 
 	_setup_atmosphere(data)
 	_setup_rings(data)
+	_setup_ocean(data)
 
 	if not is_moon:
 		_spawn_moons()
@@ -132,7 +139,6 @@ func _setup_atmosphere(data: PlanetData) -> void:
 	material.set_shader_parameter("intensity", profile.get("atmosphere_intensity"))
 	material.set_shader_parameter("atmosphere_density", profile.get("atmosphere_density"))
 	material.set_shader_parameter("outer_edge_softness", profile.get("atmosphere_outer_edge_softness"))
-	material.set_shader_parameter("inner_edge_softness", profile.get("atmosphere_inner_edge_softness"))
 	material.set_shader_parameter("day_color", profile.get("atmosphere_day_color"))
 	material.set_shader_parameter("sunset_color", profile.get("atmosphere_sunset_color"))
 	material.set_shader_parameter("terminator_width", profile.get("atmosphere_terminator_width"))
@@ -145,7 +151,7 @@ func _setup_atmosphere(data: PlanetData) -> void:
 		surface_material.set_shader_parameter("has_atmosphere_tint", true)
 		surface_material.set_shader_parameter("atmosphere_tint_color", profile.get("atmosphere_rayleigh_color"))
 		surface_material.set_shader_parameter("atmosphere_tint_strength", profile.get("atmosphere_surface_tint_strength"))
-		
+
 
 func _setup_rings(data: PlanetData) -> void:
 	if ring_mesh_instance == null:
@@ -190,6 +196,40 @@ func _setup_rings(data: PlanetData) -> void:
 	ring_mesh_instance.visible = true
 
 
+func _setup_ocean(data: PlanetData) -> void:
+	has_ocean = false
+	sea_level_radius_m = 0.0
+
+	if water_mesh_instance == null:
+		return
+
+	var profile: Resource = data.surface_profile
+	if profile == null or not profile.get("has_ocean"):
+		water_mesh_instance.visible = false
+		return
+
+	sea_level_radius_m = data.radius_m * float(profile.get("sea_level_radius_ratio"))
+
+	water_mesh_instance.mesh = water_mesh_generator.generate_sphere(sea_level_radius_m)
+
+	var material: ShaderMaterial = water_mesh_instance.material_override as ShaderMaterial
+	if material == null or material.shader != SPHERE_WATER_SHADER:
+		material = ShaderMaterial.new()
+		material.shader = SPHERE_WATER_SHADER
+		water_mesh_instance.material_override = material
+
+	material.set_shader_parameter("sky_color", profile.get("water_sky_color"))
+	material.set_shader_parameter("surface_albedo", profile.get("water_surface_color"))
+	material.set_shader_parameter("high_color", profile.get("water_high_color"))
+	material.set_shader_parameter("low_color", profile.get("water_low_color"))
+	material.set_shader_parameter("transmit_color", profile.get("water_transmit_color"))
+	material.set_shader_parameter("depth_fade_distance", sea_level_radius_m * float(profile.get("depth_fade_distance_ratio")))
+	
+	water_mesh_instance.visible = true
+
+	has_ocean = true
+
+
 func _gradient_to_texture(gradient: Gradient) -> GradientTexture1D:
 	if gradient == null:
 		return null
@@ -208,6 +248,7 @@ func _spawn_moons() -> void:
 		moons_container.add_child(moon_node)
 		moon_node.set("is_moon", true)
 		moon_node.set("generation_settings", generation_settings)
+		moon_node.set("star_node", star_node)
 		moon_node.global_position = moon_data.get_orbit_position(global_position)
 		moon_node.call("setup", moon_data)
 		moon_nodes.append(moon_node)
@@ -239,6 +280,34 @@ func get_radius() -> float:
 func get_gravity_zone_radius() -> float:
 	var multiplier: float = generation_settings.gravity_zone_multiplier if generation_settings else 1.6
 	return get_radius() * multiplier
+
+
+## returns true if the given world-space distance from this planet's
+## center is below the sea level - used by the player controller to
+## apply the underwater gravity/speed multiplier and screen tint,
+## without needing a dedicated Area3D trigger.
+func is_point_underwater(world_position: Vector3) -> bool:
+	if not has_ocean:
+		return false
+	return global_position.distance_to(world_position) < sea_level_radius_m
+
+
+func get_underwater_gravity_multiplier() -> float:
+	if planet_data == null or planet_data.surface_profile == null:
+		return 1.0
+	return planet_data.surface_profile.get("underwater_gravity_multiplier")
+
+
+func get_underwater_speed_multiplier() -> float:
+	if planet_data == null or planet_data.surface_profile == null:
+		return 1.0
+	return planet_data.surface_profile.get("underwater_speed_multiplier")
+
+
+func get_water_gradient() -> Gradient:
+	if planet_data == null or planet_data.surface_profile == null:
+		return null
+	return planet_data.surface_profile.get("water_gradient")
 
 
 func _set_filtered_color_texture(

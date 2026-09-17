@@ -150,6 +150,8 @@ func _process_sphere_movement(delta: float) -> void:
 	var input_dir: Vector2 = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 	is_running = Input.is_action_pressed("run") and input_dir.length() > 0.1
 	var speed: float = run_speed if is_running else walk_speed
+	if gravity_source.has_method("is_point_underwater") and gravity_source.call("is_point_underwater", global_position):
+		speed *= gravity_source.call("get_underwater_speed_multiplier")
 
 	var world_move_dir: Vector3 = (current_basis * Vector3(input_dir.x, 0.0, input_dir.y)).normalized() if input_dir.length() > 0.01 else Vector3.ZERO
 	var local_move_dir: Vector3 = gravity_source.global_transform.basis.inverse() * world_move_dir
@@ -305,16 +307,21 @@ func _get_falloff_gravity_strength(distance_to_center: float) -> float:
 	var surface_radius: float = gravity_source.call("get_radius")
 	var zone_radius: float = gravity_source.call("get_gravity_zone_radius")
 
+	var strength: float
 	if distance_to_center <= surface_radius:
-		return base_strength
-
-	if distance_to_center >= zone_radius:
+		strength = base_strength
+	elif distance_to_center >= zone_radius:
 		return 0.0
+	else:
+		var zone_depth: float = zone_radius - surface_radius
+		var distance_past_surface: float = distance_to_center - surface_radius
+		var fade_ratio: float = 1.0 - clamp(distance_past_surface / zone_depth, 0.0, 1.0)
+		strength = base_strength * pow(fade_ratio, gravity_fade_curve_power)
 
-	var zone_depth: float = zone_radius - surface_radius
-	var distance_past_surface: float = distance_to_center - surface_radius
-	var fade_ratio: float = 1.0 - clamp(distance_past_surface / zone_depth, 0.0, 1.0)
-	return base_strength * pow(fade_ratio, gravity_fade_curve_power)
+	if gravity_source.has_method("is_point_underwater") and gravity_source.call("is_point_underwater", global_position):
+		strength *= gravity_source.call("get_underwater_gravity_multiplier")
+
+	return strength
 
 func _process_zero_g_movement(delta: float) -> void:
 	var input_dir: Vector3 = Vector3(

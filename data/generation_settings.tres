@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_4iryo")
-min_planets = 6
+min_planets = 9
 star_surface_gap_m = 300.0
 min_orbit_distance_m = 400.0
 orbit_distance_step_m = 400.0
@@ -19,5 +19,4 @@ moon_surface_gap_m = 20.0
 moon_radius_ratio_max = 0.4
 moon_terrain_noise_scale_min = 0.06
 moon_terrain_noise_scale_max = 0.005
-terrain_noise_scale_max = 5.0
 metadata/_custom_type_script = "uid://bh2ulkao6w2ql"

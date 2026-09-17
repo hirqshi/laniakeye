@@ -11,6 +11,10 @@
 offsets = PackedFloat32Array(0, 0.11129032, 0.29193547, 0.47903225, 0.67258066, 0.89193547)
 colors = PackedColorArray(0.5240726, 1.7686467, 0.690016, 1, 0.80569184, 1.2061527, 0.40523106, 1, 0.2486325, 0.5013946, 0.28233415, 1, 0.15840003, 0.72, 0.56088006, 1, 1.1038921, 0.81762546, 0.3231648, 1, 0.74261206, 0.74261206, 0.74261206, 1)
 
+[sub_resource type="Gradient" id="Gradient_0k1rn"]
+offsets = PackedFloat32Array(0, 0.99667406)
+colors = PackedColorArray(0.0874, 0.0874, 0.23, 1, 0.6, 0.9466667, 1, 1)
+
 [resource]
 script = ExtResource("6_jnwxl")
 profile_name = "forest"
@@ -37,4 +41,12 @@ atmosphere_intensity = 18.965
 atmosphere_surface_tint_strength = 0.065
 atmosphere_terminator_width = 1.0
 atmosphere_sunset_strength = 2.515
+has_ocean = true
+sea_level_radius_ratio = 0.94
+ocean_basin_threshold = 0.225
+ocean_basin_depth_m = 32.365
+ocean_basin_edge_softness = 0.075
+ocean_floor_radius_ratio = 0.13
+water_gradient = SubResource("Gradient_0k1rn")
+depth_fade_distance_ratio = 0.035
 metadata/_custom_type_script = "uid://1t0wbuevh1oe"
