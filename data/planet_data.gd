@@ -21,6 +21,8 @@ extends Resource
 
 @export var moons: Array[PlanetData] = []
 
+@export var display_name: String = ""
+
 func get_orbit_position(center: Vector3) -> Vector3:
 	var offset: Vector3 = Vector3(
 		cos(orbit_angle_rad) * orbit_distance_m,

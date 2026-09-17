@@ -35,10 +35,13 @@ glow_intensity = 0.1
 glow_strength = 1.48
 glow_bloom = 1.0
 volumetric_fog_albedo = Color(0, 0, 0, 1)
+adjustment_brightness = 1.04
+adjustment_contrast = 0.97
+adjustment_saturation = 0.75
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_6m30h"]
 shader = ExtResource("7_i7141")
-shader_parameter/resolution = Vector2(300, 300)
+shader_parameter/resolution = Vector2(400, 400)
 shader_parameter/scan_line_amount = 0.0630000029925
 shader_parameter/warp_amount = 0.10000000475
 shader_parameter/noise_amount = 0.0310000014725

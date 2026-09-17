@@ -41,11 +41,13 @@ func generate(system_seed: int) -> SystemData:
 	system_data.system_seed = system_seed
 
 	var planet_count: int = rng.randi_range(settings.min_planets, settings.max_planets)
+	var distributed_profiles: Array[SurfaceProfile] = surface_profile_set.get_distributed_profiles(rng, planet_count)
+
 	var previous_orbit_distance_m: float = 0.0
 	var previous_radius_m: float = 0.0
 
 	for i in range(planet_count):
-		var planet: PlanetData = _generate_body_data(false, false)
+		var planet: PlanetData = _generate_body_data(false, false, distributed_profiles[i])
 
 		var base_radius_m: float = settings.star_radius_m if i == 0 else previous_radius_m
 		var base_gap_m: float = settings.star_surface_gap_m if i == 0 else settings.orbit_surface_gap_m
@@ -66,7 +68,12 @@ func generate(system_seed: int) -> SystemData:
 		var orbit_distance_m: float = max(candidate_distance, min_center_distance)
 
 		planet.orbit_distance_m = orbit_distance_m
+		planet.display_name = CelestialNameGenerator.generate_planet_name(planet.planet_seed)
 		planet.moons = _generate_moons(planet.radius_m, orbit_distance_m)
+
+		for moon_index in range(planet.moons.size()):
+			planet.moons[moon_index].display_name = CelestialNameGenerator.generate_moon_name(planet.display_name, moon_index)
+
 		system_data.planets.append(planet)
 
 		previous_orbit_distance_m = orbit_distance_m
@@ -77,7 +84,7 @@ func generate(system_seed: int) -> SystemData:
 ## Generates all of a body's data EXCEPT orbit_distance_m, which the
 ## caller assigns afterward once it knows the body's actual radius_m -
 ## this ordering is what makes correct spacing possible in the first place.
-func _generate_body_data(unused_allow_moons: bool, is_moon: bool) -> PlanetData:
+func _generate_body_data(unused_allow_moons: bool, is_moon: bool, forced_profile: SurfaceProfile = null) -> PlanetData:
 	var body: PlanetData = PlanetData.new()
 	body.planet_seed = rng.randi()
 	body.radius_m = rng.randf_range(settings.planet_radius_min_m, settings.planet_radius_max_m)
@@ -87,7 +94,7 @@ func _generate_body_data(unused_allow_moons: bool, is_moon: bool) -> PlanetData:
 	body.axial_tilt_rad = rng.randf_range(-settings.axial_tilt_max_rad, settings.axial_tilt_max_rad)
 	body.rotation_speed_rad_s = rng.randf_range(settings.rotation_speed_min, settings.rotation_speed_max)
 
-	var profile: SurfaceProfile = surface_profile_set.get_random_profile(rng)
+	var profile: SurfaceProfile = forced_profile if forced_profile else surface_profile_set.get_random_profile(rng)
 	body.surface_profile = profile
 	body.albedo_color = profile.get_random_color(rng) if profile else Color.WHITE
 	body.vegetation_density = profile.get_random_vegetation_density(rng) if profile else 0.0

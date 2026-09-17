@@ -13,6 +13,9 @@ billboard_keep_scale = true
 stencil_flags = 2
 stencil_outline_thickness = 0.0
 
+[sub_resource type="SphereShape3D" id="SphereShape3D_6m30h"]
+radius = 100.0
+
 [node name="Eye" type="Node3D" unique_id=2010017464]
 script = ExtResource("1_e6m2j")
 
@@ -21,7 +24,7 @@ transform = Transform3D(-50, 0, -4.371139e-06, 0, 50, 0, 4.371139e-06, 0, -50, 0
 mesh = ExtResource("1_60o0r")
 surface_material_override/0 = SubResource("StandardMaterial3D_gd3i8")
 
-[node name="OmniLight3D" type="OmniLight3D" parent="." unique_id=1921935190]
+[node name="EyeLight" type="OmniLight3D" parent="." unique_id=1921935190]
 light_energy = 3.171
 light_indirect_energy = 0.375
 shadow_enabled = true
@@ -30,3 +33,6 @@ shadow_normal_bias = 0.36
 shadow_blur = 3.151
 omni_range = 10000.0
 omni_attenuation = 0.186
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=79589310]
+shape = SubResource("SphereShape3D_6m30h")

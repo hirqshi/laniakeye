@@ -162,8 +162,10 @@ func _update_frame(target: Dictionary) -> void:
 func _get_display_name(body_node: Node) -> String:
 	if body_node == null:
 		return "???"
-	return "Body #%d" % (body_node.get_instance_id() % 10000)
-
+	if body_node.has_method("get_display_name"):
+		return body_node.call("get_display_name")
+	return "Unknown Body"
+	
 ## Projects the sphere's world radius to a screen-space pixel radius by
 ## unprojecting a point offset from the center by radius_m along the
 ## camera's right vector, then measuring the resulting screen distance.

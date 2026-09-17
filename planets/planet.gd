@@ -290,3 +290,6 @@ func get_landscape_type() -> String:
 
 func get_moon_nodes() -> Array[Node3D]:
 	return moon_nodes
+
+func get_display_name() -> String:
+	return planet_data.display_name if planet_data else "???"
