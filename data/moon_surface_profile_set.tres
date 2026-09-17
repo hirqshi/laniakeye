@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="MoonSurfaceProfileSet" format=3 uid="uid://cc8acwk03ml4q"]
+
+[ext_resource type="Script" uid="uid://mxq6mqikaeep" path="res://generation/moon_surface_profile.gd" id="1_xpe04"]
+[ext_resource type="Script" uid="uid://tahooyfpj73s" path="res://generation/moon_surface_profile_set.gd" id="2_5rfjl"]
+[ext_resource type="Resource" uid="uid://cy6c5y65vmu1k" path="res://data/surface_profiles/moons/moon_rocky.tres" id="2_qgotf"]
+
+[resource]
+script = ExtResource("2_5rfjl")
+profiles = Array[ExtResource("1_xpe04")]([ExtResource("2_qgotf")])
+metadata/_custom_type_script = "uid://tahooyfpj73s"

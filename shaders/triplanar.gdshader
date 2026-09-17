@@ -10,6 +10,12 @@ shader_type spatial;
 // light). Fixed by writing the triplanar-blended normal into NORMAL_MAP
 // instead - Godot handles the tangent-space -> correct space conversion
 // itself using the mesh's generated TANGENT/BITANGENT.
+//
+// ATMOSPHERE SURFACE TINT: optional rim-based color bleed from the
+// planet's atmosphere onto its own surface, driven by the same
+// rayleigh color/light direction as atmosphere.gdshader so the ground
+// near the limb reads as lit through a colored haze instead of the
+// atmosphere being a completely separate, disconnected glow shell.
 
 uniform sampler2D albedo_linear : source_color, repeat_enable, filter_linear;
 uniform sampler2D albedo_linear_mipmap : source_color, repeat_enable, filter_linear_mipmap;
@@ -66,8 +72,16 @@ uniform float ao_strength : hint_range(0.0, 1.0) = 1.0;
 uniform vec4 emission_color : source_color = vec4(1.0);
 uniform float emission_energy : hint_range(0.0, 16.0) = 0.0;
 
+group_uniforms atmosphere_tint;
+uniform bool has_atmosphere_tint = false;
+uniform vec3 atmosphere_tint_color : source_color = vec3(0.4, 0.7, 1.0);
+uniform float atmosphere_tint_strength : hint_range(0.0, 2.0) = 0.3;
+uniform float atmosphere_tint_rim_power : hint_range(0.5, 8.0) = 2.0;
+uniform vec3 atmosphere_light_direction = vec3(1.0, 0.0, 0.0);
+
 varying vec3 object_position;
 varying vec3 object_normal;
+varying vec3 world_normal_for_tint;
 
 vec3 triplanar_blend(vec3 normal_in) {
 	vec3 blend = abs(normalize(normal_in));
@@ -305,6 +319,7 @@ vec3 triplanar_emission(vec3 scaled_position, vec3 blend) {
 void vertex() {
 	object_position = VERTEX;
 	object_normal = NORMAL;
+	world_normal_for_tint = normalize((MODEL_MATRIX * vec4(NORMAL, 0.0)).xyz);
 }
 
 void fragment() {
@@ -316,8 +331,6 @@ void fragment() {
 	if (use_albedo_texture) {
 		albedo *= triplanar_albedo(scaled_position, blend);
 	}
-
-	ALBEDO = albedo;
 
 	if (use_normal_map) {
 		NORMAL_MAP = triplanar_normal_map(scaled_position, blend);
@@ -358,4 +371,12 @@ void fragment() {
 			blend
 		) * emission_color.rgb * emission_energy;
 	}
+
+	if (has_atmosphere_tint) {
+		float light_term = max(dot(world_normal_for_tint, normalize(atmosphere_light_direction)), 0.0);
+		float rim = pow(1.0 - clamp(dot(world_normal_for_tint, VIEW), 0.0, 1.0), atmosphere_tint_rim_power);
+		albedo = mix(albedo, atmosphere_tint_color, rim * light_term * atmosphere_tint_strength);
+	}
+
+	ALBEDO = albedo;
 }

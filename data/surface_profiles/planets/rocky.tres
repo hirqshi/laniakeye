@@ -7,6 +7,10 @@
 [ext_resource type="Texture2D" uid="uid://b3vqp0q7ae71v" path="res://assets/textures/rock/rock_boulder_dry_nor_gl_4k_resized.jpg" id="4_g70yo"]
 [ext_resource type="Texture2D" uid="uid://nsd2v7mimn22" path="res://assets/textures/rock/rock_boulder_dry_rough_4k_resized.jpg" id="5_m4bea"]
 
+[sub_resource type="Gradient" id="Gradient_auhju"]
+offsets = PackedFloat32Array(0.037096772, 0.18870968, 0.3532258, 0.48225805, 0.62419355, 0.7629032, 0.93064517)
+colors = PackedColorArray(0, 0, 0, 1, 0.35, 0.35, 0.35, 1, 0.43800002, 0.4434, 0.6, 1, 0.31451613, 0.31451613, 0.31451613, 1, 0.82, 0.82, 0.82, 1, 1, 1, 1, 1, 0.6889, 0.83, 0.780615, 1)
+
 [resource]
 script = ExtResource("1_bs4nj")
 profile_name = "rocky"
@@ -17,7 +21,11 @@ ao_texture = ExtResource("2_6kirp")
 height_texture = ExtResource("3_rbi4w")
 texture_filter = 3
 normal_strength = 1.0
-triplanar_scale = 0.105
-color_min = Color(0.05, 0.05, 0.05, 1)
-color_max = Color(0.2, 0.2, 0.2, 1)
+triplanar_scale = 0.035
+albedo_gradient = SubResource("Gradient_auhju")
+allow_craters = true
+crater_count_min = 8
+crater_count_max = 26
+crater_depth_m = 10.44
+crater_rim_height_m = 5.02
 metadata/_custom_type_script = "uid://1t0wbuevh1oe"

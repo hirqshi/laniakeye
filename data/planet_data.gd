@@ -1,3 +1,4 @@
+@tool
 class_name PlanetData
 extends Resource
 
@@ -12,7 +13,7 @@ extends Resource
 @export var axial_tilt_rad: float = 0.0
 @export var rotation_speed_rad_s: float = 0.02
 
-@export var surface_profile: SurfaceProfile
+@export var surface_profile: Resource
 @export var albedo_color: Color = Color.WHITE
 @export var has_vegetation: bool = false
 @export var vegetation_density: float = 0.0

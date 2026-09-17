@@ -3,17 +3,52 @@
 [ext_resource type="Script" uid="uid://qha0s4lgr3nf" path="res://planets/planet.gd" id="1_cktii"]
 [ext_resource type="PackedScene" uid="uid://bck1w1iviihme" path="res://scenes/moon.tscn" id="2_ggt7d"]
 [ext_resource type="Script" uid="uid://ba588h81spcd7" path="res://planets/planet_gravity_zone.gd" id="2_h8ms6"]
+[ext_resource type="Shader" uid="uid://bpyh64bynw6t" path="res://shaders/ring.gdshader" id="3_48b8c"]
 
-[node name="Planet" type="Node3D" unique_id=581055455 node_paths=PackedStringArray("mesh_instance", "collision_shape", "gravity_area", "gravity_collision_shape", "moons_container")]
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_okyjl"]
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_b7jpf"]
+noise = SubResource("FastNoiseLite_okyjl")
+seamless = true
+
+[sub_resource type="Gradient" id="Gradient_5lcxi"]
+offsets = PackedFloat32Array(0, 0.28996864, 0.6974922, 0.87304074)
+colors = PackedColorArray(0.58, 0.52973336, 0.464, 1, 0.63, 0.576765, 0.5481, 1, 0.75, 0.75, 0.75, 1, 0.82, 0.78091335, 0.7298, 1)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_0k1rn"]
+gradient = SubResource("Gradient_5lcxi")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_5lcxi"]
+render_priority = 0
+shader = ExtResource("3_48b8c")
+shader_parameter/ring_gradient_texture = SubResource("GradientTexture1D_0k1rn")
+shader_parameter/band_noise_texture = SubResource("NoiseTexture2D_b7jpf")
+shader_parameter/band_noise_scale = 2.6770000796574998
+shader_parameter/band_noise_strength = 0.598000028405
+shader_parameter/alpha_multiplier = 0.82000003895
+shader_parameter/edge_fade_width = 0.0690000032775
+shader_parameter/planet_world_position = Vector3(0, 0, 0)
+shader_parameter/planet_radius_m = 120.0
+shader_parameter/light_direction = Vector3(1, 0, 0)
+shader_parameter/shadow_strength = 0.62400002964
+
+[node name="Planet" type="Node3D" unique_id=581055455 node_paths=PackedStringArray("mesh_instance", "ring_mesh_instance", "collision_shape", "gravity_area", "gravity_collision_shape", "moons_container", "atmosphere_mesh_instance")]
 script = ExtResource("1_cktii")
-mesh_instance = NodePath("MeshInstance3D")
+mesh_instance = NodePath("PlanetMesh")
+ring_mesh_instance = NodePath("RingMesh")
 collision_shape = NodePath("StaticBody3D/CollisionShape3D")
 gravity_area = NodePath("GravityArea")
 gravity_collision_shape = NodePath("GravityArea/CollisionShape3D")
 moons_container = NodePath("MoonsContainer")
+atmosphere_mesh_instance = NodePath("AtmosphereMesh")
 moon_scene = ExtResource("2_ggt7d")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1771692712]
+[node name="PlanetMesh" type="MeshInstance3D" parent="." unique_id=1771692712]
+
+[node name="RingMesh" type="MeshInstance3D" parent="." unique_id=2019469535]
+material_override = SubResource("ShaderMaterial_5lcxi")
+
+[node name="AtmosphereMesh" type="MeshInstance3D" parent="." unique_id=1399107122]
 
 [node name="StaticBody3D" type="StaticBody3D" parent="." unique_id=1602399982]
 

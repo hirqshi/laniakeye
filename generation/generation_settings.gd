@@ -47,9 +47,7 @@ extends Resource
 @export var moon_orbit_speed_max: float = 0.12
 @export var moon_rotation_speed_min: float = 0.02
 @export var moon_rotation_speed_max: float = 0.08
-@export var moon_terrain_noise_scale_min: float = 0.5
-@export var moon_terrain_noise_scale_max: float = 2.0
 
 @export_group("Terrain")
-@export var terrain_noise_scale_min: float = 0.5
-@export var terrain_noise_scale_max: float = 3.0
+@export var moon_terrain_noise_scale_min: float = 0.5
+@export var moon_terrain_noise_scale_max: float = 2.0

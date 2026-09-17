@@ -25,7 +25,7 @@ mesh = ExtResource("1_60o0r")
 surface_material_override/0 = SubResource("StandardMaterial3D_gd3i8")
 
 [node name="EyeLight" type="OmniLight3D" parent="." unique_id=1921935190]
-light_energy = 3.171
+light_energy = 4.623
 light_indirect_energy = 0.375
 shadow_enabled = true
 shadow_bias = 0.584

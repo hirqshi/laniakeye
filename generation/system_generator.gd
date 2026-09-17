@@ -30,8 +30,11 @@ var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var surface_profile_set: SurfaceProfileSet
 var settings: GenerationSettings
 
-func _init(profile_set: SurfaceProfileSet, generation_settings: GenerationSettings) -> void:
+var moon_surface_profile_set: MoonSurfaceProfileSet
+
+func _init(profile_set: SurfaceProfileSet, moon_profile_set: MoonSurfaceProfileSet, generation_settings: GenerationSettings) -> void:
 	surface_profile_set = profile_set
+	moon_surface_profile_set = moon_profile_set
 	settings = generation_settings
 
 func generate(system_seed: int) -> SystemData:
@@ -96,14 +99,14 @@ func _generate_body_data(unused_allow_moons: bool, is_moon: bool, forced_profile
 
 	var profile: SurfaceProfile = forced_profile if forced_profile else surface_profile_set.get_random_profile(rng)
 	body.surface_profile = profile
-	body.albedo_color = profile.get_random_color(rng) if profile else Color.WHITE
+	body.albedo_color = profile.get_random_albedo_color(rng) if profile else Color.WHITE
 	body.vegetation_density = profile.get_random_vegetation_density(rng) if profile else 0.0
 	body.has_vegetation = body.vegetation_density > 0.0
 
 	if is_moon:
 		body.terrain_noise_scale = rng.randf_range(settings.moon_terrain_noise_scale_min, settings.moon_terrain_noise_scale_max)
 	else:
-		body.terrain_noise_scale = rng.randf_range(settings.terrain_noise_scale_min, settings.terrain_noise_scale_max)
+		body.terrain_noise_scale = profile.get_random_terrain_noise_scale(rng) if profile else rng.randf_range(0.5, 3.0)
 
 	body.terrain_height_m = profile.get_random_terrain_height(rng) if profile else rng.randf_range(2.0, 12.0)
 
@@ -118,15 +121,14 @@ func _generate_moons(planet_radius_m: float, planet_orbit_distance_m: float) -> 
 	var previous_orbit_distance_m: float = 0.0
 	var previous_radius_m: float = 0.0
 
-	# hard ceiling: even a moon sitting exactly between the planet and the
-	# star must not cross into the star's surface + gap.
 	var max_moon_orbit_distance_m: float = max(
 		0.0,
 		planet_orbit_distance_m - settings.star_radius_m - settings.star_surface_gap_m
 	)
 
 	for i in range(moon_count):
-		var moon: PlanetData = _generate_body_data(false, true)
+		var moon_profile: MoonSurfaceProfile = moon_surface_profile_set.get_random_profile(rng) if moon_surface_profile_set else null
+		var moon: PlanetData = _generate_moon_data(moon_profile)
 		moon.radius_m = rng.randf_range(5.0, planet_radius_m * settings.moon_radius_ratio_max)
 		moon.gravity_strength = rng.randf_range(settings.moon_gravity_min, settings.moon_gravity_max)
 		moon.orbit_speed_rad_s = rng.randf_range(settings.moon_orbit_speed_min, settings.moon_orbit_speed_max) * (1.0 if rng.randf() > 0.5 else -1.0)
@@ -150,10 +152,6 @@ func _generate_moons(planet_radius_m: float, planet_orbit_distance_m: float) -> 
 		var candidate_distance: float = base_distance_m + base_radius_m + desired_step
 		var orbit_distance_m: float = max(candidate_distance, min_center_distance)
 
-		# clamp to the star-safety ceiling - if min_center_distance itself
-		# already exceeds the ceiling, this moon (and all further ones,
-		# since distances only grow) simply can't fit safely; stop here
-		# instead of forcing an unsafe orbit.
 		if min_center_distance > max_moon_orbit_distance_m:
 			break
 
@@ -166,3 +164,24 @@ func _generate_moons(planet_radius_m: float, planet_orbit_distance_m: float) -> 
 		previous_radius_m = moon.radius_m
 
 	return moons
+
+## Moons no longer share _generate_body_data with planets - they use their
+## own MoonSurfaceProfile type and a much smaller/simpler field set.
+func _generate_moon_data(profile: MoonSurfaceProfile) -> PlanetData:
+	var body: PlanetData = PlanetData.new()
+	body.planet_seed = rng.randi()
+	body.surface_profile = profile
+
+	body.orbit_angle_rad = rng.randf_range(0.0, TAU)
+	body.axial_tilt_rad = rng.randf_range(-settings.axial_tilt_max_rad, settings.axial_tilt_max_rad)
+
+	if profile:
+		body.albedo_color = profile.get_random_albedo_color(rng)
+		body.terrain_noise_scale = profile.get_random_terrain_noise_scale(rng)
+		body.terrain_height_m = profile.get_random_terrain_height(rng)
+	else:
+		body.albedo_color = Color.WHITE
+		body.terrain_noise_scale = rng.randf_range(1.5, 4.0)
+		body.terrain_height_m = rng.randf_range(1.0, 4.0)
+
+	return body

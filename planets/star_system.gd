@@ -14,6 +14,7 @@ extends Node3D
 @export var planet_scene: PackedScene
 @export var star_eye_scene: PackedScene
 @export var surface_profile_set: SurfaceProfileSet
+@export var moon_surface_profile_set: MoonSurfaceProfileSet
 @export var generation_settings: GenerationSettings
 @export var system_seed: int = 0
 
@@ -27,19 +28,20 @@ func _ready() -> void:
 	_build_system(system_seed)
 
 func _build_system(seed_value: int) -> void:
-	var generator: SystemGenerator = SystemGenerator.new(surface_profile_set, generation_settings)
+	var generator: SystemGenerator = SystemGenerator.new(surface_profile_set, moon_surface_profile_set, generation_settings)
 	system_data = generator.generate(seed_value)
 
 	var star_eye: Node3D = star_eye_scene.instantiate()
 	star_eye_container.add_child(star_eye)
 
 	for planet_data in system_data.planets:
-		_spawn_planet(planet_data)
+		_spawn_planet(planet_data, star_eye)
 
-func _spawn_planet(planet_data: PlanetData) -> void:
+func _spawn_planet(planet_data: PlanetData, star_node: Node3D) -> void:
 	var planet_node: Node3D = planet_scene.instantiate()
 	planets_container.add_child(planet_node)
 	planet_node.global_position = planet_data.get_orbit_position(global_position)
+	planet_node.set("star_node", star_node)
 	planet_node.call("setup", planet_data)
 	planet_node.process_physics_priority = -100
 	planet_nodes.append(planet_node)

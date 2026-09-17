@@ -5,7 +5,12 @@
 [ext_resource type="Texture2D" uid="uid://cgqj1ge2ilxkm" path="res://assets/textures/mud/mud_cracked_dry_03_disp_4k_resized.jpg" id="3_b2hhw"]
 [ext_resource type="Texture2D" uid="uid://bmefpi2q1mp80" path="res://assets/textures/mud/mud_cracked_dry_03_nor_gl_4k_resized.jpg" id="4_rnbuw"]
 [ext_resource type="Texture2D" uid="uid://0csbmlfgx2p4" path="res://assets/textures/mud/mud_cracked_dry_03_rough_4k_resized.jpg" id="5_lpofn"]
+[ext_resource type="Gradient" uid="uid://c267c7hrw7ixw" path="res://assets/textures/ring_gradient.tres" id="5_qhq0g"]
 [ext_resource type="Script" uid="uid://1t0wbuevh1oe" path="res://generation/surface_profile.gd" id="6_7e3bw"]
+
+[sub_resource type="Gradient" id="Gradient_ty0cb"]
+offsets = PackedFloat32Array(0, 0.20806451, 0.5016129, 0.7241936, 1)
+colors = PackedColorArray(1, 1, 1, 1, 0.67, 0.67, 0.67, 1, 0.79, 0.3871, 0.3871, 1, 0.88, 0.7578267, 0.4488, 1, 1, 1, 1, 1)
 
 [resource]
 script = ExtResource("6_7e3bw")
@@ -18,6 +23,13 @@ height_texture = ExtResource("3_b2hhw")
 texture_filter = 3
 normal_strength = 1.0
 triplanar_scale = 0.105
-color_min = Color(0.05, 0.05, 0.05, 1)
-color_max = Color(0.2, 0.2, 0.2, 1)
+albedo_gradient = SubResource("Gradient_ty0cb")
+allow_craters = true
+crater_count_max = 47
+crater_radius_max_ratio = 0.345
+crater_depth_m = 6.445
+crater_rim_height_m = 3.275
+allow_rings = true
+ring_chance = 0.385
+ring_gradient = ExtResource("5_qhq0g")
 metadata/_custom_type_script = "uid://1t0wbuevh1oe"

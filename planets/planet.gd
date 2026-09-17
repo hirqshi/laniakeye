@@ -1,3 +1,4 @@
+@tool
 extends Node3D
 
 ## Represents both planets and moons. All child node references are wired
@@ -10,37 +11,75 @@ extends Node3D
 ## separate simplified collider anymore.
 
 const TRIPLANAR_SHADER: Shader = preload("res://shaders/triplanar.gdshader")
+const RING_SHADER: Shader = preload("res://shaders/ring.gdshader")
+const ATMOSPHERE_SHADER: Shader = preload("res://shaders/atmosphere.gdshader")
+const ATMOSPHERE_SPHERE_RINGS: int = 32
+const ATMOSPHERE_SPHERE_RADIAL_SEGMENTS: int = 32
 
 @export var mesh_instance: MeshInstance3D
+@export var ring_mesh_instance: MeshInstance3D
 @export var collision_shape: CollisionShape3D
 @export var gravity_area: Area3D
 @export var gravity_collision_shape: CollisionShape3D
 @export var moons_container: Node3D
+@export var atmosphere_mesh_instance: MeshInstance3D
 
 @export var moon_scene: PackedScene
 @export var is_moon: bool = false
 @export var generation_settings: GenerationSettings
 
+@export var star_node: Node3D
+
 var planet_data: PlanetData
 var moon_nodes: Array[Node3D] = []
 var mesh_generator: PlanetMeshGenerator = PlanetMeshGenerator.new()
+var ring_mesh_generator: RingMeshGenerator = RingMeshGenerator.new()
+
+
+func _process(_delta: float) -> void:
+	var light_dir: Vector3 = Vector3.RIGHT
+	var has_star: bool = star_node != null and is_instance_valid(star_node)
+	if has_star:
+		light_dir = (star_node.global_position - global_position).normalized()
+
+	if ring_mesh_instance != null and ring_mesh_instance.visible:
+		var ring_material: ShaderMaterial = ring_mesh_instance.material_override as ShaderMaterial
+		if ring_material != null:
+			ring_material.set_shader_parameter("planet_world_position", global_position)
+			ring_material.set_shader_parameter("planet_radius_m", planet_data.radius_m)
+
+	if atmosphere_mesh_instance != null and atmosphere_mesh_instance.visible:
+		var atmosphere_material: ShaderMaterial = atmosphere_mesh_instance.material_override as ShaderMaterial
+		if atmosphere_material != null:
+			atmosphere_material.set_shader_parameter("planet_center_world", global_position)
+			if has_star:
+				atmosphere_material.set_shader_parameter("light_direction", light_dir)
+
+	if mesh_instance != null:
+		var surface_material: ShaderMaterial = mesh_instance.material_override as ShaderMaterial
+		if surface_material != null and has_star:
+			surface_material.set_shader_parameter("atmosphere_light_direction", light_dir)
 
 func setup(data: PlanetData) -> void:
 	planet_data = data
+
+	var noise_type: int = data.surface_profile.get("terrain_noise_type") if data.surface_profile else 0
 
 	var mesh: ArrayMesh = mesh_generator.generate(
 		data.radius_m,
 		data.planet_seed,
 		data.terrain_noise_scale,
-		data.terrain_height_m
+		data.terrain_height_m,
+		noise_type,
+		data.surface_profile
 	)
 	mesh_instance.mesh = mesh
 
 	var material: ShaderMaterial = ShaderMaterial.new()
 	material.shader = TRIPLANAR_SHADER
-	
-	_apply_surface_profile(material, data.surface_profile)
-	
+
+	_apply_surface_profile(material, data.surface_profile, data.albedo_color)
+
 	mesh_instance.material_override = material
 
 	collision_shape.shape = mesh.create_trimesh_shape()
@@ -50,8 +89,115 @@ func setup(data: PlanetData) -> void:
 	gravity_shape.radius = data.radius_m * gravity_multiplier
 	gravity_collision_shape.shape = gravity_shape
 
+	_setup_atmosphere(data)
+	_setup_rings(data)
+
 	if not is_moon:
 		_spawn_moons()
+
+
+func _setup_atmosphere(data: PlanetData) -> void:
+	if atmosphere_mesh_instance == null:
+		return
+
+	var profile: Resource = data.surface_profile
+	if profile == null or not profile.get("has_atmosphere"):
+		atmosphere_mesh_instance.visible = false
+		return
+
+	var sphere_mesh: SphereMesh = atmosphere_mesh_instance.mesh as SphereMesh
+	if sphere_mesh == null:
+		sphere_mesh = SphereMesh.new()
+		sphere_mesh.rings = ATMOSPHERE_SPHERE_RINGS
+		sphere_mesh.radial_segments = ATMOSPHERE_SPHERE_RADIAL_SEGMENTS
+		atmosphere_mesh_instance.mesh = sphere_mesh
+
+	var outer_height_m: float = data.radius_m * float(profile.get("atmosphere_outer_height_ratio"))
+	var inner_height_m: float = data.radius_m * float(profile.get("atmosphere_inner_height_ratio"))
+	var outer_radius_m: float = data.radius_m + outer_height_m
+	sphere_mesh.radius = outer_radius_m
+	sphere_mesh.height = outer_radius_m * 2.0
+
+	var material: ShaderMaterial = atmosphere_mesh_instance.material_override as ShaderMaterial
+	if material == null or material.shader != ATMOSPHERE_SHADER:
+		material = ShaderMaterial.new()
+		material.shader = ATMOSPHERE_SHADER
+		atmosphere_mesh_instance.material_override = material
+
+	material.set_shader_parameter("planet_radius_m", data.radius_m)
+	material.set_shader_parameter("outer_shell_height_m", outer_height_m)
+	material.set_shader_parameter("inner_haze_height_m", inner_height_m)
+	material.set_shader_parameter("rayleigh_coefficient", profile.get("atmosphere_rayleigh_color"))
+	material.set_shader_parameter("mie_coefficient", profile.get("atmosphere_mie_color"))
+	material.set_shader_parameter("intensity", profile.get("atmosphere_intensity"))
+	material.set_shader_parameter("atmosphere_density", profile.get("atmosphere_density"))
+	material.set_shader_parameter("outer_edge_softness", profile.get("atmosphere_outer_edge_softness"))
+	material.set_shader_parameter("inner_edge_softness", profile.get("atmosphere_inner_edge_softness"))
+	material.set_shader_parameter("day_color", profile.get("atmosphere_day_color"))
+	material.set_shader_parameter("sunset_color", profile.get("atmosphere_sunset_color"))
+	material.set_shader_parameter("terminator_width", profile.get("atmosphere_terminator_width"))
+	material.set_shader_parameter("sunset_strength", profile.get("atmosphere_sunset_strength"))
+
+	atmosphere_mesh_instance.visible = true
+
+	var surface_material: ShaderMaterial = mesh_instance.material_override as ShaderMaterial
+	if surface_material != null:
+		surface_material.set_shader_parameter("has_atmosphere_tint", true)
+		surface_material.set_shader_parameter("atmosphere_tint_color", profile.get("atmosphere_rayleigh_color"))
+		surface_material.set_shader_parameter("atmosphere_tint_strength", profile.get("atmosphere_surface_tint_strength"))
+		
+
+func _setup_rings(data: PlanetData) -> void:
+	if ring_mesh_instance == null:
+		return
+
+	var profile: Resource = data.surface_profile
+	if profile == null or not profile.get("allow_rings"):
+		ring_mesh_instance.visible = false
+		return
+
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = data.planet_seed + 555111
+
+	if not profile.call("should_generate_rings", rng):
+		ring_mesh_instance.visible = false
+		return
+
+	var inner_ratio: float = rng.randf_range(profile.get("ring_inner_radius_ratio_min"), profile.get("ring_inner_radius_ratio_max"))
+	var outer_ratio: float = rng.randf_range(profile.get("ring_outer_radius_ratio_min"), profile.get("ring_outer_radius_ratio_max"))
+
+	var inner_radius_m: float = data.radius_m * inner_ratio
+	var outer_radius_m: float = data.radius_m * outer_ratio
+
+	var ring_mesh: ArrayMesh = ring_mesh_generator.generate(inner_radius_m, outer_radius_m)
+	ring_mesh_instance.mesh = ring_mesh
+
+	var material: ShaderMaterial = ring_mesh_instance.material_override as ShaderMaterial
+	if material == null or material.shader != RING_SHADER:
+		material = ShaderMaterial.new()
+		material.shader = RING_SHADER
+		ring_mesh_instance.material_override = material
+
+	material.set_shader_parameter("ring_gradient_texture", _gradient_to_texture(profile.get("ring_gradient")))
+
+	var tilt_max_rad: float = profile.get("ring_tilt_max_rad")
+	ring_mesh_instance.rotation = Vector3(
+		rng.randf_range(-tilt_max_rad, tilt_max_rad),
+		0.0,
+		rng.randf_range(-tilt_max_rad, tilt_max_rad)
+	)
+
+	ring_mesh_instance.visible = true
+
+
+func _gradient_to_texture(gradient: Gradient) -> GradientTexture1D:
+	if gradient == null:
+		return null
+	var texture: GradientTexture1D = GradientTexture1D.new()
+	texture.gradient = gradient
+	texture.width = 256
+	return texture
+
 
 func _spawn_moons() -> void:
 	if planet_data.moons.is_empty() or moon_scene == null:
@@ -66,7 +212,10 @@ func _spawn_moons() -> void:
 		moon_node.call("setup", moon_data)
 		moon_nodes.append(moon_node)
 
+
 func _physics_process(delta: float) -> void:
+	if Engine.is_editor_hint():
+		return
 	if is_moon or planet_data == null:
 		return
 	for i in range(moon_nodes.size()):
@@ -78,15 +227,19 @@ func _physics_process(delta: float) -> void:
 		moon_node.global_position = moon_data.get_orbit_position(global_position)
 		moon_node.rotate_y(moon_data.rotation_speed_rad_s * delta)
 
+
 func get_gravity_strength() -> float:
 	return planet_data.gravity_strength if planet_data else 9.8
+
 
 func get_radius() -> float:
 	return planet_data.radius_m if planet_data else 80.0
 
+
 func get_gravity_zone_radius() -> float:
 	var multiplier: float = generation_settings.gravity_zone_multiplier if generation_settings else 1.6
 	return get_radius() * multiplier
+
 
 func _set_filtered_color_texture(
 	material: ShaderMaterial,
@@ -98,6 +251,7 @@ func _set_filtered_color_texture(
 	material.set_shader_parameter(prefix + "_nearest", texture)
 	material.set_shader_parameter(prefix + "_nearest_mipmap", texture)
 
+
 func _set_filtered_data_texture(
 	material: ShaderMaterial,
 	prefix: String,
@@ -108,9 +262,11 @@ func _set_filtered_data_texture(
 	material.set_shader_parameter(prefix + "_nearest", texture)
 	material.set_shader_parameter(prefix + "_nearest_mipmap", texture)
 
+
 func _apply_surface_profile(
 	material: ShaderMaterial,
-	profile: SurfaceProfile
+	profile: Resource,
+	albedo_color: Color
 ) -> void:
 	if profile == null:
 		return
@@ -125,7 +281,7 @@ func _apply_surface_profile(
 	)
 	material.set_shader_parameter(
 		"albedo_tint",
-		profile.albedo_tint
+		albedo_color
 	)
 
 	material.set_shader_parameter(
@@ -234,7 +390,7 @@ func _apply_surface_profile(
 		"triplanar_offset",
 		profile.triplanar_offset
 	)
-	
+
 	material.set_shader_parameter(
 		"texture_filter_mode",
 		int(profile.texture_filter)
@@ -253,6 +409,17 @@ func _apply_surface_profile(
 		"normal_strength",
 		profile.normal_strength
 	)
+
+	# atmosphere surface tint - only turned on here if the profile
+	# actually has an atmosphere; _setup_atmosphere() re-drives these
+	# same params (it runs after this function during setup()), this
+	# early pass just makes sure has_atmosphere_tint defaults correctly
+	# even if _setup_atmosphere bails early for any reason.
+	material.set_shader_parameter(
+		"has_atmosphere_tint",
+		profile.get("has_atmosphere") if profile.get("has_atmosphere") != null else false
+	)
+
 	_set_filtered_color_texture(
 		material,
 		"albedo",
@@ -283,13 +450,16 @@ func _apply_surface_profile(
 		profile.emission_texture
 	)
 
+
 func get_landscape_type() -> String:
 	if planet_data == null or planet_data.surface_profile == null:
 		return "unknown"
 	return planet_data.surface_profile.profile_name
 
+
 func get_moon_nodes() -> Array[Node3D]:
 	return moon_nodes
+
 
 func get_display_name() -> String:
 	return planet_data.display_name if planet_data else "???"

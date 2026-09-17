@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="MoonSurfaceProfile" format=3 uid="uid://cy6c5y65vmu1k"]
+
+[ext_resource type="Script" uid="uid://mxq6mqikaeep" path="res://generation/moon_surface_profile.gd" id="1_prkdf"]
+[ext_resource type="Texture2D" uid="uid://ciew0e6xaws55" path="res://assets/textures/rock/rock_boulder_dry_diff_4k_resized.jpg" id="1_wa4ne"]
+[ext_resource type="Texture2D" uid="uid://bgo4q64gdx3v8" path="res://assets/textures/rock/rock_boulder_dry_ao_4k_resized.jpg" id="2_j4u3h"]
+[ext_resource type="Texture2D" uid="uid://b3vqp0q7ae71v" path="res://assets/textures/rock/rock_boulder_dry_nor_gl_4k_resized.jpg" id="3_6jka0"]
+[ext_resource type="Texture2D" uid="uid://nsd2v7mimn22" path="res://assets/textures/rock/rock_boulder_dry_rough_4k_resized.jpg" id="4_fd33y"]
+
+[sub_resource type="Gradient" id="Gradient_mf7q4"]
+offsets = PackedFloat32Array(0, 0.031879194, 0.38758388, 0.7533557, 1)
+colors = PackedColorArray(0, 0, 0, 1, 0.48, 0.48, 0.48, 1, 0.3842282, 0.3842282, 0.3842282, 1, 0.64008904, 0.64008904, 0.64008904, 1, 1, 1, 1, 1)
+
+[resource]
+script = ExtResource("1_prkdf")
+profile_name = "barren"
+albedo_texture = ExtResource("1_wa4ne")
+normal_texture = ExtResource("3_6jka0")
+roughness_texture = ExtResource("4_fd33y")
+ao_texture = ExtResource("2_j4u3h")
+texture_filter = 2
+triplanar_scale = 0.005
+albedo_gradient = SubResource("Gradient_mf7q4")
+terrain_noise_scale_min = 0.325
+terrain_noise_scale_max = 0.83
+terrain_height_min_m = 7.385
+terrain_height_max_m = 17.445
+crater_radius_max_ratio = 0.52
+crater_depth_m = 7.275
+crater_rim_height_m = 2.555
+metadata/_custom_type_script = "uid://mxq6mqikaeep"

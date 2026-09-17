@@ -1,3 +1,4 @@
+@tool
 class_name SurfaceProfile
 extends Resource
 
@@ -11,6 +12,14 @@ enum TextureFilter {
 enum TextureRepeat {
 	REPEAT,
 	CLAMP,
+}
+
+## Determines how PlanetMeshGenerator shapes terrain height for this
+## profile. SIMPLEX gives smooth rolling hills, RIDGED gives sharp jagged
+## mountain-ridge-like terrain (abs(noise) inverted, classic terrain trick).
+enum TerrainNoiseType {
+	SIMPLEX,
+	RIDGED,
 }
 
 @export_category("identity")
@@ -30,7 +39,6 @@ enum TextureRepeat {
 @export var texture_repeat: TextureRepeat = TextureRepeat.REPEAT
 
 @export_category("pbr values")
-@export var albedo_tint: Color = Color.WHITE
 @export var roughness_value: float = 0.9
 @export var roughness_multiplier: float = 1.0
 @export var metallic_value: float = 0.0
@@ -49,34 +57,74 @@ enum TextureRepeat {
 @export var height_strength: float = 0.0
 @export var use_height_parallax: bool = false
 
-@export_category("procedural terrain")
-@export var color_min: Color = Color.WHITE
-@export var color_max: Color = Color.WHITE
+@export_category("procedural color")
+@export var albedo_gradient: Gradient
+
+@export_category("procedural vegetation")
 @export var allow_vegetation: bool = false
 @export var vegetation_density_min: float = 0.1
 @export var vegetation_density_max: float = 0.6
+
+@export_category("procedural terrain")
+@export var terrain_noise_type: TerrainNoiseType = TerrainNoiseType.SIMPLEX
+@export var terrain_noise_scale_min: float = 0.5
+@export var terrain_noise_scale_max: float = 3.0
 @export var terrain_height_min_m: float = 2.0
 @export var terrain_height_max_m: float = 10.0
 
-func get_random_color(rng: RandomNumberGenerator) -> Color:
-	return Color(
-		rng.randf_range(color_min.r, color_max.r),
-		rng.randf_range(color_min.g, color_max.g),
-		rng.randf_range(color_min.b, color_max.b),
-		1.0
-	)
+@export_category("procedural craters")
+@export var allow_craters: bool = false
+@export var crater_count_min: int = 3
+@export var crater_count_max: int = 12
+@export var crater_radius_min_ratio: float = 0.05
+@export var crater_radius_max_ratio: float = 0.2
+@export var crater_depth_m: float = 3.0
+@export var crater_rim_height_m: float = 1.2
+
+@export_category("procedural rings")
+@export var allow_rings: bool = false
+@export var ring_chance: float = 0.5
+@export var ring_inner_radius_ratio_min: float = 1.5
+@export var ring_inner_radius_ratio_max: float = 2.0
+@export var ring_outer_radius_ratio_min: float = 2.5
+@export var ring_outer_radius_ratio_max: float = 4.0
+@export var ring_tilt_max_rad: float = 0.3
+@export var ring_gradient: Gradient
+
+@export_category("procedural atmosphere")
+@export var has_atmosphere: bool = false
+@export var atmosphere_outer_height_ratio: float = 0.08
+@export var atmosphere_inner_height_ratio: float = 0.02
+@export var atmosphere_rayleigh_color: Color = Color(0.29, 0.53, 1.0)
+@export var atmosphere_mie_color: Color = Color(0.6, 0.6, 0.6)
+@export var atmosphere_density: float = 1.0
+@export var atmosphere_intensity: float = 6.0
+@export var atmosphere_outer_edge_softness: float = 0.4
+@export var atmosphere_inner_edge_softness: float = 0.3
+@export var atmosphere_surface_tint_strength: float = 0.3
+@export var atmosphere_day_color: Color = Color(0.4, 0.7, 1.0)
+@export var atmosphere_sunset_color: Color = Color(1.0, 0.5, 0.2)
+@export var atmosphere_terminator_width: float = 0.3
+@export var atmosphere_sunset_strength: float = 1.5
+
+func should_generate_rings(rng: RandomNumberGenerator) -> bool:
+	return allow_rings and rng.randf() <= ring_chance
+	
+func get_random_crater_count(rng: RandomNumberGenerator) -> int:
+	return rng.randi_range(crater_count_min, crater_count_max)
+	
+func get_random_albedo_color(rng: RandomNumberGenerator) -> Color:
+	if albedo_gradient == null:
+		return Color.WHITE
+	return albedo_gradient.sample(rng.randf())
 
 func get_random_vegetation_density(rng: RandomNumberGenerator) -> float:
 	if not allow_vegetation:
 		return 0.0
-
-	return rng.randf_range(
-		vegetation_density_min,
-		vegetation_density_max
-	)
+	return rng.randf_range(vegetation_density_min, vegetation_density_max)
 
 func get_random_terrain_height(rng: RandomNumberGenerator) -> float:
-	return rng.randf_range(
-		terrain_height_min_m,
-		terrain_height_max_m
-	)
+	return rng.randf_range(terrain_height_min_m, terrain_height_max_m)
+
+func get_random_terrain_noise_scale(rng: RandomNumberGenerator) -> float:
+	return rng.randf_range(terrain_noise_scale_min, terrain_noise_scale_max)

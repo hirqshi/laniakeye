@@ -7,6 +7,10 @@
 [ext_resource type="Texture2D" uid="uid://w660s3mu1n65" path="res://assets/textures/grass/coast_sand_rocks_02_rough_4k_resized.jpg" id="5_cg5sw"]
 [ext_resource type="Script" uid="uid://1t0wbuevh1oe" path="res://generation/surface_profile.gd" id="6_jnwxl"]
 
+[sub_resource type="Gradient" id="Gradient_e6m2j"]
+offsets = PackedFloat32Array(0, 0.11129032, 0.29193547, 0.47903225, 0.67258066, 0.89193547)
+colors = PackedColorArray(0.5240726, 1.7686467, 0.690016, 1, 0.80569184, 1.2061527, 0.40523106, 1, 0.2486325, 0.5013946, 0.28233415, 1, 0.15840003, 0.72, 0.56088006, 1, 1.1038921, 0.81762546, 0.3231648, 1, 0.74261206, 0.74261206, 0.74261206, 1)
+
 [resource]
 script = ExtResource("6_jnwxl")
 profile_name = "forest"
@@ -18,6 +22,19 @@ height_texture = ExtResource("3_raji8")
 texture_filter = 3
 normal_strength = 1.0
 triplanar_scale = 0.105
-color_min = Color(0.05, 0.05, 0.05, 1)
-color_max = Color(0.2, 0.2, 0.2, 1)
+albedo_gradient = SubResource("Gradient_e6m2j")
+allow_rings = null
+ring_chance = null
+ring_inner_radius_ratio_min = null
+ring_inner_radius_ratio_max = null
+ring_outer_radius_ratio_min = null
+ring_outer_radius_ratio_max = null
+ring_tilt_max_rad = null
+has_atmosphere = true
+atmosphere_outer_height_ratio = 0.39
+atmosphere_mie_color = Color(0.15602916, 0.16553117, 0.178834, 1)
+atmosphere_intensity = 18.965
+atmosphere_surface_tint_strength = 0.065
+atmosphere_terminator_width = 1.0
+atmosphere_sunset_strength = 2.515
 metadata/_custom_type_script = "uid://1t0wbuevh1oe"
