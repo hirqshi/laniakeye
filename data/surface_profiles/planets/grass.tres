@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://bbrcy6o33e18y" path="res://assets/textures/grass/coast_sand_rocks_02_nor_gl_4k_resized.jpg" id="4_ynfew"]
 [ext_resource type="Texture2D" uid="uid://w660s3mu1n65" path="res://assets/textures/grass/coast_sand_rocks_02_rough_4k_resized.jpg" id="5_cg5sw"]
 [ext_resource type="Script" uid="uid://1t0wbuevh1oe" path="res://generation/surface_profile.gd" id="6_jnwxl"]
+[ext_resource type="Resource" uid="uid://b200qfg6xj084" path="res://vegetation/profiles/grassland_profile.tres" id="7_c0scx"]
 
 [sub_resource type="Gradient" id="Gradient_e6m2j"]
 offsets = PackedFloat32Array(0, 0.11129032, 0.29193547, 0.47903225, 0.67258066, 0.89193547)
@@ -17,7 +18,7 @@ colors = PackedColorArray(0.0874, 0.0874, 0.23, 1, 0.6, 0.9466667, 1, 1)
 
 [resource]
 script = ExtResource("6_jnwxl")
-profile_name = "forest"
+profile_name = "plains"
 albedo_texture = ExtResource("1_ty0cb")
 normal_texture = ExtResource("4_ynfew")
 roughness_texture = ExtResource("5_cg5sw")
@@ -41,4 +42,5 @@ ocean_basin_depth_m = 32.365
 ocean_basin_edge_softness = 0.075
 water_gradient = SubResource("Gradient_0k1rn")
 depth_fade_distance_ratio = 0.035
+vegetation_profile = ExtResource("7_c0scx")
 metadata/_custom_type_script = "uid://1t0wbuevh1oe"

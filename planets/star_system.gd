@@ -40,8 +40,10 @@ func _build_system(seed_value: int) -> void:
 func _spawn_planet(planet_data: PlanetData, star_node: Node3D) -> void:
 	var planet_node: Node3D = planet_scene.instantiate()
 	planets_container.add_child(planet_node)
+
 	planet_node.global_position = planet_data.get_orbit_position(global_position)
 	planet_node.set("star_node", star_node)
+
 	planet_node.call("setup", planet_data)
 	planet_node.process_physics_priority = -100
 	planet_nodes.append(planet_node)

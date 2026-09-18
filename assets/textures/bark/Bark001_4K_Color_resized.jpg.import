@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cio4gcwboljy4"
-path.s3tc="res://.godot/imported/leaves.png-dc5e7d89c7c612161d39a0b5bf60a1ff.s3tc.ctex"
+uid="uid://3jidmaucfo50"
+path.s3tc="res://.godot/imported/Bark001_4K_Color_resized.jpg-3eb88cecd291b3e54e90062934a9e36c.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://assets/textures/leaves.png"
-dest_files=["res://.godot/imported/leaves.png-dc5e7d89c7c612161d39a0b5bf60a1ff.s3tc.ctex"]
+source_file="res://assets/textures/bark/Bark001_4K_Color_resized.jpg"
+dest_files=["res://.godot/imported/Bark001_4K_Color_resized.jpg-3eb88cecd291b3e54e90062934a9e36c.s3tc.ctex"]
 
 [params]
 

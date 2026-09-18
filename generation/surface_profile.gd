@@ -129,6 +129,8 @@ enum TerrainNoiseType {
 @export var underwater_speed_multiplier: float = 0.6
 @export var depth_fade_distance_ratio: float = 0.4
 
+@export_category("Vegetation")
+@export var vegetation_profile: VegetationProfile
 
 func should_generate_rings(rng: RandomNumberGenerator) -> bool:
 	return allow_rings and rng.randf() <= ring_chance

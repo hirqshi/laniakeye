@@ -1,0 +1,48 @@
+[gd_resource type="Resource" script_class="TreeProfile" format=3 uid="uid://vrwxglvoyyng"]
+
+[ext_resource type="Script" uid="uid://cw6eycdgv742k" path="res://vegetation/tree_profile.gd" id="1_6vs76"]
+[ext_resource type="Texture2D" uid="uid://3jidmaucfo50" path="res://assets/textures/bark/Bark001_4K_Color_resized.jpg" id="1_kor1x"]
+[ext_resource type="Texture2D" uid="uid://bcopaubp4c54s" path="res://assets/textures/bark/Bark001_4K_NormalGL_resized.jpg" id="2_76y1l"]
+[ext_resource type="Texture2D" uid="uid://d08x8t5whl164" path="res://assets/textures/bark/Bark001_4K_Roughness_resized.jpg" id="3_7702g"]
+[ext_resource type="Texture2D" uid="uid://cio4gcwboljy4" path="res://assets/textures/leaves.png" id="4_kmth0"]
+
+[sub_resource type="Gradient" id="Gradient_5a2t0"]
+colors = PackedColorArray(0.14, 0.0616, 0.0616, 1, 0.29, 0.27173, 0.21169999, 1)
+
+[sub_resource type="Gradient" id="Gradient_8g0fa"]
+offsets = PackedFloat32Array(0, 0.52526593, 0.9986702)
+colors = PackedColorArray(0.0432, 0.12, 0.09824, 1, 0.19351667, 0.34, 0.1802, 1, 0.43113333, 0.58, 0.26099998, 1)
+
+[resource]
+script = ExtResource("1_6vs76")
+preview_seed = 3386901223
+bark_albedo_texture = ExtResource("1_kor1x")
+bark_normal_texture = ExtResource("2_76y1l")
+bark_roughness_texture = ExtResource("3_7702g")
+bark_uv_scale = 2.8699999999999997
+leaf_albedo_texture = ExtResource("4_kmth0")
+leaf_uv_scale = 0.01
+min_height_m = 8.1
+max_height_m = 14.0
+trunk_taper = 0.8
+trunk_bend_amount_m = 1.44
+trunk_twist = 1.8
+bark_color_gradient = SubResource("Gradient_5a2t0")
+max_branch_length_m = 7.4
+branch_start_height_ratio = 0.31
+branch_vertical_bias = 0.56
+branch_curvature = 0.26
+branch_twist = 0.29
+branch_radius_ratio = 0.43
+crown_shape = 5
+crown_start_height_ratio = 0.56
+crown_height_ratio = 0.55
+crown_asymmetry = 0.07
+hanging_amount = 0.18
+wind_shear_amount = 0.17
+leaf_cluster_count = 15
+min_leaf_cluster_radius_m = 1.2
+max_leaf_cluster_radius_m = 2.51
+leaf_cluster_subdivisions = 0
+leaf_color_gradient = SubResource("Gradient_8g0fa")
+metadata/_custom_type_script = "uid://cw6eycdgv742k"

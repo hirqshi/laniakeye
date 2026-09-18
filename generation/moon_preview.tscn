@@ -16,6 +16,6 @@ generation_settings = SubResource("Resource_j7xk3")
 moon_surface_profile = ExtResource("4_qyb1k")
 radius_m = 74.925
 gravity_strength = 9.8
-planet_seed = 3702009292
+planet_seed = 3408542190
 terrain_noise_scale_override = 1.645
 terrain_height_override_m = 20.99

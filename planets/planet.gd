@@ -32,6 +32,8 @@ const ATMOSPHERE_SPHERE_RADIAL_SEGMENTS: int = 32
 
 @export var star_node: Node3D
 
+@export var vegetation_spawner: PlanetVegetationSpawner
+
 var planet_data: PlanetData
 var moon_nodes: Array[Node3D] = []
 var mesh_generator: PlanetMeshGenerator = PlanetMeshGenerator.new()
@@ -43,6 +45,9 @@ var has_ocean: bool = false
 
 
 func _process(_delta: float) -> void:
+	if planet_data == null:
+		return
+
 	var light_dir: Vector3 = Vector3.RIGHT
 	var has_star: bool = star_node != null and is_instance_valid(star_node)
 	if has_star:
@@ -98,10 +103,10 @@ func setup(data: PlanetData) -> void:
 	_setup_atmosphere(data)
 	_setup_rings(data)
 	_setup_ocean(data)
-
+	_setup_vegetation(data)
+	
 	if not is_moon:
 		_spawn_moons()
-
 
 func _setup_atmosphere(data: PlanetData) -> void:
 	if atmosphere_mesh_instance == null:
@@ -200,6 +205,11 @@ func _setup_ocean(data: PlanetData) -> void:
 	has_ocean = false
 	sea_level_radius_m = 0.0
 
+	if is_moon:
+		if water_mesh_instance != null:
+			water_mesh_instance.visible = false
+		return
+
 	if water_mesh_instance == null:
 		return
 
@@ -229,6 +239,29 @@ func _setup_ocean(data: PlanetData) -> void:
 
 	has_ocean = true
 
+func _setup_vegetation(data: PlanetData) -> void:
+	if is_moon:
+		return
+
+	if vegetation_spawner == null:
+		push_warning("Planet: 'Vegetation Spawner' export is not assigned")
+		return
+
+	vegetation_spawner.setup(data)
+
+func regenerate_vegetation_for_preview() -> void:
+	if is_moon:
+		return
+
+	if vegetation_spawner == null:
+		push_warning("Planet: 'Vegetation Spawner' export is not assigned")
+		return
+
+	if planet_data == null:
+		push_warning("Planet: cannot regenerate preview vegetation before setup(data)")
+		return
+
+	vegetation_spawner.regenerate_for_preview(planet_data)
 
 func _gradient_to_texture(gradient: Gradient) -> GradientTexture1D:
 	if gradient == null:

@@ -7,8 +7,10 @@
 [ext_resource type="Resource" uid="uid://ca37y8s01x74p" path="res://data/surface_profiles/planets/desert.tres" id="4_vsa1o"]
 [ext_resource type="Resource" uid="uid://cxlg731uyudsj" path="res://data/surface_profiles/planets/wasteland.tres" id="5_g78sh"]
 [ext_resource type="Resource" uid="uid://c145uc03urm2i" path="res://data/surface_profiles/planets/ocean.tres" id="6_vsa1o"]
+[ext_resource type="Resource" uid="uid://bu0le1d85dmqu" path="res://data/surface_profiles/planets/tropical.tres" id="7_g78sh"]
+[ext_resource type="Resource" uid="uid://dv61qm7mb0i2l" path="res://data/surface_profiles/planets/alien.tres" id="8_hy63r"]
 
 [resource]
 script = ExtResource("2_yknc1")
-profiles = Array[ExtResource("1_kcblx")]([ExtResource("2_d55q8"), ExtResource("3_pg1gt"), ExtResource("4_vsa1o"), ExtResource("5_g78sh"), ExtResource("6_vsa1o")])
+profiles = Array[ExtResource("1_kcblx")]([ExtResource("2_d55q8"), ExtResource("3_pg1gt"), ExtResource("4_vsa1o"), ExtResource("5_g78sh"), ExtResource("6_vsa1o"), ExtResource("7_g78sh"), ExtResource("8_hy63r")])
 metadata/_custom_type_script = "uid://cj2w8n4sxvjw4"

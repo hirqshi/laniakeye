@@ -1,0 +1,53 @@
+[gd_resource type="Resource" script_class="TreeProfile" format=3 uid="uid://cpdkv01gi4wat"]
+
+[ext_resource type="Texture2D" uid="uid://3jidmaucfo50" path="res://assets/textures/bark/Bark001_4K_Color_resized.jpg" id="1_s46xm"]
+[ext_resource type="Texture2D" uid="uid://bcopaubp4c54s" path="res://assets/textures/bark/Bark001_4K_NormalGL_resized.jpg" id="2_q2r1c"]
+[ext_resource type="Texture2D" uid="uid://d08x8t5whl164" path="res://assets/textures/bark/Bark001_4K_Roughness_resized.jpg" id="3_46vel"]
+[ext_resource type="Texture2D" uid="uid://cio4gcwboljy4" path="res://assets/textures/leaves.png" id="4_lvxys"]
+[ext_resource type="Script" uid="uid://cw6eycdgv742k" path="res://vegetation/tree_profile.gd" id="5_0cror"]
+
+[sub_resource type="Gradient" id="Gradient_5a2t0"]
+colors = PackedColorArray(0.10752, 0.14, 0.099400006, 1, 0.29, 0.28255665, 0.2581, 1)
+
+[sub_resource type="Gradient" id="Gradient_8g0fa"]
+offsets = PackedFloat32Array(0, 0.52526593, 0.9986702)
+colors = PackedColorArray(0.025200002, 0.05282666, 0.07, 1, 0.0689, 0.13, 0.09334, 1, 0.117, 0.18, 0.16635, 1)
+
+[resource]
+script = ExtResource("5_0cror")
+preview_seed = 3553650605
+bark_albedo_texture = ExtResource("1_s46xm")
+bark_normal_texture = ExtResource("2_q2r1c")
+bark_roughness_texture = ExtResource("3_46vel")
+bark_uv_scale = 2.8699999999999997
+leaf_albedo_texture = ExtResource("4_lvxys")
+leaf_uv_scale = 0.01
+min_height_m = 33.9
+max_height_m = 40.0
+min_trunk_radius_m = 1.29
+max_trunk_radius_m = 2.3299999999999996
+trunk_taper = 0.36
+trunk_bend_amount_m = 1.14
+trunk_twist = 1.8
+bark_color_gradient = SubResource("Gradient_5a2t0")
+min_branch_count = 26
+max_branch_count = 40
+min_branch_length_m = 3.4
+max_branch_length_m = 14.7
+branch_start_height_ratio = 0.55
+branch_vertical_bias = 1.0
+branch_curvature = 0.87
+branch_twist = 0.7
+branch_radius_ratio = 0.5700000000000001
+crown_shape = 7
+crown_start_height_ratio = 0.89
+crown_radius_ratio = 0.37
+crown_height_ratio = 0.65
+crown_asymmetry = 0.23
+wind_shear_amount = 0.07
+leaf_cluster_count = 15
+min_leaf_cluster_radius_m = 4.819999999999999
+max_leaf_cluster_radius_m = 6.0
+leaf_cluster_subdivisions = 0
+leaf_color_gradient = SubResource("Gradient_8g0fa")
+metadata/_custom_type_script = "uid://cw6eycdgv742k"

@@ -102,6 +102,9 @@ func rebuild() -> void:
 	planet_node.set("generation_settings", generation_settings)
 	planet_node.call("setup", data)
 
+	if planet_node.has_method("regenerate_vegetation_for_preview"):
+		planet_node.call("regenerate_vegetation_for_preview")
+
 	_current_planet_node = planet_node
 
 func _build_preview_data() -> PlanetData:

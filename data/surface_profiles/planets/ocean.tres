@@ -5,10 +5,23 @@
 [ext_resource type="Texture2D" uid="uid://b3vqp0q7ae71v" path="res://assets/textures/rock/rock_boulder_dry_nor_gl_4k_resized.jpg" id="3_ihvlm"]
 [ext_resource type="Texture2D" uid="uid://nsd2v7mimn22" path="res://assets/textures/rock/rock_boulder_dry_rough_4k_resized.jpg" id="4_jn8q8"]
 [ext_resource type="Script" uid="uid://1t0wbuevh1oe" path="res://generation/surface_profile.gd" id="6_bjqux"]
+[ext_resource type="Script" uid="uid://kcsw7i33p7vt" path="res://vegetation/vegetation_profile.gd" id="6_jn8q8"]
+[ext_resource type="Script" uid="uid://da8uuodwnok4" path="res://vegetation/vegetation_layer_profile.gd" id="7_qdt5w"]
+[ext_resource type="Resource" uid="uid://j56a6bcxamaf" path="res://data/vegetation_profiles/oceanic_tree.tres" id="8_j54xp"]
 
 [sub_resource type="Gradient" id="Gradient_e6m2j"]
 offsets = PackedFloat32Array(0, 0.11129032, 0.29193547, 0.47335026, 0.67258066, 0.89193547)
 colors = PackedColorArray(0.27377495, 0.44276044, 0.48950115, 1, 0.201534, 0.3454608, 0.2830925, 1, 0.5, 0.5, 0.5, 1, 0.284, 0.4, 0.36713335, 1, 0.25585002, 0.28645903, 0.42280835, 1, 0.48, 0.48, 0.48, 1)
+
+[sub_resource type="Resource" id="Resource_x0y7j"]
+script = ExtResource("7_qdt5w")
+tree_profile = ExtResource("8_j54xp")
+metadata/_custom_type_script = "uid://da8uuodwnok4"
+
+[sub_resource type="Resource" id="Resource_aptve"]
+script = ExtResource("6_jn8q8")
+tree_layers = Array[ExtResource("7_qdt5w")]([SubResource("Resource_x0y7j")])
+metadata/_custom_type_script = "uid://kcsw7i33p7vt"
 
 [sub_resource type="Gradient" id="Gradient_0k1rn"]
 offsets = PackedFloat32Array(0, 0.99667406)
@@ -40,4 +53,5 @@ ocean_basin_depth_m = 50.73
 ocean_basin_edge_softness = 0.245
 water_gradient = SubResource("Gradient_0k1rn")
 depth_fade_distance_ratio = 0.035
+vegetation_profile = SubResource("Resource_aptve")
 metadata/_custom_type_script = "uid://1t0wbuevh1oe"

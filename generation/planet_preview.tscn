@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://c0cnybm3mlyll" path="res://generation/planet_preview.gd" id="1_1mqh4"]
 [ext_resource type="PackedScene" uid="uid://cjxyp1mirj6jw" path="res://scenes/planet.tscn" id="2_5lcxi"]
 [ext_resource type="Script" uid="uid://bh2ulkao6w2ql" path="res://generation/generation_settings.gd" id="3_i1a5a"]
-[ext_resource type="Resource" uid="uid://c145uc03urm2i" path="res://data/surface_profiles/planets/ocean.tres" id="4_5lcxi"]
+[ext_resource type="Resource" uid="uid://dv61qm7mb0i2l" path="res://data/surface_profiles/planets/alien.tres" id="4_5lcxi"]
 
 [sub_resource type="Resource" id="Resource_j7xk3"]
 script = ExtResource("3_i1a5a")
@@ -15,6 +15,6 @@ planet_scene = ExtResource("2_5lcxi")
 generation_settings = SubResource("Resource_j7xk3")
 surface_profile = ExtResource("4_5lcxi")
 radius_m = 120.0
-planet_seed = 2932917597
+planet_seed = 4209151799
 terrain_noise_scale_override = 1.645
 terrain_height_override_m = 20.99

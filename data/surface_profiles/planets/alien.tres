@@ -1,0 +1,64 @@
+[gd_resource type="Resource" script_class="SurfaceProfile" format=3 uid="uid://dv61qm7mb0i2l"]
+
+[ext_resource type="Texture2D" uid="uid://ciew0e6xaws55" path="res://assets/textures/rock/rock_boulder_dry_diff_4k_resized.jpg" id="1_16wa7"]
+[ext_resource type="Texture2D" uid="uid://bgo4q64gdx3v8" path="res://assets/textures/rock/rock_boulder_dry_ao_4k_resized.jpg" id="2_53wvp"]
+[ext_resource type="Texture2D" uid="uid://b2x0y4ngqeuk1" path="res://assets/textures/rock/rock_boulder_dry_disp_4k_resized.jpg" id="3_fh36n"]
+[ext_resource type="Texture2D" uid="uid://b3vqp0q7ae71v" path="res://assets/textures/rock/rock_boulder_dry_nor_gl_4k_resized.jpg" id="4_cvlqa"]
+[ext_resource type="Texture2D" uid="uid://nsd2v7mimn22" path="res://assets/textures/rock/rock_boulder_dry_rough_4k_resized.jpg" id="5_nkeid"]
+[ext_resource type="Script" uid="uid://1t0wbuevh1oe" path="res://generation/surface_profile.gd" id="6_6b30k"]
+[ext_resource type="Script" uid="uid://kcsw7i33p7vt" path="res://vegetation/vegetation_profile.gd" id="7_cvlqa"]
+[ext_resource type="Script" uid="uid://da8uuodwnok4" path="res://vegetation/vegetation_layer_profile.gd" id="8_nkeid"]
+[ext_resource type="Resource" uid="uid://c3ea2tvhfg5px" path="res://data/vegetation_profiles/alien_tree.tres" id="9_6b30k"]
+[ext_resource type="Resource" uid="uid://dbcenvkb6tuug" path="res://data/vegetation_profiles/alien_tree2.tres" id="10_nkeid"]
+
+[sub_resource type="Gradient" id="Gradient_auhju"]
+offsets = PackedFloat32Array(0.037096772, 0.18870968, 0.3532258, 0.48225805, 0.62419355, 0.7629032, 0.93064517)
+colors = PackedColorArray(0.34, 0.24140002, 0.30056006, 1, 0.324625, 0.2485, 0.35, 1, 0.43800002, 0.4434, 0.6, 1, 0.31, 0.1488, 0.21596664, 1, 0.6, 0.25200003, 0.39699996, 1, 1, 0.32, 0.33133316, 1, 0.55, 0.165, 0.165, 1)
+
+[sub_resource type="Resource" id="Resource_cp7bc"]
+script = ExtResource("8_nkeid")
+tree_profile = ExtResource("9_6b30k")
+biome_noise_threshold = 0.53
+metadata/_custom_type_script = "uid://da8uuodwnok4"
+
+[sub_resource type="Resource" id="Resource_77suo"]
+script = ExtResource("8_nkeid")
+tree_profile = ExtResource("10_nkeid")
+density = 0.302
+biome_noise_type = 0
+biome_noise_threshold = 0.52
+metadata/_custom_type_script = "uid://da8uuodwnok4"
+
+[sub_resource type="Resource" id="Resource_w5vi0"]
+script = ExtResource("7_cvlqa")
+tree_layers = Array[ExtResource("8_nkeid")]([SubResource("Resource_cp7bc"), SubResource("Resource_77suo")])
+metadata/_custom_type_script = "uid://kcsw7i33p7vt"
+
+[resource]
+script = ExtResource("6_6b30k")
+profile_name = "unindentified"
+albedo_texture = ExtResource("1_16wa7")
+normal_texture = ExtResource("4_cvlqa")
+roughness_texture = ExtResource("5_nkeid")
+ao_texture = ExtResource("2_53wvp")
+height_texture = ExtResource("3_fh36n")
+texture_filter = 3
+normal_strength = 1.0
+triplanar_scale = 0.035
+albedo_gradient = SubResource("Gradient_auhju")
+terrain_height_min_m = 4.675
+terrain_height_max_m = 9.965
+allow_craters = true
+crater_count_min = 40
+crater_count_max = 54
+crater_depth_m = 10.44
+crater_rim_height_m = 5.02
+has_ocean = true
+sea_level_radius_ratio = 0.86
+water_sky_color = Color(0.9, 0.504, 0.5105999, 1)
+water_surface_color = Color(0.35, 0.048999995, 0.13930006, 1)
+water_high_color = Color(0.6, 0.198, 0.49280015, 1)
+water_low_color = Color(0.2, 0.020000005, 0.08299998, 1)
+water_transmit_color = Color(0.31500003, 0.1, 0.4, 1)
+vegetation_profile = SubResource("Resource_w5vi0")
+metadata/_custom_type_script = "uid://1t0wbuevh1oe"

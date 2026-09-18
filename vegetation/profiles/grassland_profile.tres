@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="VegetationProfile" format=3 uid="uid://b200qfg6xj084"]
+
+[ext_resource type="Script" uid="uid://kcsw7i33p7vt" path="res://vegetation/vegetation_profile.gd" id="1_d3rgv"]
+[ext_resource type="Script" uid="uid://da8uuodwnok4" path="res://vegetation/vegetation_layer_profile.gd" id="2_y1t7c"]
+[ext_resource type="Resource" uid="uid://vrwxglvoyyng" path="res://data/vegetation_profiles/template_tree.tres" id="3_s1eap"]
+
+[sub_resource type="Resource" id="Resource_4ekj3"]
+script = ExtResource("2_y1t7c")
+tree_profile = ExtResource("3_s1eap")
+metadata/_custom_type_script = "uid://da8uuodwnok4"
+
+[resource]
+script = ExtResource("1_d3rgv")
+tree_layers = Array[ExtResource("2_y1t7c")]([SubResource("Resource_4ekj3")])
+metadata/_custom_type_script = "uid://kcsw7i33p7vt"
