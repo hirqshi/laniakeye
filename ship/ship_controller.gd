@@ -30,6 +30,10 @@ extends CharacterBody3D
 ## it (base_basis * lag_basis) instead of replacing it outright - the
 ## inspector-set orientation is now preserved and the lag is purely
 ## additive on top of it.
+##
+## REFACTOR: gravity falloff curve now delegates to GravityBodyMath
+## (generation/gravity_body_math.gd) - player_controller.gd used an
+## identical copy of this curve, this kills the duplication.
 
 signal speed_changed(speed_ratio: float)
 
@@ -106,13 +110,13 @@ func _ready() -> void:
 		push_warning("ShipController (%s): 'Ship Model' export is not assigned, hull lag effect will not run" % name)
 	else:
 		_ship_model_base_basis = ship_model.transform.basis
-		
+
 	if flight_loop_stream != null:
 		_setup_flight_audio()
-		
+
 func set_piloted(value: bool) -> void:
 	is_piloted = value
-	
+
 func _setup_flight_audio() -> void:
 	if flight_loop_stream is AudioStreamOggVorbis or flight_loop_stream is AudioStreamMP3:
 		flight_loop_stream.loop = true
@@ -125,12 +129,12 @@ func _setup_flight_audio() -> void:
 	_flight_audio_player.unit_size = 20.0
 	add_child(_flight_audio_player)
 	_flight_audio_player.play()
-	
+
 func get_seat_camera() -> Camera3D:
 	if ship_seat == null:
 		return null
 	return ship_seat.get("seat_camera")
-	
+
 ## Duck-typed gravity interface, matching what the player exposes.
 func set_planet_gravity(source: Node3D, strength: float) -> void:
 	gravity_source = source
@@ -186,9 +190,9 @@ func _physics_process(delta: float) -> void:
 	# forward_input is +1 when pressing "move_forward", but local -Z is
 	# forward in Godot, so we feed it as negative Z here.
 	var input_dir: Vector3 = Vector3(strafe_input, vertical_input, -forward_input)
-	
+
 	_update_flight_audio(input_dir.length() > 0.01, delta)
-	
+
 	var wants_liftoff: bool = vertical_input > landing_vertical_release_threshold
 	var probe: Dictionary = _probe_landing_surface()
 	var can_magnet: bool = probe.found and probe.distance <= landing_engage_distance_m and not wants_liftoff
@@ -292,7 +296,7 @@ func _process_unpiloted(delta: float) -> void:
 	_apply_gravity(delta)
 	move_and_slide()
 	speed_changed.emit(0.0)
-	
+
 ## Adds gravitational acceleration toward gravity_source's center to
 ## velocity, using the same inverse-falloff curve as the player
 ## controller. No-op if there's no active gravity source.
@@ -306,28 +310,14 @@ func _apply_gravity(delta: float) -> void:
 		return
 
 	var gravity_dir: Vector3 = to_center / distance_to_center
-	var gravity_strength: float = _get_falloff_gravity_strength(distance_to_center)
+	var gravity_strength: float = GravityBodyMath.get_falloff_gravity_strength(
+		distance_to_center,
+		surface_gravity_strength,
+		gravity_multiplier,
+		gravity_source,
+		gravity_fade_curve_power
+	)
 	velocity += gravity_dir * gravity_strength * delta
-
-func _get_falloff_gravity_strength(distance_to_center: float) -> float:
-	var base_strength: float = surface_gravity_strength * gravity_multiplier
-
-	if not gravity_source.has_method("get_radius") or not gravity_source.has_method("get_gravity_zone_radius"):
-		return base_strength
-
-	var surface_radius: float = gravity_source.call("get_radius")
-	var zone_radius: float = gravity_source.call("get_gravity_zone_radius")
-
-	if distance_to_center <= surface_radius:
-		return base_strength
-
-	if distance_to_center >= zone_radius:
-		return 0.0
-
-	var zone_depth: float = zone_radius - surface_radius
-	var distance_past_surface: float = distance_to_center - surface_radius
-	var fade_ratio: float = 1.0 - clamp(distance_past_surface / zone_depth, 0.0, 1.0)
-	return base_strength * pow(fade_ratio, gravity_fade_curve_power)
 
 ## Runs one frame of magnet-locked landing: orientation smoothly aligns to
 ## the surface normal, horizontal thrust input still allows taxiing, and

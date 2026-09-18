@@ -17,8 +17,9 @@ extends CharacterBody3D
 ## every planet regardless of size.
 ##
 ## FIX (jump height varies wildly with planet gravity): jump_velocity is
-## rescaled per-gravity via _get_effective_jump_velocity() so jump HEIGHT
-## stays roughly constant across different planet gravities (3.0 to 16.0).
+## rescaled per-gravity via GravityBodyMath.get_effective_jump_velocity()
+## so jump HEIGHT stays roughly constant across different planet
+## gravities (3.0 to 16.0).
 ##
 ## FIX (idle drift/jitter on rotating planets): _run_locked_ground_frame
 ## now re-derives position from the cached _local_offset via to_global()
@@ -42,6 +43,13 @@ extends CharacterBody3D
 ## camera vertical smoothing hack. With the hard ground lock in place, ANY
 ## vertical movement while grounded is fully intentional and authoritative
 ## - the raycast lock IS the correct ground-following mechanism.
+##
+## REFACTOR: gravity falloff curve and jump velocity scaling now delegate
+## to GravityBodyMath (generation/gravity_body_math.gd) instead of local
+## private methods - ship_controller.gd used an identical copy of the
+## falloff curve, this kills the duplication. Debug print() calls
+## replaced with DebugLog.physics() (core/debug_log.gd), which no-ops
+## unless explicitly enabled and always no-ops in release exports.
 
 signal moved(is_moving: bool, is_running: bool)
 signal jumped
@@ -102,6 +110,7 @@ func _ready() -> void:
 	safe_margin = collision_safe_margin_m
 
 func set_planet_gravity(source: Node3D, strength: float) -> void:
+	DebugLog.physics("MODE SWITCH to PLANET: player_pos=%s source=%s" % [global_position, source])
 	if gravity_source != source:
 		_local_offset_initialized = false
 		_recalibrate_ground_probe_for_source(source)
@@ -122,8 +131,9 @@ func _update_planet_ambient(source: Node3D) -> void:
 		return
 
 	AudioManager.set_planet_ambient(source.call("get_ambient_loop"))
-	
+
 func set_flat_gravity(source: Node3D, strength: float) -> void:
+	DebugLog.physics("MODE SWITCH to FLAT: player_pos=%s source=%s" % [global_position, source])
 	gravity_source = source
 	surface_gravity_strength = strength
 	gravity_mode = GravityMode.FLAT
@@ -134,8 +144,9 @@ func set_flat_gravity(source: Node3D, strength: float) -> void:
 	velocity = Vector3.ZERO
 	gravity_mode_changed.emit(false)
 	AudioManager.set_planet_ambient(null)
-	
+
 func set_zero_g() -> void:
+	DebugLog.physics("MODE SWITCH to ZERO_G: player_pos=%s" % global_position)
 	gravity_source = null
 	gravity_mode = GravityMode.ZERO_G
 	up_direction = Vector3.UP
@@ -152,7 +163,7 @@ func get_current_gravity_source() -> Node3D:
 
 func get_player_camera() -> Camera3D:
 	return player_camera
-	
+
 func set_controllable(value: bool) -> void:
 	is_controllable = value
 
@@ -224,7 +235,7 @@ func _process_sphere_movement(delta: float) -> void:
 	if grounded_in_range and not _jump_active and not jump_requested:
 		_run_locked_ground_frame(horizontal_velocity)
 	elif grounded_in_range and not _jump_active and jump_requested:
-		_vertical_speed = _get_effective_jump_velocity(gravity_strength)
+		_vertical_speed = GravityBodyMath.get_effective_jump_velocity(jump_velocity, gravity_strength)
 		_jump_active = true
 		_is_ground_locked = false
 		jumped.emit()
@@ -252,6 +263,7 @@ func _process_flat_surface_movement(delta: float) -> void:
 	if not _local_planar_initialized:
 		_local_planar_offset = Vector2(current_local_position.x, current_local_position.z)
 		_local_planar_initialized = true
+		DebugLog.physics("FLAT INIT: local_pos=%s ship_pos=%s" % [current_local_position, gravity_source.global_position])
 
 	up_direction = gravity_source.global_transform.basis.y.normalized()
 
@@ -301,7 +313,8 @@ func _process_flat_surface_movement(delta: float) -> void:
 	if grounded_in_range and not _jump_active and not jump_requested:
 		_run_locked_ground_frame(horizontal_velocity)
 	elif grounded_in_range and not _jump_active and jump_requested:
-		_vertical_speed = _get_effective_jump_velocity(surface_gravity_strength * gravity_multiplier)
+		_vertical_speed = GravityBodyMath.get_effective_jump_velocity(jump_velocity, surface_gravity_strength * gravity_multiplier)
+		DebugLog.physics("FLAT JUMP START: launch_v=%s gravity=%s pos=%s" % [_vertical_speed, surface_gravity_strength * gravity_multiplier, global_position])
 		_jump_active = true
 		_is_ground_locked = false
 		jumped.emit()
@@ -313,6 +326,12 @@ func _process_flat_surface_movement(delta: float) -> void:
 		_vertical_speed -= surface_gravity_strength * gravity_multiplier * delta
 		velocity = horizontal_velocity + up_direction * _vertical_speed
 		move_and_slide()
+
+	if _jump_active and abs(_vertical_speed) > 15.0:
+		DebugLog.physics("FLAT JUMP RUNAWAY: v_speed=%s grounded_in_range=%s ground_probe_found=%s ground_probe_dist=%s pos=%s ship_pos=%s" % [_vertical_speed, grounded_in_range, ground_probe.found, ground_probe.distance, global_position, gravity_source.global_position])
+
+	if global_position.distance_to(pos_before_frame) > 2.0:
+		DebugLog.physics("FLAT TELEPORT: before=%s after=%s h_vel=%s ground_probe_found=%s ground_probe_dist=%s grounded_in_range=%s up_dir=%s ship_pos=%s" % [pos_before_frame, global_position, horizontal_velocity, ground_probe.found, ground_probe.distance, grounded_in_range, up_direction, gravity_source.global_position])
 
 	var post_move_local_position: Vector3 = gravity_source.to_local(global_position)
 	_local_planar_offset = Vector2(post_move_local_position.x, post_move_local_position.z)
@@ -391,33 +410,14 @@ func _recalibrate_ground_probe_for_source(source: Node3D) -> void:
 	# the actual surface normal, throwing jumps sideways instead of up
 	_orientation_slerp_speed = clamp(400.0 / radius_m, 8.0, 30.0)
 
-## Rescales jump launch velocity so jump HEIGHT stays roughly constant
-## across planets with wildly different gravity_strength (3.0 to 16.0) -
-## a fixed jump_velocity is nearly unjumpable on high-g planets and
-## floaty on low-g ones.
-func _get_effective_jump_velocity(gravity_strength: float) -> float:
-	var reference_gravity: float = 9.8
-	return jump_velocity * sqrt(max(gravity_strength, 0.1) / reference_gravity)
-
 func _get_falloff_gravity_strength(distance_to_center: float) -> float:
-	var base_strength: float = surface_gravity_strength * gravity_multiplier
-
-	if not gravity_source.has_method("get_radius") or not gravity_source.has_method("get_gravity_zone_radius"):
-		return base_strength
-
-	var surface_radius: float = gravity_source.call("get_radius")
-	var zone_radius: float = gravity_source.call("get_gravity_zone_radius")
-
-	var strength: float
-	if distance_to_center <= surface_radius:
-		strength = base_strength
-	elif distance_to_center >= zone_radius:
-		return 0.0
-	else:
-		var zone_depth: float = zone_radius - surface_radius
-		var distance_past_surface: float = distance_to_center - surface_radius
-		var fade_ratio: float = 1.0 - clamp(distance_past_surface / zone_depth, 0.0, 1.0)
-		strength = base_strength * pow(fade_ratio, gravity_fade_curve_power)
+	var strength: float = GravityBodyMath.get_falloff_gravity_strength(
+		distance_to_center,
+		surface_gravity_strength,
+		gravity_multiplier,
+		gravity_source,
+		gravity_fade_curve_power
+	)
 
 	if gravity_source.has_method("is_point_underwater") and gravity_source.call("is_point_underwater", global_position):
 		strength *= gravity_source.call("get_underwater_gravity_multiplier")
