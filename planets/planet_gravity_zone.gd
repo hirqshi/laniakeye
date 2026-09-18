@@ -42,5 +42,8 @@ func _supports_gravity(body: Node3D) -> bool:
 func get_gravity_root() -> Node3D:
 	return planet_root
 
+func get_zone_priority() -> int:
+	return 0
+
 func apply_gravity_to(body: Node3D) -> void:
 	body.call("set_planet_gravity", planet_root, planet_root.call("get_gravity_strength"))

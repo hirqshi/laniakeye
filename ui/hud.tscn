@@ -21,7 +21,6 @@ font = ExtResource("7_q43x7")
 
 [sub_resource type="LabelSettings" id="LabelSettings_ff8ar"]
 font = ExtResource("7_q43x7")
-font_size = 12
 
 [sub_resource type="LabelSettings" id="LabelSettings_m0eg6"]
 font = ExtResource("7_q43x7")

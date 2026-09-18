@@ -55,3 +55,6 @@ func get_radius() -> float:
 
 func get_gravity_zone_radius() -> float:
 	return 999999.0
+
+func get_zone_priority() -> int:
+	return 10

@@ -17,9 +17,9 @@ static func reevaluate(body: Node3D) -> void:
 	if not body.has_method("set_zero_g"):
 		return
 
-	var closest_zone: Area3D = null
-	var closest_root: Node3D = null
-	var closest_distance: float = INF
+	var best_zone: Area3D = null
+	var best_priority: int = -1
+	var best_distance: float = INF
 
 	for area in body.get_tree().get_nodes_in_group("planet_gravity_zone"):
 		if not area is Area3D:
@@ -35,14 +35,16 @@ static func reevaluate(body: Node3D) -> void:
 		if candidate_root == body or candidate_root.is_ancestor_of(body):
 			continue
 
+		var priority: int = area.call("get_zone_priority") if area.has_method("get_zone_priority") else 0
 		var distance: float = body.global_position.distance_to(candidate_root.global_position)
-		if distance < closest_distance:
-			closest_distance = distance
-			closest_zone = area
-			closest_root = candidate_root
 
-	if closest_zone == null:
+		if priority > best_priority or (priority == best_priority and distance < best_distance):
+			best_priority = priority
+			best_distance = distance
+			best_zone = area
+
+	if best_zone == null:
 		body.call("set_zero_g")
 		return
 
-	closest_zone.call("apply_gravity_to", body)
+	best_zone.call("apply_gravity_to", body)

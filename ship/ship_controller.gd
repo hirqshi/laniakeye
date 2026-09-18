@@ -74,6 +74,9 @@ var surface_gravity_strength: float = 9.8
 var _parked_local_offset: Vector3 = Vector3.ZERO
 var _parked_local_basis: Basis = Basis.IDENTITY
 var _parked_anchor_valid: bool = false
+var _parked_prev_position: Vector3 = Vector3.ZERO
+var _parked_velocity_estimate: Vector3 = Vector3.ZERO
+var _parked_motion_delta: Vector3 = Vector3.ZERO
 
 # hull lag state - local counter-rotation applied on top of ship_model's
 # ORIGINAL (inspector-set) basis, never replacing it.
@@ -81,6 +84,7 @@ var _ship_model_base_basis: Basis = Basis.IDENTITY
 var _hull_lag_basis: Basis = Basis.IDENTITY
 
 func _ready() -> void:
+	process_physics_priority = -50
 	if landing_raycast == null:
 		push_error("ShipController (%s): 'Landing Raycast' export is not assigned" % name)
 	elif not landing_raycast.enabled:
@@ -116,6 +120,21 @@ func set_zero_g() -> void:
 
 func get_current_gravity_source() -> Node3D:
 	return gravity_source
+
+func get_platform_motion_delta() -> Vector3:
+	return _parked_motion_delta
+
+func get_current_velocity() -> Vector3:
+	if _is_parked:
+		# velocity is force-zeroed while parked (position is driven
+		# directly via to_global(), not through physics velocity), but
+		# the ship is still actually moving through world space if
+		# gravity_source is rotating/orbiting fast. _parked_velocity_estimate
+		# tracks the REAL frame-to-frame motion so anyone leaving the ship
+		# (the player) inherits it instead of a false zero that leaves
+		# them behind as the planet rotates out from under them.
+		return _parked_velocity_estimate
+	return velocity
 
 ## Exposes the ship seat's exit transform to external systems (World's
 ## spawn/"return to ship" logic) without them needing to know ShipSeat's
@@ -186,25 +205,51 @@ func _process_unpiloted(delta: float) -> void:
 			_parked_local_offset = gravity_source.to_local(global_position)
 			_parked_local_basis = gravity_source.global_transform.basis.inverse() * global_transform.basis
 			_parked_anchor_valid = true
+			_parked_prev_position = global_position
+			_parked_motion_delta = Vector3.ZERO
+
+		var previous_position: Vector3 = global_position
 
 		global_position = gravity_source.to_global(_parked_local_offset)
-		global_transform.basis = (gravity_source.global_transform.basis * _parked_local_basis).orthonormalized()
+		global_transform.basis = (
+			gravity_source.global_transform.basis * _parked_local_basis
+		).orthonormalized()
+
+		_parked_motion_delta = global_position - previous_position
+
+		if delta > 0.0:
+			_parked_velocity_estimate = _parked_motion_delta / delta
+		else:
+			_parked_velocity_estimate = Vector3.ZERO
+
+		_parked_prev_position = global_position
 		velocity = Vector3.ZERO
-		move_and_slide()
+
+		# Важно: parked Ship не надо move_and_slide()'ить.
+		# Иначе safe_margin может снова дать ему паразитный сдвиг
+		# от игрока, находящегося внутри корпуса.
 		speed_changed.emit(0.0)
 		return
 
 	if _is_parked:
+		_parked_motion_delta = Vector3.ZERO
+		_parked_velocity_estimate = Vector3.ZERO
 		velocity = Vector3.ZERO
-		move_and_slide()
 		speed_changed.emit(0.0)
 		return
 
+	if not is_instance_valid(gravity_source) and velocity.is_zero_approx():
+		_parked_motion_delta = Vector3.ZERO
+		_parked_velocity_estimate = Vector3.ZERO
+		speed_changed.emit(0.0)
+		return
+
+	_parked_motion_delta = Vector3.ZERO
 	velocity = velocity.lerp(Vector3.ZERO, linear_damping * delta)
 	_apply_gravity(delta)
 	move_and_slide()
 	speed_changed.emit(0.0)
-
+	
 ## Adds gravitational acceleration toward gravity_source's center to
 ## velocity, using the same inverse-falloff curve as the player
 ## controller. No-op if there's no active gravity source.
@@ -245,14 +290,35 @@ func _get_falloff_gravity_strength(distance_to_center: float) -> float:
 ## the surface normal, horizontal thrust input still allows taxiing, and
 ## position eases onto the surface via lerp.
 func _run_magnet_landing_frame(input_dir: Vector3, probe: Dictionary, delta: float) -> void:
+	var tangential_input: Vector3 = Vector3(input_dir.x, 0.0, input_dir.z)
+	var is_taxiing: bool = tangential_input.length() > 0.01
+
+	if _is_parked and _parked_anchor_valid and not is_taxiing:
+		global_position = gravity_source.to_global(_parked_local_offset) if is_instance_valid(gravity_source) else global_position
+		if is_instance_valid(gravity_source):
+			global_transform.basis = (gravity_source.global_transform.basis * _parked_local_basis).orthonormalized()
+
+		if delta > 0.0:
+			_parked_velocity_estimate = (global_position - _parked_prev_position) / delta
+		_parked_prev_position = global_position
+
+		velocity = Vector3.ZERO
+		move_and_slide()
+		speed_changed.emit(0.0)
+		return
+
 	var safe_current_basis: Basis = global_transform.basis.orthonormalized()
 	var target_basis: Basis = _basis_from_up(probe.normal, safe_current_basis)
-	global_transform.basis = safe_current_basis.slerp(target_basis, landing_align_speed * delta).orthonormalized()
 
-	var tangential_input: Vector3 = Vector3(input_dir.x, 0.0, input_dir.z)
+	var basis_angle_to_target: float = safe_current_basis.get_rotation_quaternion().angle_to(target_basis.get_rotation_quaternion())
+	if basis_angle_to_target < deg_to_rad(0.5):
+		global_transform.basis = target_basis
+	else:
+		global_transform.basis = safe_current_basis.slerp(target_basis, landing_align_speed * delta).orthonormalized()
+
 	var horizontal_velocity: Vector3 = Vector3.ZERO
 
-	if tangential_input.length() > 0.01:
+	if is_taxiing:
 		var accel_dir: Vector3 = (global_transform.basis * tangential_input).normalized()
 		accel_dir -= accel_dir.project(probe.normal)
 		if accel_dir.length() > 0.001:
@@ -264,7 +330,10 @@ func _run_magnet_landing_frame(input_dir: Vector3, probe: Dictionary, delta: flo
 	var post_probe: Dictionary = _probe_landing_surface()
 	if post_probe.found:
 		var target_position: Vector3 = post_probe.hit_point + post_probe.normal * landing_offset_m
-		global_position = global_position.lerp(target_position, clamp(landing_position_smoothing_speed * delta, 0.0, 1.0))
+		if global_position.distance_to(target_position) < 0.02:
+			global_position = target_position
+		else:
+			global_position = global_position.lerp(target_position, clamp(landing_position_smoothing_speed * delta, 0.0, 1.0))
 
 	if is_instance_valid(gravity_source):
 		_parked_local_offset = gravity_source.to_local(global_position)

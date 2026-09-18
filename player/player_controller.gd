@@ -8,21 +8,40 @@ extends CharacterBody3D
 ## exactly at ground_offset_m above the hit point. move_and_slide() only
 ## resolves horizontal collisions while locked.
 ##
+## FIX (velocity carryover on gravity mode switch): set_planet_gravity /
+## set_flat_gravity / set_zero_g now all zero out velocity explicitly.
+##
+## FIX (ground probe scaled per-planet): ground_probe_distance_m and
+## ground_lock_tolerance_m now scale off the planet's actual radius via
+## _recalibrate_ground_probe_for_source(), instead of one fixed value for
+## every planet regardless of size.
+##
+## FIX (jump height varies wildly with planet gravity): jump_velocity is
+## rescaled per-gravity via _get_effective_jump_velocity() so jump HEIGHT
+## stays roughly constant across different planet gravities (3.0 to 16.0).
+##
+## FIX (idle drift/jitter on rotating planets): _run_locked_ground_frame
+## now re-derives position from the cached _local_offset via to_global()
+## instead of re-raycasting every single frame while stationary - avoids
+## chasing a noisy terrain-mesh raycast that could land on a slightly
+## different triangle/height frame to frame.
+##
+## FIX (FLAT-mode velocity spike on jump, e.g. inside a ship): when there
+## is no horizontal input, _local_planar_offset is now resynced to the
+## body's ACTUAL current local X/Z every frame instead of trusting a
+## carried-over value. Previously, any frame where the real position
+## drifted even slightly from the stored offset (most visibly right as a
+## jump launched) created a permanent gap between them. Since
+## horizontal_velocity = (to_global(offset) - global_position) / delta,
+## that gap gets amplified by 1/delta (60x at 60 fps) into a huge spurious
+## velocity that shoved the body sideways every subsequent frame - this is
+## what was launching players into the ceiling/walls after jumping inside
+## a stationary ship, with the HUD speedometer showing up to ~30 m/s.
+##
 ## FIX (camera sinking into/below floor on slopes): removed the old
-## camera vertical smoothing hack (_update_camera_vertical_smoothing).
-## It was designed to hide RESIDUAL, UNINTENTIONAL vertical noise from the
-## days of relying on move_and_slide's automatic floor snap. With the hard
-## ground lock now in place, ANY vertical movement while grounded (walking
-## down/up a slope, following bumpy terrain) is fully intentional and
-## authoritative - the raycast lock IS the correct ground-following
-## mechanism, there's no more "noise" to hide. The smoothing hack was
-## comparing actual vertical movement against velocity's vertical
-## component (which is always exactly zero while locked, by design) and
-## treating ALL real slope-following motion as "unexpected", subtracting
-## it into a clamped camera offset that got stuck at its negative clamp
-## while walking downhill for any stretch - visually sinking the camera
-## toward/below the floor until the slope leveled out. No smoothing is
-## needed anymore; the camera should simply follow the body 1:1.
+## camera vertical smoothing hack. With the hard ground lock in place, ANY
+## vertical movement while grounded is fully intentional and authoritative
+## - the raycast lock IS the correct ground-following mechanism.
 
 signal moved(is_moving: bool, is_running: bool)
 signal jumped
@@ -64,6 +83,7 @@ var _jump_active: bool = false
 var _local_offset: Vector3 = Vector3.ZERO
 var _local_offset_initialized: bool = false
 var _local_carrier_radius: float = 0.0
+var _orientation_slerp_speed: float = 10.0
 
 # flat mode carrier (ship deck walking - pinned local X/Z, free local Y)
 var _local_planar_offset: Vector2 = Vector2.ZERO
@@ -80,16 +100,21 @@ func _ready() -> void:
 	safe_margin = collision_safe_margin_m
 
 func set_planet_gravity(source: Node3D, strength: float) -> void:
+	print("MODE SWITCH to PLANET: player_pos=", global_position, " source=", source)
+	if gravity_source != source:
+		_local_offset_initialized = false
+		_recalibrate_ground_probe_for_source(source)
 	gravity_source = source
 	surface_gravity_strength = strength
 	gravity_mode = GravityMode.PLANET
 	_vertical_speed = 0.0
 	_is_ground_locked = false
 	_jump_active = false
-	_local_offset_initialized = false
+	velocity = Vector3.ZERO
 	gravity_mode_changed.emit(false)
 
 func set_flat_gravity(source: Node3D, strength: float) -> void:
+	print("MODE SWITCH to FLAT: player_pos=", global_position, " source=", source)
 	gravity_source = source
 	surface_gravity_strength = strength
 	gravity_mode = GravityMode.FLAT
@@ -97,9 +122,11 @@ func set_flat_gravity(source: Node3D, strength: float) -> void:
 	_is_ground_locked = false
 	_jump_active = false
 	_local_planar_initialized = false
+	velocity = Vector3.ZERO
 	gravity_mode_changed.emit(false)
 
 func set_zero_g() -> void:
+	print("MODE SWITCH to ZERO_G: player_pos=", global_position)
 	gravity_source = null
 	gravity_mode = GravityMode.ZERO_G
 	up_direction = Vector3.UP
@@ -107,6 +134,7 @@ func set_zero_g() -> void:
 	_jump_active = false
 	_local_offset_initialized = false
 	_local_planar_initialized = false
+	velocity = Vector3.ZERO
 	gravity_mode_changed.emit(true)
 
 func get_current_gravity_source() -> Node3D:
@@ -166,7 +194,7 @@ func _process_sphere_movement(delta: float) -> void:
 	if horizontal_velocity.length() > max_horizontal_speed:
 		horizontal_velocity = horizontal_velocity.normalized() * max_horizontal_speed
 
-	global_transform.basis = global_transform.basis.slerp(current_basis, 10.0 * delta).orthonormalized()
+	global_transform.basis = global_transform.basis.slerp(current_basis, _orientation_slerp_speed * delta).orthonormalized()
 
 	var gravity_strength: float = _get_falloff_gravity_strength(distance_to_center)
 	var ground_probe: Dictionary = _probe_ground()
@@ -182,7 +210,7 @@ func _process_sphere_movement(delta: float) -> void:
 	if grounded_in_range and not _jump_active and not jump_requested:
 		_run_locked_ground_frame(horizontal_velocity)
 	elif grounded_in_range and not _jump_active and jump_requested:
-		_vertical_speed = jump_velocity
+		_vertical_speed = _get_effective_jump_velocity(gravity_strength)
 		_jump_active = true
 		_is_ground_locked = false
 		jumped.emit()
@@ -195,18 +223,22 @@ func _process_sphere_movement(delta: float) -> void:
 		velocity = horizontal_velocity + up_direction * _vertical_speed
 		move_and_slide()
 
-	var local_body_position: Vector3 = gravity_source.to_local(global_position)
-	if local_body_position.length_squared() > 0.000001:
-		_local_offset = local_body_position.normalized() * _local_carrier_radius
+	_local_offset = gravity_source.to_local(global_position)
 
 	moved.emit(input_dir.length() > 0.1, is_running)
 
 func _process_flat_surface_movement(delta: float) -> void:
+	if gravity_source.has_method("get_platform_motion_delta"):
+		var platform_motion_delta: Vector3 = gravity_source.call("get_platform_motion_delta")
+		if not platform_motion_delta.is_zero_approx():
+			global_position += platform_motion_delta
+
 	var current_local_position: Vector3 = gravity_source.to_local(global_position)
 
 	if not _local_planar_initialized:
 		_local_planar_offset = Vector2(current_local_position.x, current_local_position.z)
 		_local_planar_initialized = true
+		print("FLAT INIT: local_pos=", current_local_position, " ship_pos=", gravity_source.global_position)
 
 	up_direction = gravity_source.global_transform.basis.y.normalized()
 
@@ -216,26 +248,38 @@ func _process_flat_surface_movement(delta: float) -> void:
 	is_running = Input.is_action_pressed("run") and input_dir.length() > 0.1
 	var speed: float = run_speed if is_running else walk_speed
 
-	var world_move_dir: Vector3 = (current_basis * Vector3(input_dir.x, 0.0, input_dir.y)).normalized() if input_dir.length() > 0.01 else Vector3.ZERO
-	var local_move_dir: Vector3 = gravity_source.global_transform.basis.inverse() * world_move_dir
-	var local_horizontal_delta: Vector2 = Vector2(local_move_dir.x, local_move_dir.z) * speed * delta
+	var has_input: bool = input_dir.length() > 0.01
+	var horizontal_velocity: Vector3 = Vector3.ZERO
 
-	_local_planar_offset += local_horizontal_delta
+	if has_input:
+		var world_move_dir: Vector3 = (current_basis * Vector3(input_dir.x, 0.0, input_dir.y)).normalized()
+		var local_move_dir: Vector3 = gravity_source.global_transform.basis.inverse() * world_move_dir
+		var local_horizontal_delta: Vector2 = Vector2(local_move_dir.x, local_move_dir.z) * speed * delta
 
-	var horizontal_target_local_pos: Vector3 = Vector3(_local_planar_offset.x, current_local_position.y, _local_planar_offset.y)
-	var horizontal_target_world_pos: Vector3 = gravity_source.to_global(horizontal_target_local_pos)
-	var horizontal_velocity: Vector3 = (horizontal_target_world_pos - global_position) / delta if delta > 0.0 else Vector3.ZERO
-	horizontal_velocity -= horizontal_velocity.project(up_direction)
+		_local_planar_offset += local_horizontal_delta
 
-	var max_horizontal_speed: float = run_speed * max_horizontal_speed_multiplier
-	if horizontal_velocity.length() > max_horizontal_speed:
-		horizontal_velocity = horizontal_velocity.normalized() * max_horizontal_speed
+		var horizontal_target_local_pos: Vector3 = Vector3(_local_planar_offset.x, current_local_position.y, _local_planar_offset.y)
+		var horizontal_target_world_pos: Vector3 = gravity_source.to_global(horizontal_target_local_pos)
+		horizontal_velocity = (horizontal_target_world_pos - global_position) / delta if delta > 0.0 else Vector3.ZERO
+		horizontal_velocity -= horizontal_velocity.project(up_direction)
+
+		var max_horizontal_speed: float = run_speed * max_horizontal_speed_multiplier
+		if horizontal_velocity.length() > max_horizontal_speed:
+			horizontal_velocity = horizontal_velocity.normalized() * max_horizontal_speed
+	else:
+		# no input - don't round-trip position through to_local()/to_global()
+		# every frame, that repeated matrix inverse+multiply at large world
+		# coordinates introduces tiny orientation-dependent floating point
+		# error that compounds every physics frame into a slow directional
+		# drift. Just keep the offset in sync without touching global_position.
+		_local_planar_offset = Vector2(current_local_position.x, current_local_position.z)
 
 	global_transform.basis = global_transform.basis.slerp(current_basis, 10.0 * delta).orthonormalized()
 
 	var ground_probe: Dictionary = _probe_ground()
 	var grounded_in_range: bool = ground_probe.found and ground_probe.distance <= ground_offset_m + ground_lock_tolerance_m
 	var jump_requested: bool = Input.is_action_just_pressed("jump")
+	var pos_before_frame: Vector3 = global_position
 
 	if _jump_active and _vertical_speed <= 0.0 and grounded_in_range:
 		_jump_active = false
@@ -243,7 +287,8 @@ func _process_flat_surface_movement(delta: float) -> void:
 	if grounded_in_range and not _jump_active and not jump_requested:
 		_run_locked_ground_frame(horizontal_velocity)
 	elif grounded_in_range and not _jump_active and jump_requested:
-		_vertical_speed = jump_velocity
+		_vertical_speed = _get_effective_jump_velocity(surface_gravity_strength * gravity_multiplier)
+		print("FLAT JUMP START: launch_v=", _vertical_speed, " gravity=", surface_gravity_strength * gravity_multiplier, " pos=", global_position)
 		_jump_active = true
 		_is_ground_locked = false
 		jumped.emit()
@@ -255,6 +300,12 @@ func _process_flat_surface_movement(delta: float) -> void:
 		_vertical_speed -= surface_gravity_strength * gravity_multiplier * delta
 		velocity = horizontal_velocity + up_direction * _vertical_speed
 		move_and_slide()
+
+	if _jump_active and abs(_vertical_speed) > 15.0:
+		print("FLAT JUMP RUNAWAY: v_speed=", _vertical_speed, " grounded_in_range=", grounded_in_range, " ground_probe_found=", ground_probe.found, " ground_probe_dist=", ground_probe.distance, " pos=", global_position, " ship_pos=", gravity_source.global_position)
+
+	if global_position.distance_to(pos_before_frame) > 2.0:
+		print("FLAT TELEPORT: before=", pos_before_frame, " after=", global_position, " h_vel=", horizontal_velocity, " ground_probe_found=", ground_probe.found, " ground_probe_dist=", ground_probe.distance, " grounded_in_range=", grounded_in_range, " up_dir=", up_direction, " ship_pos=", gravity_source.global_position)
 
 	var post_move_local_position: Vector3 = gravity_source.to_local(global_position)
 	_local_planar_offset = Vector2(post_move_local_position.x, post_move_local_position.z)
@@ -268,6 +319,25 @@ func _process_flat_surface_movement(delta: float) -> void:
 ## introduced. No sliding, no separation, no floor-snap flicker.
 func _run_locked_ground_frame(horizontal_velocity: Vector3) -> void:
 	_vertical_speed = 0.0
+
+	var can_use_frozen_anchor: bool = false
+	var frozen_anchor_target: Vector3 = global_position
+
+	if gravity_mode == GravityMode.PLANET and _local_offset_initialized:
+		can_use_frozen_anchor = true
+		frozen_anchor_target = gravity_source.to_global(_local_offset)
+	elif gravity_mode == GravityMode.FLAT and _local_planar_initialized:
+		can_use_frozen_anchor = true
+		var current_local_position: Vector3 = gravity_source.to_local(global_position)
+		var target_local: Vector3 = Vector3(_local_planar_offset.x, current_local_position.y, _local_planar_offset.y)
+		frozen_anchor_target = gravity_source.to_global(target_local)
+
+	if horizontal_velocity.length() < 0.001 and _is_ground_locked and can_use_frozen_anchor:
+		global_position = frozen_anchor_target
+		velocity = Vector3.ZERO
+		move_and_slide()
+		return
+
 	velocity = horizontal_velocity
 	move_and_slide()
 
@@ -297,6 +367,30 @@ func _probe_ground() -> Dictionary:
 	var hit_point: Vector3 = result.position
 	var distance: float = (global_position - hit_point).dot(up_direction)
 	return {"found": true, "hit_point": hit_point, "distance": distance}
+
+## Scales the ground probe's reach and lock tolerance to the actual
+## planet's radius, once, whenever gravity_source changes to a different
+## body - a fixed probe window doesn't work equally well for a 40m moon
+## and a 140m planet.
+func _recalibrate_ground_probe_for_source(source: Node3D) -> void:
+	if not source.has_method("get_radius"):
+		return
+	var radius_m: float = source.call("get_radius")
+	ground_probe_distance_m = clamp(radius_m * 0.05, 1.0, 6.0)
+	ground_lock_tolerance_m = clamp(radius_m * 0.01, 0.15, 0.6)
+	# smaller planets have sharper curvature relative to walking speed,
+	# so up_direction changes faster underfoot - the body's orientation
+	# needs to catch up proportionally faster or it visibly lags behind
+	# the actual surface normal, throwing jumps sideways instead of up
+	_orientation_slerp_speed = clamp(400.0 / radius_m, 8.0, 30.0)
+
+## Rescales jump launch velocity so jump HEIGHT stays roughly constant
+## across planets with wildly different gravity_strength (3.0 to 16.0) -
+## a fixed jump_velocity is nearly unjumpable on high-g planets and
+## floaty on low-g ones.
+func _get_effective_jump_velocity(gravity_strength: float) -> float:
+	var reference_gravity: float = 9.8
+	return jump_velocity * sqrt(max(gravity_strength, 0.1) / reference_gravity)
 
 func _get_falloff_gravity_strength(distance_to_center: float) -> float:
 	var base_strength: float = surface_gravity_strength * gravity_multiplier

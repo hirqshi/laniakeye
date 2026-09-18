@@ -110,7 +110,12 @@ func _unseat_player() -> void:
 
 	if exit_position:
 		player_controller.global_transform = exit_position.global_transform
-	player_controller.velocity = Vector3.ZERO
+		if ship_controller and ship_controller.has_method("get_current_velocity"):
+			var exit_velocity: Vector3 = ship_controller.call("get_current_velocity")
+			print("UNSEAT: exit_position=", exit_position.global_position, " ship_velocity=", exit_velocity, " ship_gravity_source=", ship_controller.get_current_gravity_source())
+			player_controller.velocity = exit_velocity
+		else:
+			player_controller.velocity = Vector3.ZERO
 	player_controller.visible = true
 	if player_collision_shape:
 		player_collision_shape.disabled = false

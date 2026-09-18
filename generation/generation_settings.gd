@@ -28,8 +28,8 @@ extends Resource
 @export var gravity_fade_curve_power: float = 1.5
 
 @export_group("Orbit & Rotation")
-@export var orbit_speed_min: float = 0.002
-@export var orbit_speed_max: float = 0.01
+@export_range(0.0, 0.02, 0.00001) var orbit_speed_min: float = 0.0001
+@export_range(0.0, 0.02, 0.00001) var orbit_speed_max: float = 0.0006
 @export var rotation_speed_min: float = 0.01
 @export var rotation_speed_max: float = 0.05
 @export var axial_tilt_max_rad: float = 0.4
