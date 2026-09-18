@@ -1,20 +1,31 @@
-extends Area3D
+extends GravityZone
 
-## Bridges a planet's GravityArea to any body that knows how to receive
-## gravity (player, ship - anything implementing set_planet_gravity/
-## set_zero_g/get_current_gravity_source).
+## Gravity zone for walking around INSIDE the ship's hull (not the seat -
+## this is for a player who is NOT piloting, just walking around the
+## interior). Unlike planet gravity (which pulls toward a center point),
+## ship interior gravity pulls toward the ship's local -Y axis, i.e.
+## "down" relative to the ship's own orientation - so it still works
+## correctly while the ship is flying/rotating in space.
 ##
-## FIX: both entered and exited now go through GravityZoneSelector,
-## deferred consistently. Previously body_entered called
-## _apply_closest_gravity_source() immediately/synchronously while
-## body_exited deferred it - if a body crossed zone boundaries quickly
-## (e.g. repeatedly entering/exiting near an edge, or transitioning
-## between overlapping zones), a stale deferred exit reevaluation could
-## execute AFTER a fresher immediate entry and overwrite it with wrong or
-## null gravity. Deferring both consistently preserves the actual order
-## events fired in, regardless of which zone or signal type.
+## FIX: both entered and exited now go through GravityZoneSelector, which
+## reevaluates ALL overlapping "planet_gravity_zone" members and picks the
+## closest/highest-priority one - instead of this zone unilaterally
+## forcing set_flat_gravity on entry or blindly forcing set_zero_g on
+## exit. The old exit handler could incorrectly zero out gravity even
+## while the body was still inside a DIFFERENT valid zone (e.g. a
+## planet's gravity while standing near an open airlock during landing).
+## Both signals are now deferred consistently (previously entered was
+## immediate and exited was deferred, which could let a stale deferred
+## exit stomp a fresher immediate entry - see GravityZoneSelector for
+## details).
+##
+## REFACTOR: now extends GravityZone (planets/gravity_zone_base.gd)
+## instead of bare Area3D. Overrides below replace the old duck-typed
+## get_zone_priority/apply_gravity_to that GravityZoneSelector used to
+## reach via has_method()/call().
 
-@export var planet_root: Node3D
+@export var ship_root: Node3D
+@export var interior_gravity_strength: float = 9.8
 
 func _ready() -> void:
 	add_to_group("planet_gravity_zone")
@@ -40,10 +51,16 @@ func _supports_gravity(body: Node3D) -> bool:
 ## Identifies this zone's gravity root and how it applies gravity, for
 ## GravityZoneSelector's closest-zone comparison.
 func get_gravity_root() -> Node3D:
-	return planet_root
-
-func get_zone_priority() -> int:
-	return 0
+	return ship_root
 
 func apply_gravity_to(body: Node3D) -> void:
-	body.call("set_planet_gravity", planet_root, planet_root.call("get_gravity_strength"))
+	body.call("set_flat_gravity", ship_root, interior_gravity_strength)
+
+func get_radius() -> float:
+	return 0.0
+
+func get_gravity_zone_radius() -> float:
+	return 999999.0
+
+func get_zone_priority() -> int:
+	return 10
