@@ -149,7 +149,6 @@ func _unseat_player() -> void:
 		player_controller.global_transform = exit_position.global_transform
 		if ship_controller and ship_controller.has_method("get_current_velocity"):
 			var exit_velocity: Vector3 = ship_controller.call("get_current_velocity")
-			print("UNSEAT: exit_position=", exit_position.global_position, " ship_velocity=", exit_velocity, " ship_gravity_source=", ship_controller.get_current_gravity_source())
 			player_controller.velocity = exit_velocity
 		else:
 			player_controller.velocity = Vector3.ZERO
@@ -160,6 +159,11 @@ func _unseat_player() -> void:
 
 	player_camera.current = true
 	ship_controller.call("set_piloted", false)
+
+	## Player is walking now, not the ship - spawn anchor must follow
+	## them again, otherwise CreatureSpawner keeps orbiting whatever
+	## spot the ship landed on while the player wanders off on foot.
+	_set_spawn_anchor(player_controller)
 
 	if is_player_in_range and interaction_prompt_label:
 		interaction_prompt_label.visible = true
