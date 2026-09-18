@@ -95,6 +95,7 @@ var is_running: bool = false
 var is_controllable: bool = true
 
 func _ready() -> void:
+	SpawnAnchorService.set_active_anchor(self)
 	add_to_group("player")
 	floor_max_angle = deg_to_rad(floor_max_angle_deg)
 	floor_stop_on_slope = true
@@ -471,3 +472,6 @@ func _apply_planet_look(mouse_delta: Vector2) -> void:
 func _apply_zero_g_look(mouse_delta: Vector2) -> void:
 	rotate_object_local(Vector3.UP, -mouse_delta.x * mouse_sensitivity)
 	rotate_object_local(Vector3.RIGHT, -mouse_delta.y * mouse_sensitivity)
+
+func _exit_tree() -> void:
+	SpawnAnchorService.clear_active_anchor(self)

@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://dvvlav0carqdp"
 path.s3tc="res://.godot/imported/Concrete024_4K_Color_resized.jpg-8f61d005b53adb4afdeb2c5a35ad2648.s3tc.ctex"
+path.etc2="res://.godot/imported/Concrete024_4K_Color_resized.jpg-8f61d005b53adb4afdeb2c5a35ad2648.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/ship/glass/Concrete024_4K_Color_resized.jpg"
-dest_files=["res://.godot/imported/Concrete024_4K_Color_resized.jpg-8f61d005b53adb4afdeb2c5a35ad2648.s3tc.ctex"]
+dest_files=["res://.godot/imported/Concrete024_4K_Color_resized.jpg-8f61d005b53adb4afdeb2c5a35ad2648.s3tc.ctex", "res://.godot/imported/Concrete024_4K_Color_resized.jpg-8f61d005b53adb4afdeb2c5a35ad2648.etc2.ctex"]
 
 [params]
 

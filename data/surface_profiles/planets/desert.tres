@@ -5,12 +5,26 @@
 [ext_resource type="AudioStream" uid="uid://i4yjpj2bfq7c" path="res://audio/freesound_community-space-rumble-29970.mp3" id="2_mnhdt"]
 [ext_resource type="Texture2D" uid="uid://crlipa3i2bwd0" path="res://assets/textures/sand/aerial_beach_01_disp_4k_resized.jpg" id="3_iqtci"]
 [ext_resource type="Texture2D" uid="uid://j0ap3ubdqwpa" path="res://assets/textures/sand/aerial_beach_01_nor_gl_4k_resized.jpg" id="4_m7bk0"]
+[ext_resource type="Script" uid="uid://bmw0a83pbs8lm" path="res://creatures/creature_planet_profile.gd" id="4_yr0vf"]
 [ext_resource type="Texture2D" uid="uid://pyiwtju0xjoo" path="res://assets/textures/sand/aerial_beach_01_rough_4k_resized.jpg" id="5_3106i"]
+[ext_resource type="Script" uid="uid://v7mqc6nt1yg5" path="res://creatures/creature_spawn_entry.gd" id="5_s27ve"]
 [ext_resource type="Script" uid="uid://1t0wbuevh1oe" path="res://generation/surface_profile.gd" id="6_73g36"]
+[ext_resource type="Resource" uid="uid://bc3jeknjy6vy7" path="res://creatures/worm.tres" id="6_wwo8j"]
 
 [sub_resource type="Gradient" id="Gradient_e6m2j"]
 offsets = PackedFloat32Array(0.008064516, 0.21129033, 0.37903225, 0.5596774, 0.7532258, 0.9758065)
 colors = PackedColorArray(0.34, 0.23833999, 0.1836, 1, 1, 0.9846667, 0.53999996, 1, 0.91, 0.85267, 0.4186, 1, 0.74, 0.72816, 0.6808, 1, 0.98, 0.4704001, 0.21560003, 1, 0.87, 0.19140002, 0.19140002, 1)
+
+[sub_resource type="Resource" id="Resource_xvim6"]
+script = ExtResource("5_s27ve")
+creature_profile = ExtResource("6_wwo8j")
+max_count = 0
+metadata/_custom_type_script = "uid://v7mqc6nt1yg5"
+
+[sub_resource type="Resource" id="Resource_ssirq"]
+script = ExtResource("4_yr0vf")
+spawn_entries = Array[ExtResource("5_s27ve")]([SubResource("Resource_xvim6")])
+metadata/_custom_type_script = "uid://bmw0a83pbs8lm"
 
 [sub_resource type="Gradient" id="Gradient_5lcxi"]
 offsets = PackedFloat32Array(0, 0.28996864, 0.6974922, 0.87304074)
@@ -36,5 +50,6 @@ ring_chance = 0.1
 ring_outer_radius_ratio_min = 3.995
 ring_outer_radius_ratio_max = 6.595
 ring_gradient = SubResource("Gradient_5lcxi")
+creature_profile = SubResource("Resource_ssirq")
 ambient_loop = ExtResource("2_mnhdt")
 metadata/_custom_type_script = "uid://1t0wbuevh1oe"

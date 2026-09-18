@@ -33,6 +33,7 @@ const ATMOSPHERE_SPHERE_RADIAL_SEGMENTS: int = 32
 @export var star_node: Node3D
 
 @export var vegetation_spawner: PlanetVegetationSpawner
+@export var creature_spawner: CreatureSpawner
 
 var planet_data: PlanetData
 var moon_nodes: Array[Node3D] = []
@@ -104,9 +105,20 @@ func setup(data: PlanetData) -> void:
 	_setup_rings(data)
 	_setup_ocean(data)
 	_setup_vegetation(data)
-	
+	_setup_creatures(data)
+
 	if not is_moon:
 		_spawn_moons()
+
+func _setup_creatures(data: PlanetData) -> void:
+	if is_moon:
+		return
+
+	if creature_spawner == null:
+		push_warning("Planet: 'Creature Spawner' export is not assigned")
+		return
+
+	creature_spawner.setup(data)
 
 func _setup_atmosphere(data: PlanetData) -> void:
 	if atmosphere_mesh_instance == null:
@@ -262,6 +274,20 @@ func regenerate_vegetation_for_preview() -> void:
 		return
 
 	vegetation_spawner.regenerate_for_preview(planet_data)
+
+func regenerate_creatures_for_preview() -> void:
+	if is_moon:
+		return
+
+	if creature_spawner == null:
+		push_warning("Planet: 'Creature Spawner' export is not assigned")
+		return
+
+	if planet_data == null:
+		push_warning("Planet: cannot regenerate preview creatures before setup(data)")
+		return
+
+	creature_spawner.regenerate_for_preview(planet_data)
 
 func _gradient_to_texture(gradient: Gradient) -> GradientTexture1D:
 	if gradient == null:

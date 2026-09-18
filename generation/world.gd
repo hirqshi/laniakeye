@@ -106,7 +106,8 @@ func _teleport_player_to_ship_seat() -> void:
 func _find_safe_ship_spawn_position() -> Vector3:
 	var system_data: SystemData = star_system.get("system_data")
 	var star_center: Vector3 = star_system.global_position
-	var outer_bound_m: float = _compute_outer_bound_m(system_data)
+	var star_radius_m: float = star_system.call("get_radius")
+	var outer_bound_m: float = _compute_outer_bound_m(system_data, star_radius_m)
 
 	for attempt in range(ship_spawn_max_attempts):
 		var candidate: Vector3 = _random_point_in_shell(
@@ -115,15 +116,13 @@ func _find_safe_ship_spawn_position() -> Vector3:
 			outer_bound_m
 		)
 
-		if _is_position_clear(candidate, system_data, star_center):
+		if _is_position_clear(candidate, system_data, star_center, star_radius_m):
 			return candidate
 
-	# Fallback: directly "above" the star's pole, well outside the whole
-	# system. Not pretty, but guaranteed collision-free and never hangs.
 	push_warning("World: could not find a clear random ship spawn after %d attempts, using polar fallback" % ship_spawn_max_attempts)
 	return star_center + Vector3.UP * (outer_bound_m + ship_spawn_margin_m)
 
-func _compute_outer_bound_m(system_data: SystemData) -> float:
+func _compute_outer_bound_m(system_data: SystemData, star_radius_m: float) -> float:
 	var outer_bound_m: float = star_radius_m + ship_spawn_margin_m
 
 	if system_data == null:
@@ -139,22 +138,7 @@ func _compute_outer_bound_m(system_data: SystemData) -> float:
 
 	return outer_bound_m + ship_spawn_margin_m
 
-func _random_point_in_shell(center: Vector3, min_distance_m: float, max_distance_m: float) -> Vector3:
-	var direction: Vector3 = Vector3(
-		_rng.randf_range(-1.0, 1.0),
-		_rng.randf_range(-1.0, 1.0),
-		_rng.randf_range(-1.0, 1.0)
-	)
-
-	if direction.length_squared() < 0.0001:
-		direction = Vector3.UP
-	else:
-		direction = direction.normalized()
-
-	var distance_m: float = _rng.randf_range(min_distance_m, max_distance_m)
-	return center + direction * distance_m
-
-func _is_position_clear(candidate: Vector3, system_data: SystemData, star_center: Vector3) -> bool:
+func _is_position_clear(candidate: Vector3, system_data: SystemData, star_center: Vector3, star_radius_m: float) -> bool:
 	if candidate.distance_to(star_center) < star_radius_m + ship_spawn_body_clearance_m:
 		return false
 
@@ -177,6 +161,21 @@ func _is_position_clear(candidate: Vector3, system_data: SystemData, star_center
 
 	return true
 
+func _random_point_in_shell(center: Vector3, min_distance_m: float, max_distance_m: float) -> Vector3:
+	var direction: Vector3 = Vector3(
+		_rng.randf_range(-1.0, 1.0),
+		_rng.randf_range(-1.0, 1.0),
+		_rng.randf_range(-1.0, 1.0)
+	)
+
+	if direction.length_squared() < 0.0001:
+		direction = Vector3.UP
+	else:
+		direction = direction.normalized()
+
+	var distance_m: float = _rng.randf_range(min_distance_m, max_distance_m)
+	return center + direction * distance_m
+
 func _setup_hud() -> void:
 	if hud == null:
 		push_warning("World: 'Hud' export is not assigned")
@@ -187,7 +186,13 @@ func _setup_hud() -> void:
 		push_error("World: player has no 'player_camera' property")
 		return
 
+	var leviathan_spawner: LeviathanSpawner = null
+
+	if star_system.has_method("get_leviathan_spawner"):
+		leviathan_spawner = star_system.call("get_leviathan_spawner")
+
 	hud.set_star_system(star_system)
+	hud.set_leviathan_spawner(leviathan_spawner)
 	hud.set_ship_reference(player_camera, ship)
 	hud.set_player_and_ship(player, ship)
 	hud.set_piloting_ship(false)

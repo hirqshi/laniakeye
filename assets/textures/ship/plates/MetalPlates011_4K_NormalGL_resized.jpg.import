@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://wmagnuv03ixa"
 path.s3tc="res://.godot/imported/MetalPlates011_4K_NormalGL_resized.jpg-4a80ec7bcc11c1840bc4a1c5abf25621.s3tc.ctex"
+path.etc2="res://.godot/imported/MetalPlates011_4K_NormalGL_resized.jpg-4a80ec7bcc11c1840bc4a1c5abf25621.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/ship/plates/MetalPlates011_4K_NormalGL_resized.jpg"
-dest_files=["res://.godot/imported/MetalPlates011_4K_NormalGL_resized.jpg-4a80ec7bcc11c1840bc4a1c5abf25621.s3tc.ctex"]
+dest_files=["res://.godot/imported/MetalPlates011_4K_NormalGL_resized.jpg-4a80ec7bcc11c1840bc4a1c5abf25621.s3tc.ctex", "res://.godot/imported/MetalPlates011_4K_NormalGL_resized.jpg-4a80ec7bcc11c1840bc4a1c5abf25621.etc2.ctex"]
 
 [params]
 

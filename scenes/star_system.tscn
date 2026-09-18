@@ -6,17 +6,28 @@
 [ext_resource type="Resource" uid="uid://c07ye3u42k3ye" path="res://data/surface_profile_set.tres" id="4_igb27"]
 [ext_resource type="Resource" uid="uid://cc8acwk03ml4q" path="res://data/moon_surface_profile_set.tres" id="5_eh6l5"]
 [ext_resource type="Resource" uid="uid://bwixgh4txf2lt" path="res://data/generation_settings.tres" id="5_xyphy"]
+[ext_resource type="Script" uid="uid://dn3ldwnppo8cy" path="res://creatures/leviathan_spawner.gd" id="7_cu2wf"]
+[ext_resource type="Script" uid="uid://c5bdic3s3tv8e" path="res://creatures/leviathan_profile.gd" id="8_yd2l3"]
+[ext_resource type="Resource" uid="uid://bqkmvsy7x0umv" path="res://creatures/squid_leviathan.tres" id="9_s3stn"]
+[ext_resource type="Resource" uid="uid://do36ev10rgpoi" path="res://creatures/worm_leviathan.tres" id="10_3c5vh"]
 
-[node name="StarSystem" type="Node3D" unique_id=696955812 node_paths=PackedStringArray("planets_container", "star_eye_container")]
+[node name="StarSystem" type="Node3D" unique_id=696955812 node_paths=PackedStringArray("planets_container", "star_eye_container", "leviathan_spawner")]
 script = ExtResource("1_lcs5o")
 planets_container = NodePath("PlanetContainer")
 star_eye_container = NodePath("StarEyeContainer")
+leviathan_spawner = NodePath("LeviathanSpawner")
 planet_scene = ExtResource("2_xyphy")
 star_eye_scene = ExtResource("3_eh6l5")
 surface_profile_set = ExtResource("4_igb27")
 moon_surface_profile_set = ExtResource("5_eh6l5")
 generation_settings = ExtResource("5_xyphy")
+system_seed = null
 
 [node name="PlanetContainer" type="Node3D" parent="." unique_id=299560113]
 
 [node name="StarEyeContainer" type="Node3D" parent="." unique_id=69163368]
+
+[node name="LeviathanSpawner" type="Node3D" parent="." unique_id=1704995867]
+script = ExtResource("7_cu2wf")
+leviathan_profiles = Array[ExtResource("8_yd2l3")]([ExtResource("9_s3stn"), ExtResource("10_3c5vh")])
+max_leviathans = 4

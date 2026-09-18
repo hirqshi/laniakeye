@@ -1,0 +1,15 @@
+[gd_scene format=3 uid="uid://vqaorshybnyl"]
+
+[ext_resource type="Script" uid="uid://mlyg2lndgm0e" path="res://creatures/creature_body.gd" id="1_fr2s8"]
+[ext_resource type="Script" uid="uid://crvfoq05xscm6" path="res://creatures/spider_body_controller.gd" id="4_6ueg1"]
+
+[node name="CreatureBody" type="Node3D" unique_id=71639571 node_paths=PackedStringArray("creature_mesh_instance", "spider_body_controller")]
+script = ExtResource("1_fr2s8")
+creature_mesh_instance = NodePath("CreatureMesh")
+spider_body_controller = NodePath("SpiderBody")
+
+[node name="CreatureMesh" type="MeshInstance3D" parent="." unique_id=1081772007]
+
+[node name="SpiderBody" type="Node3D" parent="." unique_id=34366077]
+process_mode = 3
+script = ExtResource("4_6ueg1")

@@ -6,6 +6,7 @@
 [ext_resource type="Shader" uid="uid://bpyh64bynw6t" path="res://shaders/ring.gdshader" id="3_48b8c"]
 [ext_resource type="Gradient" uid="uid://c267c7hrw7ixw" path="res://assets/textures/ring_gradient.tres" id="4_3s4jt"]
 [ext_resource type="Script" uid="uid://dqnnom6wbvxaq" path="res://vegetation/planet_vegetation_spawner.gd" id="5_48b8c"]
+[ext_resource type="Script" uid="uid://dv8drudl1c0wd" path="res://creatures/creature_spawner.gd" id="7_ekhpw"]
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_okyjl"]
 
@@ -30,7 +31,7 @@ shader_parameter/planet_radius_m = 120.0
 shader_parameter/light_direction = Vector3(1, 0, 0)
 shader_parameter/shadow_strength = 0.62400002964
 
-[node name="Planet" type="Node3D" unique_id=581055455 node_paths=PackedStringArray("mesh_instance", "ring_mesh_instance", "collision_shape", "gravity_area", "gravity_collision_shape", "moons_container", "atmosphere_mesh_instance", "water_mesh_instance", "vegetation_spawner")]
+[node name="Planet" type="Node3D" unique_id=581055455 node_paths=PackedStringArray("mesh_instance", "ring_mesh_instance", "collision_shape", "gravity_area", "gravity_collision_shape", "moons_container", "atmosphere_mesh_instance", "water_mesh_instance", "vegetation_spawner", "creature_spawner")]
 script = ExtResource("1_cktii")
 mesh_instance = NodePath("PlanetMesh")
 ring_mesh_instance = NodePath("RingMesh")
@@ -42,6 +43,7 @@ atmosphere_mesh_instance = NodePath("AtmosphereMesh")
 water_mesh_instance = NodePath("WaterMesh")
 moon_scene = ExtResource("2_ggt7d")
 vegetation_spawner = NodePath("VegetationSpawner")
+creature_spawner = NodePath("CreatureSpawner")
 
 [node name="PlanetMesh" type="MeshInstance3D" parent="." unique_id=1771692712]
 
@@ -69,3 +71,10 @@ script = ExtResource("5_48b8c")
 candidate_count_per_layer = 15000
 max_instances_per_layer = 4000
 generate_in_editor = true
+
+[node name="CreatureSpawner" type="Node3D" parent="." unique_id=1959080408]
+script = ExtResource("7_ekhpw")
+max_active_creatures = 20
+spawn_min_distance_m = 14.0
+spawn_max_distance_m = 26.0
+despawn_distance_m = 136.0

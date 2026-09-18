@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://w660s3mu1n65"
 path.s3tc="res://.godot/imported/coast_sand_rocks_02_rough_4k_resized.jpg-5fd26520c3b65093e93ca2470c60306d.s3tc.ctex"
+path.etc2="res://.godot/imported/coast_sand_rocks_02_rough_4k_resized.jpg-5fd26520c3b65093e93ca2470c60306d.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/grass/coast_sand_rocks_02_rough_4k_resized.jpg"
-dest_files=["res://.godot/imported/coast_sand_rocks_02_rough_4k_resized.jpg-5fd26520c3b65093e93ca2470c60306d.s3tc.ctex"]
+dest_files=["res://.godot/imported/coast_sand_rocks_02_rough_4k_resized.jpg-5fd26520c3b65093e93ca2470c60306d.s3tc.ctex", "res://.godot/imported/coast_sand_rocks_02_rough_4k_resized.jpg-5fd26520c3b65093e93ca2470c60306d.etc2.ctex"]
 
 [params]
 

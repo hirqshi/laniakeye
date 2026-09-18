@@ -2,6 +2,7 @@
 
 [ext_resource type="Texture2D" uid="uid://3jidmaucfo50" path="res://assets/textures/bark/Bark001_4K_Color_resized.jpg" id="1_8417t"]
 [ext_resource type="Script" uid="uid://bagqiw6prqgu1" path="res://creatures/creature_profile.gd" id="1_yfc36"]
+[ext_resource type="PackedScene" uid="uid://vqaorshybnyl" path="res://creatures/spider.tscn" id="2_fji5x"]
 [ext_resource type="Texture2D" uid="uid://bcopaubp4c54s" path="res://assets/textures/bark/Bark001_4K_NormalGL_resized.jpg" id="2_s1ojw"]
 [ext_resource type="Texture2D" uid="uid://d08x8t5whl164" path="res://assets/textures/bark/Bark001_4K_Roughness_resized.jpg" id="3_fji5x"]
 
@@ -11,16 +12,52 @@ colors = PackedColorArray(0.21, 0.1512, 0.1512, 1, 0.24098666, 0.28, 0.2268, 1, 
 
 [resource]
 script = ExtResource("1_yfc36")
+creature_type = 2
+locomotion_mode = 0
 albedo_texture = ExtResource("1_8417t")
 normal_texture = ExtResource("2_s1ojw")
 roughness_texture = ExtResource("3_fji5x")
 display_name = "Spider"
-creature_type = 2
-preview_seed = 1347775951
+preview_seed = 2266291306
 color_gradient = SubResource("Gradient_vvghl")
-min_leg_length_m = 1.23
-max_leg_length_m = 2.31
-spider_body_radius_m = 0.9550000000000001
-spider_leg_radius_m = 0.08
-spider_leg_bend = 0.01
+min_leg_length_m = 1.94
+max_leg_length_m = 2.3400000000000003
+spider_body_radius_m = 0.21500000000000002
+spider_leg_radius_m = 0.08499999999999999
+spider_leg_bend = 1.0
+spider_body_radius_ratio = 0.22000000000000003
+spider_idle_step_amplitude_deg = 27.31
+spider_idle_step_speed = 7.08
+creature_scene = ExtResource("2_fji5x")
+hop_launch_speed_mps = 5.0
+hop_horizontal_speed_mps = 3.0
+hop_arc_turn_rate_rad_s = null
+burrow_depth_m = null
+burrow_speed_mps = null
+burrow_turn_speed_rad_s = null
+hop_direction_reroll_chance = null
+hop_direction_jitter_rad = null
+flight_altitude_m = null
+flight_altitude_variation_m = null
+flight_altitude_change_speed = null
+flight_speed_mps = null
+flight_turn_interval_min_s = null
+flight_turn_interval_max_s = null
+flight_altitude_interval_min_s = null
+flight_altitude_interval_max_s = null
+flight_turn_smoothing_speed = null
+swim_speed_mps = null
+swim_depth_change_speed = null
+swim_preferred_depth_ratio = null
+swim_depth_variation_m = null
+swim_wall_margin_m = null
+swim_turn_interval_min_s = null
+swim_turn_interval_max_s = null
+swim_depth_interval_min_s = null
+swim_depth_interval_max_s = null
+swim_turn_smoothing_speed = null
+spider_walk_speed_mps = 5.6
+spider_walk_turn_interval_min_s = 5.5
+spider_walk_turn_interval_max_s = 12.0
+spider_ground_sink_m = 0.48
 metadata/_custom_type_script = "uid://bagqiw6prqgu1"

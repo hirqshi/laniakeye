@@ -26,6 +26,7 @@ signal ui_color_changed(color: Color)
 @export var system_map: SystemMap
 
 var _star_system_ref: Node3D
+var _leviathan_spawner_ref: LeviathanSpawner
 
 func _ready() -> void:
 	if root == null:
@@ -50,12 +51,12 @@ func set_player_and_ship(player: CharacterBody3D, ship: CharacterBody3D) -> void
 	if ship_hint_panel:
 		ship_hint_panel.setup(player, ship)
 	if system_map and _star_system_ref:
-		system_map.setup(_star_system_ref, player, ship)
+		system_map.setup(_star_system_ref, player, ship, _leviathan_spawner_ref)
 
 func clear_ship_reference() -> void:
 	if ship_marker:
 		ship_marker.clear_ship()
-		
+
 func set_ship_reference(camera: Camera3D, ship: Node3D) -> void:
 	if ship_marker:
 		ship_marker.setup(camera, ship)
@@ -80,3 +81,10 @@ func set_star_system(star_system: Node3D) -> void:
 	_star_system_ref = star_system
 	if planet_target_frame:
 		planet_target_frame.setup(star_system)
+
+## Called by World alongside set_star_system() - kept as a separate
+## setter instead of bundling into set_star_system() because the two
+## come from different exports on World (star_system vs leviathan_spawner)
+## and HudController shouldn't assume they're always set together.
+func set_leviathan_spawner(leviathan_spawner: LeviathanSpawner) -> void:
+	_leviathan_spawner_ref = leviathan_spawner

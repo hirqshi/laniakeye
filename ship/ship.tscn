@@ -132,6 +132,7 @@ door_open_stream = ExtResource("15_gmwrw")
 door_close_stream = ExtResource("16_5xfri")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="Door" unique_id=1200547773]
+collision_layer = 4
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Door/StaticBody3D" unique_id=1324781851]
 transform = Transform3D(1, -2.0150401e-10, 4.654055e-13, 2.0150401e-10, 0.9999894, -0.0046098744, 4.654055e-13, 0.0046098744, 0.9999894, -0.3330079, 0.3083436, 1.2382305)
@@ -185,7 +186,7 @@ surface_material_override/1 = ExtResource("9_culm4")
 
 [node name="SeatCamera" type="Camera3D" parent="Seat" unique_id=1499846475]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.0854473, -2.4228847)
-far = 20000.0
+far = 40000.0
 
 [node name="OmniLight3D" type="OmniLight3D" parent="." unique_id=1346513125]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.3041725, -1.6142945)

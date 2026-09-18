@@ -134,6 +134,74 @@ func rebuild() -> void:
 	_create_body(body_radius_m)
 	_create_legs(rng, leg_count, body_radius_m)
 
+	_apply_stand_height_offset()
+
+
+## Legs are built hanging below body_radius_m, so the lowest foot tip
+## ends up below the controller's own origin - lift the whole generated
+## rig up by that amount so the feet touch ground level and the body
+## floats above it, instead of the body sitting on the ground with legs
+## buried in the terrain.
+func _apply_stand_height_offset() -> void:
+	if _generated_root == null:
+		return
+
+	var local_aabb: AABB = _get_local_aabb(_generated_root)
+
+	if local_aabb.size.length_squared() < 0.0001:
+		return
+
+	var lowest_local_y: float = local_aabb.position.y
+
+	if lowest_local_y >= 0.0:
+		return
+
+	_generated_root.position.y = -lowest_local_y
+
+
+func _get_local_aabb(root: Node3D) -> AABB:
+	var mesh_instances: Array[MeshInstance3D] = []
+	_gather_mesh_instances(root, mesh_instances)
+
+	var combined_aabb: AABB = AABB()
+	var has_aabb: bool = false
+
+	for mesh_instance: MeshInstance3D in mesh_instances:
+		if mesh_instance.mesh == null:
+			continue
+
+		var relative_transform: Transform3D = _get_transform_relative_to(
+			mesh_instance,
+			root
+		)
+
+		var mesh_local_aabb: AABB = mesh_instance.mesh.get_aabb()
+		var relative_aabb: AABB = relative_transform * mesh_local_aabb
+
+		if not has_aabb:
+			combined_aabb = relative_aabb
+			has_aabb = true
+		else:
+			combined_aabb = combined_aabb.merge(relative_aabb)
+
+	return combined_aabb
+
+
+func _get_transform_relative_to(
+	node: Node3D,
+	root: Node3D
+) -> Transform3D:
+	var result: Transform3D = node.transform
+	var current: Node = node.get_parent()
+
+	while current != null and current != root:
+		if current is Node3D:
+			result = (current as Node3D).transform * result
+
+		current = current.get_parent()
+
+	return result
+
 func get_generated_aabb() -> AABB:
 	if _generated_root == null:
 		return AABB()
@@ -159,6 +227,9 @@ func get_generated_aabb() -> AABB:
 
 	return combined_aabb
 
+func clear_generated() -> void:
+	_clear_generated()
+	
 func _gather_mesh_instances(
 	node: Node,
 	result: Array[MeshInstance3D]
@@ -288,24 +359,50 @@ func _create_legs(
 			sin(angle_rad)
 		).normalized()
 
-		var leg_root: Node3D = Node3D.new()
-		leg_root.name = "Leg_%d" % (leg_index + 1)
-		leg_root.position = attach_direction * body_radius_m
-
-		var base_rotation: Vector3 = Vector3(
+		## Build the leg's orientation from explicit forward/up vectors
+		## instead of raw Euler angles - guarantees the leg's local X
+		## axis (what the knee bends around) stays horizontal, so the
+		## knee always folds upward in world space regardless of which
+		## way around the body this leg points.
+		var outward: Vector3 = Vector3(
+			attach_direction.x,
 			0.0,
-			-angle_rad + PI * 0.5,
+			attach_direction.z
+		)
+
+		if outward.length_squared() < 0.0001:
+			outward = Vector3.FORWARD
+		else:
+			outward = outward.normalized()
+
+		var bend_axis: Vector3 = Vector3.UP.cross(outward).normalized()
+
+		if bend_axis.length_squared() < 0.0001:
+			bend_axis = Vector3.RIGHT
+
+		var leg_forward: Vector3 = outward.rotated(
+			bend_axis,
 			deg_to_rad(65.0)
 		)
 
-		leg_root.rotation = base_rotation
+		var leg_basis: Basis = Basis(
+			bend_axis,
+			bend_axis.cross(leg_forward).normalized(),
+			leg_forward
+		).orthonormalized()
+
+		var leg_root: Node3D = Node3D.new()
+		leg_root.name = "Leg_%d" % (leg_index + 1)
+		leg_root.position = attach_direction * body_radius_m
+		leg_root.basis = leg_basis
+
 		_generated_root.add_child(leg_root)
 
 		if Engine.is_editor_hint():
 			leg_root.owner = owner
 
 		_leg_roots.append(leg_root)
-		_leg_base_rotations.append(base_rotation)
+		_leg_base_rotations.append(leg_root.rotation)
 
 		_create_leg_chain(leg_root, leg_length_m)
 

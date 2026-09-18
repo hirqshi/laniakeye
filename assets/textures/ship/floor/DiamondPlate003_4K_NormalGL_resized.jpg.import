@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://xdx1sqd6x2uw"
 path.s3tc="res://.godot/imported/DiamondPlate003_4K_NormalGL_resized.jpg-37b5157d5410b1423333730c9376693c.s3tc.ctex"
+path.etc2="res://.godot/imported/DiamondPlate003_4K_NormalGL_resized.jpg-37b5157d5410b1423333730c9376693c.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/ship/floor/DiamondPlate003_4K_NormalGL_resized.jpg"
-dest_files=["res://.godot/imported/DiamondPlate003_4K_NormalGL_resized.jpg-37b5157d5410b1423333730c9376693c.s3tc.ctex"]
+dest_files=["res://.godot/imported/DiamondPlate003_4K_NormalGL_resized.jpg-37b5157d5410b1423333730c9376693c.s3tc.ctex", "res://.godot/imported/DiamondPlate003_4K_NormalGL_resized.jpg-37b5157d5410b1423333730c9376693c.etc2.ctex"]
 
 [params]
 

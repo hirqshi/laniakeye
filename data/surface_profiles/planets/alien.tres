@@ -4,9 +4,12 @@
 [ext_resource type="AudioStream" uid="uid://db2np2nb4frfy" path="res://audio/dragon-studio-deep-sea-underwater-ambience-472383.mp3" id="2_6b30k"]
 [ext_resource type="Texture2D" uid="uid://bgo4q64gdx3v8" path="res://assets/textures/rock/rock_boulder_dry_ao_4k_resized.jpg" id="2_53wvp"]
 [ext_resource type="Texture2D" uid="uid://b2x0y4ngqeuk1" path="res://assets/textures/rock/rock_boulder_dry_disp_4k_resized.jpg" id="3_fh36n"]
+[ext_resource type="Script" uid="uid://bmw0a83pbs8lm" path="res://creatures/creature_planet_profile.gd" id="4_cp7bc"]
 [ext_resource type="Texture2D" uid="uid://b3vqp0q7ae71v" path="res://assets/textures/rock/rock_boulder_dry_nor_gl_4k_resized.jpg" id="4_cvlqa"]
 [ext_resource type="Texture2D" uid="uid://nsd2v7mimn22" path="res://assets/textures/rock/rock_boulder_dry_rough_4k_resized.jpg" id="5_nkeid"]
+[ext_resource type="Script" uid="uid://v7mqc6nt1yg5" path="res://creatures/creature_spawn_entry.gd" id="5_yhnjb"]
 [ext_resource type="Script" uid="uid://1t0wbuevh1oe" path="res://generation/surface_profile.gd" id="6_6b30k"]
+[ext_resource type="Resource" uid="uid://d3qf4khmjxsfi" path="res://creatures/squid.tres" id="6_yhnjb"]
 [ext_resource type="Script" uid="uid://kcsw7i33p7vt" path="res://vegetation/vegetation_profile.gd" id="7_cvlqa"]
 [ext_resource type="Script" uid="uid://da8uuodwnok4" path="res://vegetation/vegetation_layer_profile.gd" id="8_nkeid"]
 [ext_resource type="Resource" uid="uid://c3ea2tvhfg5px" path="res://data/vegetation_profiles/alien_tree.tres" id="9_6b30k"]
@@ -15,6 +18,18 @@
 [sub_resource type="Gradient" id="Gradient_auhju"]
 offsets = PackedFloat32Array(0.037096772, 0.18870968, 0.3532258, 0.48225805, 0.62419355, 0.7629032, 0.93064517)
 colors = PackedColorArray(0.34, 0.24140002, 0.30056006, 1, 0.324625, 0.2485, 0.35, 1, 0.43800002, 0.4434, 0.6, 1, 0.31, 0.1488, 0.21596664, 1, 0.6, 0.25200003, 0.39699996, 1, 1, 0.32, 0.33133316, 1, 0.55, 0.165, 0.165, 1)
+
+[sub_resource type="Resource" id="Resource_m5dqw"]
+script = ExtResource("5_yhnjb")
+creature_profile = ExtResource("6_yhnjb")
+min_count = 13
+max_count = 31
+metadata/_custom_type_script = "uid://v7mqc6nt1yg5"
+
+[sub_resource type="Resource" id="Resource_1wmcx"]
+script = ExtResource("4_cp7bc")
+spawn_entries = Array[ExtResource("5_yhnjb")]([SubResource("Resource_m5dqw")])
+metadata/_custom_type_script = "uid://bmw0a83pbs8lm"
 
 [sub_resource type="Resource" id="Resource_cp7bc"]
 script = ExtResource("8_nkeid")
@@ -62,5 +77,6 @@ water_high_color = Color(0.6, 0.198, 0.49280015, 1)
 water_low_color = Color(0.2, 0.020000005, 0.08299998, 1)
 water_transmit_color = Color(0.31500003, 0.1, 0.4, 1)
 vegetation_profile = SubResource("Resource_w5vi0")
+creature_profile = SubResource("Resource_1wmcx")
 ambient_loop = ExtResource("2_6b30k")
 metadata/_custom_type_script = "uid://1t0wbuevh1oe"

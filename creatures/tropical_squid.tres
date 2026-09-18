@@ -1,0 +1,46 @@
+[gd_resource type="Resource" script_class="CreatureProfile" format=3 uid="uid://cmd61ifxokdwr"]
+
+[ext_resource type="Texture2D" uid="uid://da077uhcsyypn" path="res://assets/textures/sand/aerial_beach_01_diff_4k_resized.jpg" id="1_3jg5t"]
+[ext_resource type="PackedScene" uid="uid://ddns8oih2segh" path="res://creatures/squid.tscn" id="2_2gqqq"]
+[ext_resource type="Texture2D" uid="uid://j0ap3ubdqwpa" path="res://assets/textures/sand/aerial_beach_01_nor_gl_4k_resized.jpg" id="3_o78lu"]
+[ext_resource type="Texture2D" uid="uid://pyiwtju0xjoo" path="res://assets/textures/sand/aerial_beach_01_rough_4k_resized.jpg" id="4_mvu1d"]
+[ext_resource type="Script" uid="uid://bagqiw6prqgu1" path="res://creatures/creature_profile.gd" id="5_jgypv"]
+
+[sub_resource type="Gradient" id="Gradient_pmfvi"]
+offsets = PackedFloat32Array(0, 0.50268096, 1)
+colors = PackedColorArray(0.1428, 0.34, 0.28083998, 1, 0.22079998, 0.48, 0.43679997, 1, 0.2244, 0.51, 0.35292, 1)
+
+[resource]
+script = ExtResource("5_jgypv")
+creature_type = 1
+locomotion_mode = 2
+albedo_texture = ExtResource("1_3jg5t")
+normal_texture = ExtResource("3_o78lu")
+roughness_texture = ExtResource("4_mvu1d")
+display_name = "Squid"
+preview_seed = 1338076620
+color_gradient = SubResource("Gradient_pmfvi")
+tentacle_count = 12
+min_tentacle_length_m = 5.2
+max_tentacle_length_m = 16.7
+squid_body_length_ratio = 5.699999999999999
+squid_body_radius_ratio = 1.4400000000000002
+squid_body_radial_segments = 6
+tentacle_radius_ratio = 0.74
+tentacle_taper = 0.84
+squid_body_wiggle_multiplier = 0.08
+tentacle_attachment_inset_ratio = 1.0
+tentacle_wave_frequency = 1.0
+tentacle_wave_speed = 10.0
+tentacle_wave_amplitude_ratio = 5.1
+tentacle_length_variation = 0.89
+tentacle_radius_variation = 0.2
+tentacle_angle_variation_rad = 0.74
+tentacle_missing_chance = 0.0
+creature_scene = ExtResource("2_2gqqq")
+flight_altitude_m = 72.0
+flight_altitude_variation_m = 3.0
+flight_speed_mps = 11.5
+flight_turn_interval_min_s = 17.5
+flight_turn_interval_max_s = 27.0
+metadata/_custom_type_script = "uid://bagqiw6prqgu1"

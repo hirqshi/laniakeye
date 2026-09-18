@@ -1,5 +1,8 @@
 extends Area3D
 class_name ShipSeat
+
+const SPAWN_ANCHOR_GROUP: StringName = &"creature_spawn_anchor"
+
 ## Seat the player can enter to pilot the ship.
 ##
 ## RADICALLY SIMPLIFIED: no reparenting, no manual camera transform lerp,
@@ -83,6 +86,34 @@ func _unhandled_input(event: InputEvent) -> void:
 		else:
 			_unseat_player()
 
+func _set_spawn_anchor(anchor: Node3D) -> void:
+	if anchor == null:
+		return
+
+	var anchors: Array[Node] = get_tree().get_nodes_in_group(
+		SPAWN_ANCHOR_GROUP
+	)
+
+	for existing_anchor: Node in anchors:
+		if existing_anchor is Node3D:
+			existing_anchor.remove_from_group(
+				SPAWN_ANCHOR_GROUP
+			)
+
+	if not anchor.is_in_group(SPAWN_ANCHOR_GROUP):
+		anchor.add_to_group(SPAWN_ANCHOR_GROUP)
+
+func _get_ship_anchor() -> Node3D:
+	var ship_anchor: Node3D = ship_controller as Node3D
+
+	if ship_anchor == null:
+		push_error(
+			"ShipSeat: Ship Controller must inherit Node3D "
+			+ "to be used as a spawn anchor"
+		)
+
+	return ship_anchor
+
 func _seat_player() -> void:
 	if seat_camera == null or ship_controller == null:
 		push_error("ShipSeat: cannot seat, required exports missing")
@@ -103,6 +134,12 @@ func _seat_player() -> void:
 
 	seat_camera.current = true
 	ship_controller.call("set_piloted", true)
+
+	var ship_anchor: Node3D = _get_ship_anchor()
+
+	if ship_anchor != null:
+		_set_spawn_anchor(ship_anchor)
+
 	player_seated.emit()
 
 func _unseat_player() -> void:

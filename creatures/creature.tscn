@@ -1,0 +1,281 @@
+[gd_scene format=4 uid="uid://cx2q8xvgsjc0t"]
+
+[ext_resource type="Script" uid="uid://mlyg2lndgm0e" path="res://creatures/creature_body.gd" id="1_47day"]
+[ext_resource type="Script" uid="uid://cq3wchqtoeqm4" path="res://creatures/worm_body_controller.gd" id="2_elaha"]
+[ext_resource type="Script" uid="uid://dnpcjw7rwmgbx" path="res://creatures/squid_tentacle_lag.gd" id="4_8fquu"]
+[ext_resource type="Script" uid="uid://crvfoq05xscm6" path="res://creatures/spider_body_controller.gd" id="5_bdhrq"]
+[ext_resource type="Shader" uid="uid://dqxd26gbjponi" path="res://shaders/spider_static.gdshader" id="7_mi0f4"]
+[ext_resource type="Texture2D" uid="uid://3jidmaucfo50" path="res://assets/textures/bark/Bark001_4K_Color_resized.jpg" id="8_rajsc"]
+[ext_resource type="Texture2D" uid="uid://bcopaubp4c54s" path="res://assets/textures/bark/Bark001_4K_NormalGL_resized.jpg" id="9_ihygj"]
+[ext_resource type="Texture2D" uid="uid://d08x8t5whl164" path="res://assets/textures/bark/Bark001_4K_Roughness_resized.jpg" id="10_7710u"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_muvj2"]
+render_priority = 0
+shader = ExtResource("7_mi0f4")
+shader_parameter/albedo_texture = ExtResource("8_rajsc")
+shader_parameter/normal_texture = ExtResource("9_ihygj")
+shader_parameter/roughness_texture = ExtResource("10_7710u")
+shader_parameter/normal_strength = 1.0
+shader_parameter/roughness_multiplier = 1.0
+shader_parameter/albedo_tint = Color(0.49969605, 0.49297744, 0.5239864, 1)
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_qnanu"]
+_surfaces = [{
+"aabb": AABB(-0.4276203, -0.4276203, -0.4276203, 0.8552406, 0.8552406, 0.8552406),
+"attribute_data": PackedByteArray("AACAP+pvND4AAEA/CsilPgNyaT8AAAA/AACAP+pvND4AAAA/6m80PgAAQD8KyKU+AACAP+pvND4AAIA+CsilPgAAAD/qbzQ+AACAP+pvND7sb7Q9AAAAPwAAgD4KyKU+AACAP+pvND4Dcmk/AAAAP+xvtD0AAAA/AAAAP+pvND79jRY/AAAAPwAAQD8KyKU+AABAPwrIpT4AAEA/+xstPwNyaT8AAAA/A3JpPwAAAD8AAIA/BuRSP+xvtD0AAAA/7G+0PQAAAD8AAIA++xstPwAAgD4KyKU+AACAPgrIpT4F5NI+AAAAPwAAAD/qbzQ+AAAAPwbkUj8AAEA/+xstP/2NFj8AAAA/AAAAPwbkUj8AAIA/BuRSPwAAQD/7Gy0/AAAAPwbkUj8AAIA++xstPwAAgD8G5FI/AAAAPwbkUj8F5NI+AAAAPwAAgD77Gy0/AAAAPwbkUj/9jRY/AAAAPwXk0j4AAAA/AABAP/sbLT8AAEA/CsilPv2NFj8AAAA/AACAPwbkUj8Dcmk/AAAAPwAAQD/7Gy0/AACAPvsbLT/sb7Q9AAAAPwAAgD8G5FI/BeTSPgAAAD8AAIA+CsilPgAAgD77Gy0//Y0WPwAAAD8AAAA/6m80PgXk0j4AAAA/"),
+"format": 34359738391,
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 60,
+"vertex_data": PackedByteArray("N1CHvgzx2j4AAAAAAAAAADdQhz4M8do+DPHavgAAAAA3UIc+N1CHvgzx2j4AAAAAN1CHPgzx2j4AAAAAAAAAADdQhz4M8do+N1CHvgzx2j4AAAAAAAAAADdQhz4M8dq+N1CHPgzx2j4AAAAAN1CHvgzx2j4AAAAADPHavgAAAAA3UIe+AAAAADdQhz4M8dq+N1CHvgzx2j4AAAAADPHavgAAAAA3UIc+DPHavgAAAAA3UIe+N1CHPgzx2j4AAAAADPHaPgAAAAA3UIc+AAAAADdQhz4M8do+AAAAADdQhz4M8do+AAAAADdQh74M8do+DPHavgAAAAA3UIc+DPHavgAAAAA3UIc+N1CHvgzx2r4AAAAADPHavgAAAAA3UIe+DPHavgAAAAA3UIe+AAAAADdQh74M8dq+AAAAADdQhz4M8dq+AAAAADdQhz4M8dq+DPHaPgAAAAA3UIe+N1CHPgzx2j4AAAAAN1CHPgzx2r4AAAAAAAAAADdQh74M8do+DPHaPgAAAAA3UIc+N1CHPgzx2r4AAAAAN1CHvgzx2r4AAAAAAAAAADdQh74M8do+N1CHPgzx2r4AAAAAAAAAADdQh74M8dq+N1CHvgzx2r4AAAAAN1CHPgzx2r4AAAAADPHaPgAAAAA3UIe+AAAAADdQh74M8dq+N1CHPgzx2r4AAAAADPHaPgAAAAA3UIc+DPHaPgAAAAA3UIe+AAAAADdQh74M8do+AAAAADdQhz4M8do+DPHaPgAAAAA3UIc+N1CHvgzx2r4AAAAADPHavgAAAAA3UIc+AAAAADdQh74M8do+AAAAADdQh74M8dq+DPHavgAAAAA3UIe+N1CHvgzx2r4AAAAADPHaPgAAAAA3UIe+AAAAADdQhz4M8dq+AAAAADdQh74M8dq+DPHaPgAAAAA3UIc+N1CHPgzx2j4AAAAADPHaPgAAAAA3UIe+VFWqqvcF/19UVaqq9wX/X1RVqqr3Bf9f/3+e3AAA/z//f57cAAD/P/9/ntwAAP8/YKP//wAA/79go///AAD/v2Cj//8AAP+/qipU1f8/A72qKlTV/z8DvaoqVNX/PwO9YCNgo/9//79gI2Cj/3//v2AjYKP/f/+/qqqqqv8/BD2qqqqq/z8EPaqqqqr/PwQ9nlz/fwAATy6eXP9/AABPLp5c/38AAE8uYCOeXP9//79gI55c/3//v2Ajnlz/f/+/AACe3P//Ty4AAJ7c//9PLgAAntz//08uVNVU1f+/+0JU1VTV/7/7QlTVVNX/v/tCqqpUVf8/+0KqqlRV/z/7QqqqVFX/P/tC/39gIwAA/z//f2AjAAD/P/9/YCMAAP8/YKMAAAAA/79gowAAAAD/v2CjAAAAAP+/VNWqKv+/BD1U1aoq/78EPVTVqir/vwQ9ntyeXP9//z+e3J5c/3//P57cnlz/f/8/YKP/f2Aj/z9go/9/YCP/P2Cj/39gI/8/VFVUVfcF/x9UVVRV9wX/H1RVVFX3Bf8fqiqqKv8/+sKqKqoq/z/6wqoqqir/P/rC//+e3J7c/z///57cntz/P///ntye3P8/ntxgo/9//z+e3GCj/3//P57cYKP/f/8/")
+}]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_xksls"]
+top_radius = 0.056
+bottom_radius = 0.08
+height = 0.7402925
+radial_segments = 4
+rings = 0
+cap_top = false
+cap_bottom = false
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_e4opn"]
+top_radius = 0.056
+bottom_radius = 0.08
+height = 0.6056939
+radial_segments = 4
+rings = 0
+cap_top = false
+cap_bottom = false
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_wgx7c"]
+top_radius = 0.056
+bottom_radius = 0.08
+height = 1.0388778
+radial_segments = 4
+rings = 0
+cap_top = false
+cap_bottom = false
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_fkp34"]
+top_radius = 0.056
+bottom_radius = 0.08
+height = 0.84999096
+radial_segments = 4
+rings = 0
+cap_top = false
+cap_bottom = false
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_0mms3"]
+top_radius = 0.056
+bottom_radius = 0.08
+height = 0.8932289
+radial_segments = 4
+rings = 0
+cap_top = false
+cap_bottom = false
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_rm4xd"]
+top_radius = 0.056
+bottom_radius = 0.08
+height = 0.73082364
+radial_segments = 4
+rings = 0
+cap_top = false
+cap_bottom = false
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_vb0db"]
+top_radius = 0.056
+bottom_radius = 0.08
+height = 1.0864414
+radial_segments = 4
+rings = 0
+cap_top = false
+cap_bottom = false
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_kw7o3"]
+top_radius = 0.056
+bottom_radius = 0.08
+height = 0.8889066
+radial_segments = 4
+rings = 0
+cap_top = false
+cap_bottom = false
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_1bg3p"]
+top_radius = 0.056
+bottom_radius = 0.08
+height = 1.0429846
+radial_segments = 4
+rings = 0
+cap_top = false
+cap_bottom = false
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_ajg5l"]
+top_radius = 0.056
+bottom_radius = 0.08
+height = 0.853351
+radial_segments = 4
+rings = 0
+cap_top = false
+cap_bottom = false
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_wb56q"]
+top_radius = 0.056
+bottom_radius = 0.08
+height = 1.1098114
+radial_segments = 4
+rings = 0
+cap_top = false
+cap_bottom = false
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_ao45s"]
+top_radius = 0.056
+bottom_radius = 0.08
+height = 0.9080275
+radial_segments = 4
+rings = 0
+cap_top = false
+cap_bottom = false
+
+[node name="CreatureBody" type="Node3D" unique_id=71639571 node_paths=PackedStringArray("creature_mesh_instance", "worm_body_controller", "spider_body_controller", "squid_tentacle_lag")]
+script = ExtResource("1_47day")
+creature_mesh_instance = NodePath("CreatureMesh")
+worm_body_controller = NodePath("WormBody")
+spider_body_controller = NodePath("SpiderBody")
+squid_tentacle_lag = NodePath("SquidTentacleLag")
+
+[node name="CreatureMesh" type="MeshInstance3D" parent="." unique_id=1081772007]
+
+[node name="WormBody" type="Node" parent="." unique_id=279832902]
+process_mode = 4
+script = ExtResource("2_elaha")
+
+[node name="SquidTentacleLag" type="Node" parent="." unique_id=1474431382 node_paths=PackedStringArray("target")]
+process_mode = 4
+script = ExtResource("4_8fquu")
+target = NodePath("..")
+
+[node name="SpiderBody" type="Node3D" parent="." unique_id=34366077]
+process_mode = 3
+script = ExtResource("5_bdhrq")
+
+[node name="_Node3D_120977" type="Node3D" parent="SpiderBody" unique_id=37733412]
+
+[node name="Body" type="MeshInstance3D" parent="SpiderBody/_Node3D_120977" unique_id=252832933]
+material_override = SubResource("ShaderMaterial_muvj2")
+mesh = SubResource("ArrayMesh_qnanu")
+
+[node name="Leg_1" type="Node3D" parent="SpiderBody/_Node3D_120977" unique_id=1996790247]
+transform = Transform3D(-1.847323e-08, 3.9615973e-08, 1, 0.9063078, 0.42261824, 0, -0.42261824, 0.9063078, -4.371139e-08, 0.49713615, -0.074570425, 0)
+
+[node name="SegmentPivot_1" type="Node3D" parent="SpiderBody/_Node3D_120977/Leg_1" unique_id=2072680123]
+transform = Transform3D(1, 0, 0, 0, 0.9999863, -0.005235964, 0, 0.005235964, 0.9999863, 0, 0, 0)
+
+[node name="_MeshInstance3D_120978" type="MeshInstance3D" parent="SpiderBody/_Node3D_120977/Leg_1/SegmentPivot_1" unique_id=1747479882]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0.37014624)
+material_override = SubResource("ShaderMaterial_muvj2")
+mesh = SubResource("CylinderMesh_xksls")
+
+[node name="SegmentPivot_2" type="Node3D" parent="SpiderBody/_Node3D_120977/Leg_1/SegmentPivot_1" unique_id=1658219068]
+transform = Transform3D(1, 0, 0, 0, 0.99991435, 0.013089596, 0, -0.013089596, 0.99991435, 0, 0, 0.7402925)
+
+[node name="_MeshInstance3D_120979" type="MeshInstance3D" parent="SpiderBody/_Node3D_120977/Leg_1/SegmentPivot_1/SegmentPivot_2" unique_id=1353142448]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0.30284694)
+material_override = SubResource("ShaderMaterial_muvj2")
+mesh = SubResource("CylinderMesh_e4opn")
+
+[node name="Leg_2" type="Node3D" parent="SpiderBody/_Node3D_120977" unique_id=1177579669]
+transform = Transform3D(0.36599812, -0.7848856, 0.5, 0.9063078, 0.42261824, 0, -0.21130912, 0.4531539, 0.8660254, 0.24856807, -0.074570425, 0.43053254)
+
+[node name="SegmentPivot_1" type="Node3D" parent="SpiderBody/_Node3D_120977/Leg_2" unique_id=1129889246]
+transform = Transform3D(1, 0, 0, 0, 0.9999863, -0.005235964, 0, 0.005235964, 0.9999863, 0, 0, 0)
+
+[node name="_MeshInstance3D_120980" type="MeshInstance3D" parent="SpiderBody/_Node3D_120977/Leg_2/SegmentPivot_1" unique_id=1137793934]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0.5194389)
+material_override = SubResource("ShaderMaterial_muvj2")
+mesh = SubResource("CylinderMesh_wgx7c")
+
+[node name="SegmentPivot_2" type="Node3D" parent="SpiderBody/_Node3D_120977/Leg_2/SegmentPivot_1" unique_id=1615871485]
+transform = Transform3D(1, 0, 0, 0, 0.99991435, 0.013089596, 0, -0.013089596, 0.99991435, 0, 0, 1.0388778)
+
+[node name="_MeshInstance3D_120981" type="MeshInstance3D" parent="SpiderBody/_Node3D_120977/Leg_2/SegmentPivot_1/SegmentPivot_2" unique_id=75361667]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0.42499548)
+material_override = SubResource("ShaderMaterial_muvj2")
+mesh = SubResource("CylinderMesh_fkp34")
+
+[node name="Leg_3" type="Node3D" parent="SpiderBody/_Node3D_120977" unique_id=979860186]
+transform = Transform3D(0.36599812, -0.7848856, -0.5, 0.9063078, 0.42261824, 0, 0.21130912, -0.4531539, 0.8660254, -0.24856807, -0.074570425, 0.43053254)
+
+[node name="SegmentPivot_1" type="Node3D" parent="SpiderBody/_Node3D_120977/Leg_3" unique_id=1439977394]
+transform = Transform3D(1, 0, 0, 0, 0.9999863, -0.005235964, 0, 0.005235964, 0.9999863, 0, 0, 0)
+
+[node name="_MeshInstance3D_120982" type="MeshInstance3D" parent="SpiderBody/_Node3D_120977/Leg_3/SegmentPivot_1" unique_id=268963661]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0.44661444)
+material_override = SubResource("ShaderMaterial_muvj2")
+mesh = SubResource("CylinderMesh_0mms3")
+
+[node name="SegmentPivot_2" type="Node3D" parent="SpiderBody/_Node3D_120977/Leg_3/SegmentPivot_1" unique_id=880421482]
+transform = Transform3D(1, 0, 0, 0, 0.99991435, 0.013089596, 0, -0.013089596, 0.99991435, 0, 0, 0.8932289)
+
+[node name="_MeshInstance3D_120983" type="MeshInstance3D" parent="SpiderBody/_Node3D_120977/Leg_3/SegmentPivot_1/SegmentPivot_2" unique_id=1551835992]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0.36541182)
+material_override = SubResource("ShaderMaterial_muvj2")
+mesh = SubResource("CylinderMesh_rm4xd")
+
+[node name="Leg_4" type="Node3D" parent="SpiderBody/_Node3D_120977" unique_id=214892090]
+transform = Transform3D(-1.847323e-08, 3.9615973e-08, -1, 0.9063078, 0.42261824, 0, 0.42261824, -0.9063078, -4.371139e-08, -0.49713615, -0.074570425, 6.0879606e-17)
+
+[node name="SegmentPivot_1" type="Node3D" parent="SpiderBody/_Node3D_120977/Leg_4" unique_id=1674159137]
+transform = Transform3D(1, 0, 0, 0, 0.9999863, -0.005235964, 0, 0.005235964, 0.9999863, 0, 0, 0)
+
+[node name="_MeshInstance3D_120984" type="MeshInstance3D" parent="SpiderBody/_Node3D_120977/Leg_4/SegmentPivot_1" unique_id=1445331396]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0.5432207)
+material_override = SubResource("ShaderMaterial_muvj2")
+mesh = SubResource("CylinderMesh_vb0db")
+
+[node name="SegmentPivot_2" type="Node3D" parent="SpiderBody/_Node3D_120977/Leg_4/SegmentPivot_1" unique_id=381185305]
+transform = Transform3D(1, 0, 0, 0, 0.99991435, 0.013089596, 0, -0.013089596, 0.99991435, 0, 0, 1.0864414)
+
+[node name="_MeshInstance3D_120985" type="MeshInstance3D" parent="SpiderBody/_Node3D_120977/Leg_4/SegmentPivot_1/SegmentPivot_2" unique_id=1155225970]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0.4444533)
+material_override = SubResource("ShaderMaterial_muvj2")
+mesh = SubResource("CylinderMesh_kw7o3")
+
+[node name="Leg_5" type="Node3D" parent="SpiderBody/_Node3D_120977" unique_id=1229801614]
+transform = Transform3D(-0.36599812, 0.7848856, -0.50000006, 0.9063078, 0.42261824, 0, 0.21130915, -0.45315397, -0.8660254, -0.24856807, -0.074570425, -0.43053254)
+
+[node name="SegmentPivot_1" type="Node3D" parent="SpiderBody/_Node3D_120977/Leg_5" unique_id=277799617]
+transform = Transform3D(1, 0, 0, 0, 0.9999863, -0.005235964, 0, 0.005235964, 0.9999863, 0, 0, 0)
+
+[node name="_MeshInstance3D_120986" type="MeshInstance3D" parent="SpiderBody/_Node3D_120977/Leg_5/SegmentPivot_1" unique_id=1224205419]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0.5214923)
+material_override = SubResource("ShaderMaterial_muvj2")
+mesh = SubResource("CylinderMesh_1bg3p")
+
+[node name="SegmentPivot_2" type="Node3D" parent="SpiderBody/_Node3D_120977/Leg_5/SegmentPivot_1" unique_id=84416198]
+transform = Transform3D(1, 0, 0, 0, 0.99991435, 0.013089596, 0, -0.013089596, 0.99991435, 0, 0, 1.0429846)
+
+[node name="_MeshInstance3D_120987" type="MeshInstance3D" parent="SpiderBody/_Node3D_120977/Leg_5/SegmentPivot_1/SegmentPivot_2" unique_id=1583481085]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0.4266755)
+material_override = SubResource("ShaderMaterial_muvj2")
+mesh = SubResource("CylinderMesh_ajg5l")
+
+[node name="Leg_6" type="Node3D" parent="SpiderBody/_Node3D_120977" unique_id=153376284]
+transform = Transform3D(-0.36599812, 0.7848856, 0.49999997, 0.9063078, 0.42261824, 0, -0.2113091, 0.45315388, -0.8660254, 0.24856807, -0.074570425, -0.43053254)
+
+[node name="SegmentPivot_1" type="Node3D" parent="SpiderBody/_Node3D_120977/Leg_6" unique_id=1236870156]
+transform = Transform3D(1, 0, 0, 0, 0.9999863, -0.005235964, 0, 0.005235964, 0.9999863, 0, 0, 0)
+
+[node name="_MeshInstance3D_120988" type="MeshInstance3D" parent="SpiderBody/_Node3D_120977/Leg_6/SegmentPivot_1" unique_id=1911481874]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0.5549057)
+material_override = SubResource("ShaderMaterial_muvj2")
+mesh = SubResource("CylinderMesh_wb56q")
+
+[node name="SegmentPivot_2" type="Node3D" parent="SpiderBody/_Node3D_120977/Leg_6/SegmentPivot_1" unique_id=725250857]
+transform = Transform3D(1, 0, 0, 0, 0.99991435, 0.013089596, 0, -0.013089596, 0.99991435, 0, 0, 1.1098114)
+
+[node name="_MeshInstance3D_120989" type="MeshInstance3D" parent="SpiderBody/_Node3D_120977/Leg_6/SegmentPivot_1/SegmentPivot_2" unique_id=354414389]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0.45401376)
+material_override = SubResource("ShaderMaterial_muvj2")
+mesh = SubResource("CylinderMesh_ao45s")

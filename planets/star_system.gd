@@ -10,6 +10,7 @@ extends Node3D
 
 @export var planets_container: Node3D
 @export var star_eye_container: Node3D
+@export var leviathan_spawner: LeviathanSpawner
 
 @export var planet_scene: PackedScene
 @export var star_eye_scene: PackedScene
@@ -17,6 +18,11 @@ extends Node3D
 @export var moon_surface_profile_set: MoonSurfaceProfileSet
 @export var generation_settings: GenerationSettings
 @export var system_seed: int = 0
+
+## The star's physical radius - lives here, not on World, because the
+## star itself is spawned and owned by StarSystem (star_eye_scene). World
+## only borrows this value for ship spawn clearance checks.
+@export var star_radius_m: float = 300.0
 
 var system_data: SystemData
 var planet_nodes: Array[Node3D] = []
@@ -41,6 +47,9 @@ func _build_system(seed_value: int) -> void:
 
 	for planet_data in system_data.planets:
 		_spawn_planet(planet_data, star_eye)
+
+	if leviathan_spawner != null:
+		leviathan_spawner.setup(self, seed_value, star_radius_m)
 
 func _spawn_planet(planet_data: PlanetData, star_node: Node3D) -> void:
 	var planet_node: Node3D = planet_scene.instantiate()
@@ -76,3 +85,9 @@ func get_all_celestial_nodes() -> Array[Node3D]:
 				if is_instance_valid(moon_node):
 					all_nodes.append(moon_node)
 	return all_nodes
+
+func get_leviathan_spawner() -> LeviathanSpawner:
+	return leviathan_spawner
+
+func get_radius() -> float:
+	return star_radius_m

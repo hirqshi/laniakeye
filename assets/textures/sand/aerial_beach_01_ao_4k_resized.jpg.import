@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://ctyra4hpivlpu"
 path.s3tc="res://.godot/imported/aerial_beach_01_ao_4k_resized.jpg-07399e3c476e906e27a5ad2ce41a9a84.s3tc.ctex"
+path.etc2="res://.godot/imported/aerial_beach_01_ao_4k_resized.jpg-07399e3c476e906e27a5ad2ce41a9a84.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/sand/aerial_beach_01_ao_4k_resized.jpg"
-dest_files=["res://.godot/imported/aerial_beach_01_ao_4k_resized.jpg-07399e3c476e906e27a5ad2ce41a9a84.s3tc.ctex"]
+dest_files=["res://.godot/imported/aerial_beach_01_ao_4k_resized.jpg-07399e3c476e906e27a5ad2ce41a9a84.s3tc.ctex", "res://.godot/imported/aerial_beach_01_ao_4k_resized.jpg-07399e3c476e906e27a5ad2ce41a9a84.etc2.ctex"]
 
 [params]
 

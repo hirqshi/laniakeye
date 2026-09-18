@@ -29,6 +29,12 @@ uniform float tentacle_lag_wave_sharpness : hint_range(0.1, 6.0) = 1.7;
 
 uniform float surface_mode : hint_range(0.0, 1.0) = 0.0;
 
+uniform vec4 emission_color : source_color = vec4(0.3, 0.8, 1.0, 1.0);
+uniform float emission_energy_multiplier : hint_range(0.0, 20.0) = 0.0;
+uniform float emission_band_count : hint_range(0.1, 20.0) = 6.0;
+uniform float emission_pulse_speed : hint_range(0.0, 20.0) = 1.5;
+uniform float emission_band_sharpness : hint_range(0.1, 8.0) = 3.0;
+
 void vertex() {
 	if (surface_mode < 0.5) {
 		float body_phase = (
@@ -72,9 +78,9 @@ void vertex() {
 			* tip_weight
 		);
 		float lag_phase = (
-		UV.y * tentacle_lag_wave_count * 6.2831853
-		- TIME * tentacle_lag_wave_speed
-		+ tentacle_phase
+			UV.y * tentacle_lag_wave_count * 6.2831853
+			- TIME * tentacle_lag_wave_speed
+			+ tentacle_phase
 		);
 
 		float lag_wave = sin(lag_phase) * 0.5 + 0.5;
@@ -91,4 +97,12 @@ void fragment() {
 	NORMAL_MAP = texture(normal_texture, UV).rgb;
 	NORMAL_MAP_DEPTH = normal_strength;
 	ROUGHNESS = texture(roughness_texture, UV).r * roughness_multiplier;
+
+	if (emission_energy_multiplier > 0.0) {
+		float band_phase = UV.y * emission_band_count * 6.2831853 - TIME * emission_pulse_speed;
+		float band_wave = sin(band_phase) * 0.5 + 0.5;
+		band_wave = pow(band_wave, emission_band_sharpness);
+
+		EMISSION = emission_color.rgb * band_wave * emission_energy_multiplier;
+	}
 }

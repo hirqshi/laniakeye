@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://bagqiw6prqgu1" path="res://creatures/creature_profile.gd" id="1_oofnk"]
 [ext_resource type="Texture2D" uid="uid://ciew0e6xaws55" path="res://assets/textures/rock/rock_boulder_dry_diff_4k_resized.jpg" id="1_q53ba"]
+[ext_resource type="PackedScene" uid="uid://jlgubtkruw0h" path="res://creatures/worm.tscn" id="2_f803f"]
 [ext_resource type="Texture2D" uid="uid://b3vqp0q7ae71v" path="res://assets/textures/rock/rock_boulder_dry_nor_gl_4k_resized.jpg" id="2_opnew"]
 [ext_resource type="Texture2D" uid="uid://nsd2v7mimn22" path="res://assets/textures/rock/rock_boulder_dry_rough_4k_resized.jpg" id="3_f803f"]
 
@@ -15,12 +16,23 @@ albedo_texture = ExtResource("1_q53ba")
 normal_texture = ExtResource("2_opnew")
 roughness_texture = ExtResource("3_f803f")
 display_name = "Worm"
-preview_seed = 4290508037
+preview_seed = 1490530341
 wave_amplitude_ratio = 3.9
 wave_frequency = 1.4
 wave_speed = 5.800000000000001
-min_length_m = 5.1000000000000005
-max_length_m = 30.2
+min_length_m = 49.0
+max_length_m = 75.8
 color_gradient = SubResource("Gradient_fwu3m")
-max_worm_radius_m = 1.74
+worm_segments = 42
+min_worm_radius_m = 0.93
+max_worm_radius_m = 1.6400000000000001
+creature_scene = ExtResource("2_f803f")
+hop_interval_min_s = 0.1
+hop_interval_max_s = 0.1
+hop_launch_speed_mps = 16.8
+hop_horizontal_speed_mps = 13.6
+hop_arc_turn_rate_rad_s = 0.86
+burrow_depth_m = 3.14
+burrow_speed_mps = 30.0
+burrow_turn_speed_rad_s = 12.62
 metadata/_custom_type_script = "uid://bagqiw6prqgu1"

@@ -12,5 +12,5 @@
 
 [resource]
 script = ExtResource("2_yknc1")
-profiles = Array[ExtResource("1_kcblx")]([ExtResource("2_d55q8"), ExtResource("3_pg1gt"), ExtResource("4_vsa1o"), ExtResource("5_g78sh"), ExtResource("6_vsa1o"), ExtResource("7_g78sh"), ExtResource("8_hy63r")])
+profiles = Array[ExtResource("1_kcblx")]([ExtResource("7_g78sh"), ExtResource("2_d55q8"), ExtResource("3_pg1gt"), ExtResource("6_vsa1o"), ExtResource("5_g78sh"), ExtResource("8_hy63r"), ExtResource("4_vsa1o")])
 metadata/_custom_type_script = "uid://cj2w8n4sxvjw4"

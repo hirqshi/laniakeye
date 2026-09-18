@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="LeviathanProfile" format=3 uid="uid://bqkmvsy7x0umv"]
+
+[ext_resource type="PackedScene" uid="uid://csq00vyq0gkqr" path="res://creatures/squid_leviathan.tscn" id="1_a4b62"]
+[ext_resource type="Resource" uid="uid://0dmn0by7vvyf" path="res://creatures/leviathan_squid.tres" id="1_cruyb"]
+[ext_resource type="Script" uid="uid://c5bdic3s3tv8e" path="res://creatures/leviathan_profile.gd" id="1_myuqq"]
+
+[resource]
+script = ExtResource("1_myuqq")
+leviathan_type = 1
+creature_scene = ExtResource("1_a4b62")
+base_creature_profile = ExtResource("1_cruyb")
+size_multiplier = 5000.0
+base_speed_mps = 10.0
+emission_energy_multiplier = 5.1
+metadata/_custom_type_script = "uid://c5bdic3s3tv8e"

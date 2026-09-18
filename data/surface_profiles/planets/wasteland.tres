@@ -5,9 +5,12 @@
 [ext_resource type="Texture2D" uid="uid://dkkpfnikq4xr0" path="res://assets/textures/mud/mud_cracked_dry_03_ao_4k_resized.jpg" id="2_t5emb"]
 [ext_resource type="Texture2D" uid="uid://cgqj1ge2ilxkm" path="res://assets/textures/mud/mud_cracked_dry_03_disp_4k_resized.jpg" id="3_b2hhw"]
 [ext_resource type="Texture2D" uid="uid://bmefpi2q1mp80" path="res://assets/textures/mud/mud_cracked_dry_03_nor_gl_4k_resized.jpg" id="4_rnbuw"]
+[ext_resource type="Script" uid="uid://bmw0a83pbs8lm" path="res://creatures/creature_planet_profile.gd" id="4_xhcob"]
+[ext_resource type="Script" uid="uid://v7mqc6nt1yg5" path="res://creatures/creature_spawn_entry.gd" id="5_douvh"]
 [ext_resource type="Texture2D" uid="uid://0csbmlfgx2p4" path="res://assets/textures/mud/mud_cracked_dry_03_rough_4k_resized.jpg" id="5_lpofn"]
 [ext_resource type="Gradient" uid="uid://c267c7hrw7ixw" path="res://assets/textures/ring_gradient.tres" id="5_qhq0g"]
 [ext_resource type="Script" uid="uid://1t0wbuevh1oe" path="res://generation/surface_profile.gd" id="6_7e3bw"]
+[ext_resource type="Resource" uid="uid://qcd24r2s2pno" path="res://creatures/flying_worm.tres" id="6_7gwvo"]
 [ext_resource type="Script" uid="uid://kcsw7i33p7vt" path="res://vegetation/vegetation_profile.gd" id="8_okyjl"]
 [ext_resource type="Script" uid="uid://da8uuodwnok4" path="res://vegetation/vegetation_layer_profile.gd" id="9_bt1j3"]
 [ext_resource type="Resource" uid="uid://c4uuixxo8moay" path="res://data/vegetation_profiles/dead_tree.tres" id="10_bt1j3"]
@@ -15,6 +18,18 @@
 [sub_resource type="Gradient" id="Gradient_ty0cb"]
 offsets = PackedFloat32Array(0, 0.20806451, 0.5016129, 0.7241936, 1)
 colors = PackedColorArray(1, 1, 1, 1, 0.67, 0.67, 0.67, 1, 0.79, 0.3871, 0.3871, 1, 0.88, 0.7578267, 0.4488, 1, 1, 1, 1, 1)
+
+[sub_resource type="Resource" id="Resource_2qenn"]
+script = ExtResource("5_douvh")
+creature_profile = ExtResource("6_7gwvo")
+min_count = 3
+max_count = 7
+metadata/_custom_type_script = "uid://v7mqc6nt1yg5"
+
+[sub_resource type="Resource" id="Resource_f1ulv"]
+script = ExtResource("4_xhcob")
+spawn_entries = Array[ExtResource("5_douvh")]([SubResource("Resource_2qenn")])
+metadata/_custom_type_script = "uid://bmw0a83pbs8lm"
 
 [sub_resource type="Resource" id="Resource_i1a5a"]
 script = ExtResource("9_bt1j3")
@@ -49,5 +64,6 @@ allow_rings = true
 ring_chance = 0.385
 ring_gradient = ExtResource("5_qhq0g")
 vegetation_profile = SubResource("Resource_5lcxi")
+creature_profile = SubResource("Resource_f1ulv")
 ambient_loop = ExtResource("2_bvr8f")
 metadata/_custom_type_script = "uid://1t0wbuevh1oe"

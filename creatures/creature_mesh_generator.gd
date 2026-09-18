@@ -89,10 +89,7 @@ func _build_worm_topology(data: WormMeshData) -> void:
 	_append_cap_topology(data, true)
 	_append_cap_topology(data, false)
 
-func _append_cap_topology(
-	data: WormMeshData,
-	is_head: bool
-) -> void:
+func _append_cap_topology(data: WormMeshData, is_head: bool) -> void:
 	var center_index: int = data.vertices.size()
 	var cap_ring_start_index: int = center_index + 1
 
@@ -111,18 +108,17 @@ func _append_cap_topology(
 		var next_radial_index: int = (
 			(radial_index + 1) % data.radial_segment_count
 		)
-
 		var current_index: int = cap_ring_start_index + radial_index
 		var next_index: int = cap_ring_start_index + next_radial_index
 
 		if is_head:
 			data.indices.append(center_index)
-			data.indices.append(next_index)
 			data.indices.append(current_index)
+			data.indices.append(next_index)
 		else:
 			data.indices.append(center_index)
-			data.indices.append(current_index)
 			data.indices.append(next_index)
+			data.indices.append(current_index)
 
 func _build_initial_worm_mesh(data: WormMeshData) -> void:
 	var body_points: PackedVector3Array = PackedVector3Array()

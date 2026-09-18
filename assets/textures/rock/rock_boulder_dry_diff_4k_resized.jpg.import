@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://ciew0e6xaws55"
 path.s3tc="res://.godot/imported/rock_boulder_dry_diff_4k_resized.jpg-8993a394835466501243a2eb78c86779.s3tc.ctex"
+path.etc2="res://.godot/imported/rock_boulder_dry_diff_4k_resized.jpg-8993a394835466501243a2eb78c86779.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/rock/rock_boulder_dry_diff_4k_resized.jpg"
-dest_files=["res://.godot/imported/rock_boulder_dry_diff_4k_resized.jpg-8993a394835466501243a2eb78c86779.s3tc.ctex"]
+dest_files=["res://.godot/imported/rock_boulder_dry_diff_4k_resized.jpg-8993a394835466501243a2eb78c86779.s3tc.ctex", "res://.godot/imported/rock_boulder_dry_diff_4k_resized.jpg-8993a394835466501243a2eb78c86779.etc2.ctex"]
 
 [params]
 

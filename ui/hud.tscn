@@ -15,6 +15,7 @@
 [ext_resource type="Texture2D" uid="uid://ddsdqgiidt62x" path="res://assets/ui/PlanetIcon.png" id="13_mp5xd"]
 [ext_resource type="Texture2D" uid="uid://civkmut58jc17" path="res://assets/ui/player_marker.png" id="13_so1yu"]
 [ext_resource type="Texture2D" uid="uid://dx11yn7j7xcbp" path="res://assets/ui/starIcon.png" id="14_u6vop"]
+[ext_resource type="Texture2D" uid="uid://7yle40thnmul" path="res://assets/ui/leviathan.png" id="16_u6vop"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_6m30h"]
 font = ExtResource("7_q43x7")
@@ -254,6 +255,7 @@ script = ExtResource("12_b00kl")
 planet_icon_texture = ExtResource("13_mp5xd")
 star_icon_texture = ExtResource("14_u6vop")
 player_icon_texture = ExtResource("13_so1yu")
+leviathan_icon_texture = ExtResource("16_u6vop")
 map_radius_px = 80.0
 star_dot_radius_px = 3.0
 planet_dot_min_radius_px = 0.765

@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://0upa71xd3vdh"
 path.s3tc="res://.godot/imported/Metal023_4K_Metalness_resized.jpg-613e620f4f71ee4b109e95a7c5a7443b.s3tc.ctex"
+path.etc2="res://.godot/imported/Metal023_4K_Metalness_resized.jpg-613e620f4f71ee4b109e95a7c5a7443b.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/ship/rust/Metal023_4K_Metalness_resized.jpg"
-dest_files=["res://.godot/imported/Metal023_4K_Metalness_resized.jpg-613e620f4f71ee4b109e95a7c5a7443b.s3tc.ctex"]
+dest_files=["res://.godot/imported/Metal023_4K_Metalness_resized.jpg-613e620f4f71ee4b109e95a7c5a7443b.s3tc.ctex", "res://.godot/imported/Metal023_4K_Metalness_resized.jpg-613e620f4f71ee4b109e95a7c5a7443b.etc2.ctex"]
 
 [params]
 

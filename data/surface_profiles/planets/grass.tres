@@ -4,14 +4,37 @@
 [ext_resource type="AudioStream" uid="uid://q5ug7uc4e7x" path="res://audio/audiopapkin-forest-ambience-296528.mp3" id="2_0f7rh"]
 [ext_resource type="Texture2D" uid="uid://dycxuodb270vi" path="res://assets/textures/grass/coast_sand_rocks_02_ao_4k_resized.jpg" id="2_35iq8"]
 [ext_resource type="Texture2D" uid="uid://bd8wogbsc0l66" path="res://assets/textures/grass/coast_sand_rocks_02_disp_4k_resized.jpg" id="3_raji8"]
+[ext_resource type="Script" uid="uid://bmw0a83pbs8lm" path="res://creatures/creature_planet_profile.gd" id="4_71dgy"]
 [ext_resource type="Texture2D" uid="uid://bbrcy6o33e18y" path="res://assets/textures/grass/coast_sand_rocks_02_nor_gl_4k_resized.jpg" id="4_ynfew"]
 [ext_resource type="Texture2D" uid="uid://w660s3mu1n65" path="res://assets/textures/grass/coast_sand_rocks_02_rough_4k_resized.jpg" id="5_cg5sw"]
+[ext_resource type="Script" uid="uid://v7mqc6nt1yg5" path="res://creatures/creature_spawn_entry.gd" id="5_vuyck"]
 [ext_resource type="Script" uid="uid://1t0wbuevh1oe" path="res://generation/surface_profile.gd" id="6_jnwxl"]
+[ext_resource type="Resource" uid="uid://rlbqtr3u3irk" path="res://creatures/swimming_worm.tres" id="6_yy4qq"]
 [ext_resource type="Resource" uid="uid://b200qfg6xj084" path="res://vegetation/profiles/grassland_profile.tres" id="7_c0scx"]
+[ext_resource type="Resource" uid="uid://dacirgsnru87v" path="res://creatures/spider.tres" id="7_vuyck"]
 
 [sub_resource type="Gradient" id="Gradient_e6m2j"]
 offsets = PackedFloat32Array(0, 0.11129032, 0.29193547, 0.47903225, 0.67258066, 0.89193547)
 colors = PackedColorArray(0.5240726, 1.7686467, 0.690016, 1, 0.80569184, 1.2061527, 0.40523106, 1, 0.2486325, 0.5013946, 0.28233415, 1, 0.15840003, 0.72, 0.56088006, 1, 1.1038921, 0.81762546, 0.3231648, 1, 0.74261206, 0.74261206, 0.74261206, 1)
+
+[sub_resource type="Resource" id="Resource_1wmcx"]
+script = ExtResource("5_vuyck")
+creature_profile = ExtResource("7_vuyck")
+min_count = 2
+max_count = 9
+metadata/_custom_type_script = "uid://v7mqc6nt1yg5"
+
+[sub_resource type="Resource" id="Resource_oxgrk"]
+script = ExtResource("5_vuyck")
+creature_profile = ExtResource("6_yy4qq")
+min_count = 2
+max_count = 6
+metadata/_custom_type_script = "uid://v7mqc6nt1yg5"
+
+[sub_resource type="Resource" id="Resource_xdfdi"]
+script = ExtResource("4_71dgy")
+spawn_entries = Array[ExtResource("5_vuyck")]([SubResource("Resource_1wmcx"), SubResource("Resource_oxgrk")])
+metadata/_custom_type_script = "uid://bmw0a83pbs8lm"
 
 [sub_resource type="Gradient" id="Gradient_0k1rn"]
 offsets = PackedFloat32Array(0, 0.99667406)
@@ -44,5 +67,6 @@ ocean_basin_edge_softness = 0.075
 water_gradient = SubResource("Gradient_0k1rn")
 depth_fade_distance_ratio = 0.035
 vegetation_profile = ExtResource("7_c0scx")
+creature_profile = SubResource("Resource_xdfdi")
 ambient_loop = ExtResource("2_0f7rh")
 metadata/_custom_type_script = "uid://1t0wbuevh1oe"

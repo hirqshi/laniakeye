@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://ddns8oih2segh"]
+
+[ext_resource type="Script" uid="uid://mlyg2lndgm0e" path="res://creatures/creature_body.gd" id="1_y3c5e"]
+[ext_resource type="Script" uid="uid://dnpcjw7rwmgbx" path="res://creatures/squid_tentacle_lag.gd" id="2_3x212"]
+
+[node name="CreatureBody" type="Node3D" unique_id=71639571 node_paths=PackedStringArray("creature_mesh_instance", "squid_tentacle_lag")]
+script = ExtResource("1_y3c5e")
+creature_mesh_instance = NodePath("CreatureMesh")
+squid_tentacle_lag = NodePath("SquidTentacleLag")
+
+[node name="CreatureMesh" type="MeshInstance3D" parent="." unique_id=1081772007]
+
+[node name="SquidTentacleLag" type="Node" parent="." unique_id=1474431382 node_paths=PackedStringArray("target", "tentacle_mesh")]
+process_mode = 1
+script = ExtResource("2_3x212")
+target = NodePath("..")
+tentacle_mesh = NodePath("../CreatureMesh")

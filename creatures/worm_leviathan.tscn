@@ -1,0 +1,26 @@
+[gd_scene format=3 uid="uid://bbkgnxxt13rge"]
+
+[ext_resource type="Script" uid="uid://5pop8ts2y4by" path="res://creatures/leviathan_body.gd" id="1_6uqd1"]
+[ext_resource type="Script" uid="uid://dnpcjw7rwmgbx" path="res://creatures/squid_tentacle_lag.gd" id="2_pc7uj"]
+[ext_resource type="Script" uid="uid://cq3wchqtoeqm4" path="res://creatures/worm_body_controller.gd" id="3_yxrtr"]
+
+[node name="LeviathanBody" type="Node3D" unique_id=1873914329 node_paths=PackedStringArray("creature_mesh_instance", "worm_body_controller", "squid_tentacle_lag")]
+script = ExtResource("1_6uqd1")
+creature_mesh_instance = NodePath("CreatureMesh")
+worm_body_controller = NodePath("WormBody")
+squid_tentacle_lag = NodePath("SquidTentacleLag")
+
+[node name="CreatureMesh" type="MeshInstance3D" parent="." unique_id=884630962]
+transform = Transform3D(15, 0, 0, 0, 15, 0, 0, 0, 15, 0, 0, 0)
+
+[node name="SquidTentacleLag" type="Node" parent="." unique_id=222905799 node_paths=PackedStringArray("target", "tentacle_mesh")]
+process_mode = 1
+script = ExtResource("2_pc7uj")
+target = NodePath("..")
+tentacle_mesh = NodePath("../CreatureMesh")
+
+[node name="WormBody" type="Node" parent="." unique_id=2093241388 node_paths=PackedStringArray("creature_mesh")]
+process_mode = 1
+script = ExtResource("3_yxrtr")
+creature_mesh = NodePath("../CreatureMesh")
+preview_enabled = false

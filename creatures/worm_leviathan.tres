@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="LeviathanProfile" format=3 uid="uid://do36ev10rgpoi"]
+
+[ext_resource type="Resource" uid="uid://bssf7u3ugel3q" path="res://creatures/leviathan_worm.tres" id="1_3mplt"]
+[ext_resource type="Script" uid="uid://c5bdic3s3tv8e" path="res://creatures/leviathan_profile.gd" id="2_3mplt"]
+[ext_resource type="PackedScene" uid="uid://bbkgnxxt13rge" path="res://creatures/worm_leviathan.tscn" id="2_3tdeh"]
+
+[resource]
+script = ExtResource("2_3mplt")
+creature_scene = ExtResource("2_3tdeh")
+base_creature_profile = ExtResource("1_3mplt")
+size_multiplier = 5000.0
+base_speed_mps = 10.0
+emission_color = Color(1, 0.8133334, 0.19999999, 1)
+emission_energy_multiplier = 5.0
+metadata/_custom_type_script = "uid://c5bdic3s3tv8e"

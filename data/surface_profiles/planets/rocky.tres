@@ -5,8 +5,11 @@
 [ext_resource type="Texture2D" uid="uid://bgo4q64gdx3v8" path="res://assets/textures/rock/rock_boulder_dry_ao_4k_resized.jpg" id="2_6kirp"]
 [ext_resource type="AudioStream" uid="uid://ktl722e1p0ir" path="res://audio/u_7hpxkdroz2-space-461600.mp3" id="2_fiovq"]
 [ext_resource type="Texture2D" uid="uid://b2x0y4ngqeuk1" path="res://assets/textures/rock/rock_boulder_dry_disp_4k_resized.jpg" id="3_rbi4w"]
+[ext_resource type="Script" uid="uid://bmw0a83pbs8lm" path="res://creatures/creature_planet_profile.gd" id="4_2qmuh"]
 [ext_resource type="Texture2D" uid="uid://b3vqp0q7ae71v" path="res://assets/textures/rock/rock_boulder_dry_nor_gl_4k_resized.jpg" id="4_g70yo"]
+[ext_resource type="Script" uid="uid://v7mqc6nt1yg5" path="res://creatures/creature_spawn_entry.gd" id="5_b528h"]
 [ext_resource type="Texture2D" uid="uid://nsd2v7mimn22" path="res://assets/textures/rock/rock_boulder_dry_rough_4k_resized.jpg" id="5_m4bea"]
+[ext_resource type="Resource" uid="uid://cxkqra6y2p0qc" path="res://creatures/big_spider.tres" id="6_b528h"]
 [ext_resource type="Script" uid="uid://kcsw7i33p7vt" path="res://vegetation/vegetation_profile.gd" id="7_kww3t"]
 [ext_resource type="Script" uid="uid://da8uuodwnok4" path="res://vegetation/vegetation_layer_profile.gd" id="8_fiovq"]
 [ext_resource type="Resource" uid="uid://ct5cl6aw5ql2r" path="res://data/vegetation_profiles/alien_tree3.tres" id="9_mlmqi"]
@@ -14,6 +17,18 @@
 [sub_resource type="Gradient" id="Gradient_auhju"]
 offsets = PackedFloat32Array(0.037096772, 0.18870968, 0.3532258, 0.48225805, 0.62419355, 0.7629032, 0.93064517)
 colors = PackedColorArray(0, 0, 0, 1, 0.35, 0.35, 0.35, 1, 0.43800002, 0.4434, 0.6, 1, 0.31451613, 0.31451613, 0.31451613, 1, 0.82, 0.82, 0.82, 1, 1, 1, 1, 1, 0.6889, 0.83, 0.780615, 1)
+
+[sub_resource type="Resource" id="Resource_yy4qq"]
+script = ExtResource("5_b528h")
+creature_profile = ExtResource("6_b528h")
+min_count = 5
+max_count = 7
+metadata/_custom_type_script = "uid://v7mqc6nt1yg5"
+
+[sub_resource type="Resource" id="Resource_vuyck"]
+script = ExtResource("4_2qmuh")
+spawn_entries = Array[ExtResource("5_b528h")]([SubResource("Resource_yy4qq")])
+metadata/_custom_type_script = "uid://bmw0a83pbs8lm"
 
 [sub_resource type="Resource" id="Resource_uc5mg"]
 script = ExtResource("8_fiovq")
@@ -46,5 +61,6 @@ crater_count_max = 26
 crater_depth_m = 10.44
 crater_rim_height_m = 5.02
 vegetation_profile = SubResource("Resource_7s8av")
+creature_profile = SubResource("Resource_vuyck")
 ambient_loop = ExtResource("2_fiovq")
 metadata/_custom_type_script = "uid://1t0wbuevh1oe"

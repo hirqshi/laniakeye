@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://b0p4ywj0oojtf"
 path.s3tc="res://.godot/imported/mud_cracked_dry_03_diff_4k_resized.jpg-22dec4906c0a39e4e94643156187c4e7.s3tc.ctex"
+path.etc2="res://.godot/imported/mud_cracked_dry_03_diff_4k_resized.jpg-22dec4906c0a39e4e94643156187c4e7.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/mud/mud_cracked_dry_03_diff_4k_resized.jpg"
-dest_files=["res://.godot/imported/mud_cracked_dry_03_diff_4k_resized.jpg-22dec4906c0a39e4e94643156187c4e7.s3tc.ctex"]
+dest_files=["res://.godot/imported/mud_cracked_dry_03_diff_4k_resized.jpg-22dec4906c0a39e4e94643156187c4e7.s3tc.ctex", "res://.godot/imported/mud_cracked_dry_03_diff_4k_resized.jpg-22dec4906c0a39e4e94643156187c4e7.etc2.ctex"]
 
 [params]
 

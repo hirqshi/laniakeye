@@ -28,6 +28,7 @@ buses/default_bus_layout="uid://w363865flcx8"
 MouseCaptureManager="*uid://bfeovmpw04fcw"
 AudioManager="*uid://chg4rfb55dehs"
 SaveManager="*uid://bw3fosv1d0m37"
+SpawnAnchorService="*uid://yogt5lcoboav"
 
 [display]
 
@@ -40,6 +41,7 @@ window/stretch/mode="viewport"
 
 planet_gravity_zone=""
 player=""
+creature_spawn_anchor=""
 
 [input]
 
@@ -107,3 +109,4 @@ toggle_ui={
 
 textures/canvas_textures/default_texture_filter=0
 rendering_device/driver.windows="d3d12"
+textures/vram_compression/import_etc2_astc=true

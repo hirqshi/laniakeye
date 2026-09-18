@@ -20,16 +20,25 @@ class_name SystemMap
 ## Node2D-элементом (нужен для процедурных окружностей орбит), все
 ## остальные визуальные элементы - Control-дерево, чтобы не мешать две
 ## разные системы координат в одном компоненте.
+##
+## LEVIATHANS: unlike planets, leviathans have no fixed orbit - they roam
+## freely (LeviathanLocomotion), so there's no static ring to draw for
+## them, only a live position sampled every frame. Their count can also
+## change at runtime in principle, so the icon pool is rebuilt whenever
+## the live leviathan list no longer matches (see _sync_leviathan_icons),
+## instead of assuming a fixed count like planets.
 
 @export var planet_icon_texture: Texture2D
 @export var star_icon_texture: Texture2D
 @export var player_icon_texture: Texture2D
+@export var leviathan_icon_texture: Texture2D
 
 @export var map_radius_px: float = 90.0
 @export var star_dot_radius_px: float = 5.0
 @export var planet_dot_min_radius_px: float = 2.5
 @export var planet_dot_max_radius_px: float = 7.0
 @export var player_icon_radius_px: float = 4.0
+@export var leviathan_icon_radius_px: float = 5.0
 @export var orbit_line_width: float = 1.0
 @export var orbit_circle_points: int = 48
 
@@ -37,10 +46,13 @@ var _star_system: Node3D
 var _player: Node3D
 var _ship: Node3D
 var _is_piloting_ship: bool = false
+var _leviathan_spawner: LeviathanSpawner
 
 var _orbit_lines: Array[Line2D] = []
 var _planet_dots: Array[TextureRect] = []
 var _player_icon: TextureRect
+var _leviathan_icons: Array[TextureRect] = []
+var _tracked_leviathans: Array[LeviathanBody] = []
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -53,10 +65,11 @@ func _ready() -> void:
 		_on_ui_color_changed(hud.ui_color)
 
 ## Вызывается извне (World) один раз после спавна.
-func setup(star_system: Node3D, player: Node3D, ship: Node3D) -> void:
+func setup(star_system: Node3D, player: Node3D, ship: Node3D, leviathan_spawner: LeviathanSpawner = null) -> void:
 	_star_system = star_system
 	_player = player
 	_ship = ship
+	_leviathan_spawner = leviathan_spawner
 	_rebuild_orbits()
 
 func set_piloting_ship(value: bool) -> void:
@@ -67,6 +80,7 @@ func _process(_delta: float) -> void:
 		return
 	_update_planet_positions()
 	_update_player_icon()
+	_update_leviathan_icons()
 
 ## Builds the static orbit rings + one icon per planet, ONCE, based on
 ## system_data. Called from setup() - orbit radii don't change at runtime,
@@ -148,6 +162,49 @@ func _update_player_icon() -> void:
 
 	_player_icon.visible = true
 
+	var map_pos: Vector2 = _world_position_to_map_pos(tracked_body.global_position)
+	_player_icon.position = map_pos - _player_icon.size * 0.5
+
+## Rebuilds the leviathan icon pool whenever the live leviathan list
+## changes size, then positions each icon from its LeviathanBody's actual
+## world position every frame - no fixed orbit to precompute, unlike
+## planets.
+func _update_leviathan_icons() -> void:
+	if _leviathan_spawner == null or not is_instance_valid(_leviathan_spawner):
+		return
+
+	var live_leviathans: Array[LeviathanBody] = _leviathan_spawner.get_active_leviathans()
+
+	if live_leviathans.size() != _tracked_leviathans.size():
+		_sync_leviathan_icons(live_leviathans)
+
+	for i in range(_leviathan_icons.size()):
+		var leviathan: LeviathanBody = _tracked_leviathans[i]
+		var icon: TextureRect = _leviathan_icons[i]
+
+		if not is_instance_valid(leviathan) or not is_instance_valid(icon):
+			continue
+
+		var map_pos: Vector2 = _world_position_to_map_pos(leviathan.global_position)
+		icon.position = map_pos - icon.size * 0.5
+
+func _sync_leviathan_icons(live_leviathans: Array[LeviathanBody]) -> void:
+	for icon in _leviathan_icons:
+		if is_instance_valid(icon):
+			icon.queue_free()
+	_leviathan_icons.clear()
+
+	_tracked_leviathans = live_leviathans.duplicate()
+
+	for _leviathan in _tracked_leviathans:
+		var icon: TextureRect = _make_icon(leviathan_icon_texture, leviathan_icon_radius_px)
+		add_child(icon)
+		_leviathan_icons.append(icon)
+
+## Shared by player icon and leviathan icons - converts a world position
+## to a map-space pixel position using the same distance/angle scaling
+## as planet orbits, so everything stays visually consistent on one map.
+func _world_position_to_map_pos(world_position: Vector3) -> Vector2:
 	var system_data: SystemData = _star_system.get("system_data")
 	var max_orbit_m: float = 1.0
 	if system_data:
@@ -155,14 +212,13 @@ func _update_player_icon() -> void:
 			max_orbit_m = max(max_orbit_m, planet_data.orbit_distance_m)
 
 	var star_center: Vector3 = _star_system.global_position
-	var offset_world: Vector3 = tracked_body.global_position - star_center
+	var offset_world: Vector3 = world_position - star_center
 	var distance_m: float = offset_world.length()
 	var angle_rad: float = atan2(offset_world.z, offset_world.x)
 
 	var radius_px: float = _distance_to_map_radius(distance_m, max_orbit_m)
 	var center: Vector2 = size * 0.5
-	var map_pos: Vector2 = center + Vector2(cos(angle_rad), sin(angle_rad)) * radius_px
-	_player_icon.position = map_pos - _player_icon.size * 0.5
+	return center + Vector2(cos(angle_rad), sin(angle_rad)) * radius_px
 
 ## sqrt scaling keeps close orbits from bunching up near the center while
 ## still clamping everything to map_radius_px - see class comment.
@@ -195,6 +251,9 @@ func _on_ui_color_changed(color: Color) -> void:
 		dot.modulate = color
 	if _player_icon:
 		_player_icon.modulate = color
+	for icon in _leviathan_icons:
+		if is_instance_valid(icon):
+			icon.modulate = color
 
 func _find_hud_controller() -> HudController:
 	var node: Node = get_parent()
