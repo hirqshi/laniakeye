@@ -28,6 +28,11 @@ extends Node
 
 @export var hud: HudController
 
+@export var seat_enter_stream: AudioStream
+@export var seat_exit_stream: AudioStream
+@export var return_to_ship_stream: AudioStream
+@export_range(-24.0, 6.0, 0.1) var seat_audio_volume_db: float = -4.0
+
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 
 func _ready() -> void:
@@ -64,6 +69,13 @@ func _validate_exports() -> bool:
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("return"):
 		_teleport_player_to_ship_seat()
+
+		if is_instance_valid(player):
+			AudioManager.play_sfx_3d(
+				return_to_ship_stream,
+				player.global_position,
+				seat_audio_volume_db
+			)
 
 ## Teleports the player to the ship's seat exit transform - the single
 ## authoritative "player belongs here when not on foot" point. Used both
@@ -191,10 +203,24 @@ func _on_player_seated() -> void:
 	hud.set_ship_reference(ship.call("get_seat_camera"), ship)
 	hud.set_piloting_ship(true)
 
+	if is_instance_valid(ship):
+		AudioManager.play_sfx_3d(
+			seat_enter_stream,
+			ship.global_position,
+			seat_audio_volume_db
+		)
+
 func _on_player_unseated() -> void:
 	if hud == null:
 		return
-	var player_camera: Camera3D = player.get("player_camera")
+	var player_camera: Camera3D = player.get_player_camera()
 	if player_camera:
 		hud.set_ship_reference(player_camera, ship)
 	hud.set_piloting_ship(false)
+
+	if is_instance_valid(ship):
+		AudioManager.play_sfx_3d(
+			seat_exit_stream,
+			ship.global_position,
+			seat_audio_volume_db
+		)

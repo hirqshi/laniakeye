@@ -46,6 +46,7 @@ extends CharacterBody3D
 signal moved(is_moving: bool, is_running: bool)
 signal jumped
 signal gravity_mode_changed(is_zero_g: bool)
+signal landed
 
 enum GravityMode { PLANET, FLAT, ZERO_G }
 
@@ -100,10 +101,10 @@ func _ready() -> void:
 	safe_margin = collision_safe_margin_m
 
 func set_planet_gravity(source: Node3D, strength: float) -> void:
-	print("MODE SWITCH to PLANET: player_pos=", global_position, " source=", source)
 	if gravity_source != source:
 		_local_offset_initialized = false
 		_recalibrate_ground_probe_for_source(source)
+
 	gravity_source = source
 	surface_gravity_strength = strength
 	gravity_mode = GravityMode.PLANET
@@ -112,9 +113,16 @@ func set_planet_gravity(source: Node3D, strength: float) -> void:
 	_jump_active = false
 	velocity = Vector3.ZERO
 	gravity_mode_changed.emit(false)
+	_update_planet_ambient(source)
 
+func _update_planet_ambient(source: Node3D) -> void:
+	if not is_instance_valid(source) or not source.has_method("get_ambient_loop"):
+		AudioManager.set_planet_ambient(null)
+		return
+
+	AudioManager.set_planet_ambient(source.call("get_ambient_loop"))
+	
 func set_flat_gravity(source: Node3D, strength: float) -> void:
-	print("MODE SWITCH to FLAT: player_pos=", global_position, " source=", source)
 	gravity_source = source
 	surface_gravity_strength = strength
 	gravity_mode = GravityMode.FLAT
@@ -124,9 +132,9 @@ func set_flat_gravity(source: Node3D, strength: float) -> void:
 	_local_planar_initialized = false
 	velocity = Vector3.ZERO
 	gravity_mode_changed.emit(false)
-
+	AudioManager.set_planet_ambient(null)
+	
 func set_zero_g() -> void:
-	print("MODE SWITCH to ZERO_G: player_pos=", global_position)
 	gravity_source = null
 	gravity_mode = GravityMode.ZERO_G
 	up_direction = Vector3.UP
@@ -136,10 +144,14 @@ func set_zero_g() -> void:
 	_local_planar_initialized = false
 	velocity = Vector3.ZERO
 	gravity_mode_changed.emit(true)
+	AudioManager.set_planet_ambient(null)
 
 func get_current_gravity_source() -> Node3D:
 	return gravity_source
 
+func get_player_camera() -> Camera3D:
+	return player_camera
+	
 func set_controllable(value: bool) -> void:
 	is_controllable = value
 
@@ -206,6 +218,7 @@ func _process_sphere_movement(delta: float) -> void:
 	# the lock from re-engaging one frame later and cutting the jump short
 	if _jump_active and _vertical_speed <= 0.0 and grounded_in_range:
 		_jump_active = false
+		landed.emit()
 
 	if grounded_in_range and not _jump_active and not jump_requested:
 		_run_locked_ground_frame(horizontal_velocity)
@@ -238,7 +251,6 @@ func _process_flat_surface_movement(delta: float) -> void:
 	if not _local_planar_initialized:
 		_local_planar_offset = Vector2(current_local_position.x, current_local_position.z)
 		_local_planar_initialized = true
-		print("FLAT INIT: local_pos=", current_local_position, " ship_pos=", gravity_source.global_position)
 
 	up_direction = gravity_source.global_transform.basis.y.normalized()
 
@@ -283,12 +295,12 @@ func _process_flat_surface_movement(delta: float) -> void:
 
 	if _jump_active and _vertical_speed <= 0.0 and grounded_in_range:
 		_jump_active = false
+		landed.emit()
 
 	if grounded_in_range and not _jump_active and not jump_requested:
 		_run_locked_ground_frame(horizontal_velocity)
 	elif grounded_in_range and not _jump_active and jump_requested:
 		_vertical_speed = _get_effective_jump_velocity(surface_gravity_strength * gravity_multiplier)
-		print("FLAT JUMP START: launch_v=", _vertical_speed, " gravity=", surface_gravity_strength * gravity_multiplier, " pos=", global_position)
 		_jump_active = true
 		_is_ground_locked = false
 		jumped.emit()
@@ -300,12 +312,6 @@ func _process_flat_surface_movement(delta: float) -> void:
 		_vertical_speed -= surface_gravity_strength * gravity_multiplier * delta
 		velocity = horizontal_velocity + up_direction * _vertical_speed
 		move_and_slide()
-
-	if _jump_active and abs(_vertical_speed) > 15.0:
-		print("FLAT JUMP RUNAWAY: v_speed=", _vertical_speed, " grounded_in_range=", grounded_in_range, " ground_probe_found=", ground_probe.found, " ground_probe_dist=", ground_probe.distance, " pos=", global_position, " ship_pos=", gravity_source.global_position)
-
-	if global_position.distance_to(pos_before_frame) > 2.0:
-		print("FLAT TELEPORT: before=", pos_before_frame, " after=", global_position, " h_vel=", horizontal_velocity, " ground_probe_found=", ground_probe.found, " ground_probe_dist=", ground_probe.distance, " grounded_in_range=", grounded_in_range, " up_dir=", up_direction, " ship_pos=", gravity_source.global_position)
 
 	var post_move_local_position: Vector3 = gravity_source.to_local(global_position)
 	_local_planar_offset = Vector2(post_move_local_position.x, post_move_local_position.z)

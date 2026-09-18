@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="CreatureProfile" format=3 uid="uid://d3qf4khmjxsfi"]
+
+[ext_resource type="Texture2D" uid="uid://da077uhcsyypn" path="res://assets/textures/sand/aerial_beach_01_diff_4k_resized.jpg" id="1_vvtt8"]
+[ext_resource type="Script" uid="uid://bagqiw6prqgu1" path="res://creatures/creature_profile.gd" id="1_w7gs0"]
+[ext_resource type="Texture2D" uid="uid://j0ap3ubdqwpa" path="res://assets/textures/sand/aerial_beach_01_nor_gl_4k_resized.jpg" id="2_1q5ga"]
+[ext_resource type="Texture2D" uid="uid://pyiwtju0xjoo" path="res://assets/textures/sand/aerial_beach_01_rough_4k_resized.jpg" id="3_8nfw6"]
+
+[sub_resource type="Gradient" id="Gradient_pmfvi"]
+offsets = PackedFloat32Array(0, 0.50268096, 1)
+colors = PackedColorArray(0.34, 0.306, 0.255, 1, 0.64, 0.44031996, 0.4096, 1, 0.85, 0.663, 0.74715, 1)
+
+[resource]
+script = ExtResource("1_w7gs0")
+albedo_texture = ExtResource("1_vvtt8")
+normal_texture = ExtResource("2_1q5ga")
+roughness_texture = ExtResource("3_8nfw6")
+display_name = "Squid"
+creature_type = 1
+preview_seed = 112271199
+color_gradient = SubResource("Gradient_pmfvi")
+min_tentacle_length_m = 2.1
+max_tentacle_length_m = 4.4
+squid_body_length_ratio = 1.5
+squid_body_radial_segments = 6
+tentacle_radius_ratio = 0.2
+tentacle_taper = 0.84
+tentacle_attachment_inset_ratio = 0.75
+tentacle_wave_speed = 9.5
+tentacle_wave_amplitude_ratio = 2.6
+metadata/_custom_type_script = "uid://bagqiw6prqgu1"

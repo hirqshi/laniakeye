@@ -11,16 +11,23 @@ config_version=5
 [application]
 
 config/name="laniakeye"
-run/main_scene="uid://d15yu8c7rucw"
+run/main_scene="uid://c5f1cto0o1rxa"
 config/features=PackedStringArray("4.7", "Forward Plus")
 boot_splash/bg_color=Color(0, 0, 0, 1)
 boot_splash/use_filter=false
 boot_splash/image="uid://b20sa3gcvuqxp"
-config/icon="res://icon.svg"
+config/icon="uid://ddkhcg2uxwt8e"
+config/windows_native_icon="res://assets/laniakeye.ico"
+
+[audio]
+
+buses/default_bus_layout="uid://w363865flcx8"
 
 [autoload]
 
 MouseCaptureManager="*uid://bfeovmpw04fcw"
+AudioManager="*uid://chg4rfb55dehs"
+SaveManager="*uid://bw3fosv1d0m37"
 
 [display]
 

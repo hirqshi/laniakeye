@@ -1,5 +1,7 @@
 extends Node3D
 
+signal footstep
+
 ## Owns camera "feel": head bob and FOV kick.
 ## Head bob only applies in planet mode (walking/running on a surface).
 ## Zero-g and jumping/airborne states disable bob entirely.
@@ -28,6 +30,7 @@ var _is_running: bool = false
 var _is_zero_g: bool = true
 var _external_fov_kick: float = 0.0
 var _camera_base_local_pos: Vector3
+var _bob_phase_was_rising: bool = true
 
 func _ready() -> void:
 	_target_fov = base_fov
@@ -71,10 +74,20 @@ func _update_bob(delta: float) -> void:
 
 	if should_bob:
 		_bob_time += delta * frequency
-		var target_offset: float = sin(_bob_time) * amplitude
+
+		var bob_phase: float = sin(_bob_time)
+		var is_rising: bool = bob_phase > 0.0
+
+		if is_rising and not _bob_phase_was_rising:
+			footstep.emit()
+
+		_bob_phase_was_rising = is_rising
+
+		var target_offset: float = bob_phase * amplitude
 		_bob_offset = lerp(_bob_offset, target_offset, bob_lerp_speed * delta)
 	else:
 		_bob_time = 0.0
+		_bob_phase_was_rising = true
 		_bob_offset = lerp(_bob_offset, 0.0, bob_lerp_speed * delta)
 
 	player_camera.position = _camera_base_local_pos + Vector3(0.0, _bob_offset, 0.0)

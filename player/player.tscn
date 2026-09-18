@@ -4,6 +4,11 @@
 [ext_resource type="Script" uid="uid://cbaaoxtggsguj" path="res://player/player_camera.gd" id="2_g1dw6"]
 [ext_resource type="Script" uid="uid://brjg73r6ik832" path="res://player/underwater_effects.gd" id="3_g1dw6"]
 [ext_resource type="Shader" uid="uid://opeslr3j7kca" path="res://shaders/underwater_tint.gdshader" id="4_yw30f"]
+[ext_resource type="Script" uid="uid://dr8gsn0uiyxxp" path="res://audio/footstep_audio.gd" id="5_boad6"]
+[ext_resource type="AudioStream" uid="uid://b1wdopu5kwdb3" path="res://audio/Sounds_Packet_First/Little_step1.wav" id="6_hg6s5"]
+[ext_resource type="Script" uid="uid://cgwxqt1cmg6yi" path="res://audio/jump_land_audio.gd" id="7_hg6s5"]
+[ext_resource type="AudioStream" uid="uid://cxehd5ejyn0nr" path="res://audio/Sounds_Packet_First/Little_Step5.wav" id="8_rgyib"]
+[ext_resource type="AudioStream" uid="uid://drn7gnhvomq8v" path="res://audio/Sounds_Packet_First/Step4.wav" id="9_hg6s5"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_6m30h"]
 radius = 0.2
@@ -53,3 +58,15 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
+
+[node name="FootstepAudio" type="Node" parent="." unique_id=591500455 node_paths=PackedStringArray("camera_bob", "player_controller")]
+script = ExtResource("5_boad6")
+camera_bob = NodePath("../BodyPivot/CameraPivot/PlayerCamera")
+player_controller = NodePath("..")
+footstep_streams = Array[AudioStream]([ExtResource("6_hg6s5")])
+
+[node name="JumpLandAudio" type="Node" parent="." unique_id=804292191 node_paths=PackedStringArray("player_controller")]
+script = ExtResource("7_hg6s5")
+player_controller = NodePath("..")
+jump_stream = ExtResource("8_rgyib")
+land_streams = Array[AudioStream]([ExtResource("9_hg6s5")])

@@ -14,6 +14,8 @@ extends RefCounted
 static func reevaluate(body: Node3D) -> void:
 	if not is_instance_valid(body):
 		return
+	if not body.is_inside_tree():
+		return
 	if not body.has_method("set_zero_g"):
 		return
 

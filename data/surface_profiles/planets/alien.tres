@@ -1,6 +1,7 @@
 [gd_resource type="Resource" script_class="SurfaceProfile" format=3 uid="uid://dv61qm7mb0i2l"]
 
 [ext_resource type="Texture2D" uid="uid://ciew0e6xaws55" path="res://assets/textures/rock/rock_boulder_dry_diff_4k_resized.jpg" id="1_16wa7"]
+[ext_resource type="AudioStream" uid="uid://db2np2nb4frfy" path="res://audio/dragon-studio-deep-sea-underwater-ambience-472383.mp3" id="2_6b30k"]
 [ext_resource type="Texture2D" uid="uid://bgo4q64gdx3v8" path="res://assets/textures/rock/rock_boulder_dry_ao_4k_resized.jpg" id="2_53wvp"]
 [ext_resource type="Texture2D" uid="uid://b2x0y4ngqeuk1" path="res://assets/textures/rock/rock_boulder_dry_disp_4k_resized.jpg" id="3_fh36n"]
 [ext_resource type="Texture2D" uid="uid://b3vqp0q7ae71v" path="res://assets/textures/rock/rock_boulder_dry_nor_gl_4k_resized.jpg" id="4_cvlqa"]
@@ -61,4 +62,5 @@ water_high_color = Color(0.6, 0.198, 0.49280015, 1)
 water_low_color = Color(0.2, 0.020000005, 0.08299998, 1)
 water_transmit_color = Color(0.31500003, 0.1, 0.4, 1)
 vegetation_profile = SubResource("Resource_w5vi0")
+ambient_loop = ExtResource("2_6b30k")
 metadata/_custom_type_script = "uid://1t0wbuevh1oe"

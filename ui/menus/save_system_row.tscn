@@ -1,0 +1,57 @@
+[gd_scene format=3 uid="uid://b6fjwfj3cjpls"]
+
+[ext_resource type="Theme" uid="uid://3oh8qomayi5p" path="res://assets/buttons.tres" id="1_o35kb"]
+[ext_resource type="FontFile" uid="uid://qtgl5e38up3a" path="res://assets/ui/Tiny5-Regular.ttf" id="2_jq77r"]
+[ext_resource type="Script" uid="uid://dkqddw0o7yl8v" path="res://ui/menus/save_system_row.gd" id="2_plwwd"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_6m30h"]
+font = ExtResource("2_jq77r")
+font_color = Color(1, 0.65, 0, 1)
+
+[node name="SaveSystemRow" type="Control" unique_id=181228047 node_paths=PackedStringArray("seed_label", "date_label", "load_button", "delete_button")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_o35kb")
+script = ExtResource("2_plwwd")
+seed_label = NodePath("SeedLabel")
+date_label = NodePath("DateLabel")
+load_button = NodePath("LoadButton")
+delete_button = NodePath("DeleteButton")
+
+[node name="SeedLabel" type="Label" parent="." unique_id=502337094]
+layout_mode = 1
+offset_left = 126.0
+offset_top = 10.0
+offset_right = 166.0
+offset_bottom = 28.0
+text = "seed"
+label_settings = SubResource("LabelSettings_6m30h")
+
+[node name="DateLabel" type="Label" parent="." unique_id=1701780661]
+layout_mode = 1
+offset_left = 125.0
+offset_top = 28.0
+offset_right = 165.0
+offset_bottom = 46.0
+text = "date"
+label_settings = SubResource("LabelSettings_6m30h")
+
+[node name="LoadButton" type="Button" parent="." unique_id=1133139668]
+layout_mode = 1
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 58.0
+offset_bottom = 56.0
+text = "Load"
+
+[node name="DeleteButton" type="Button" parent="." unique_id=425280863]
+layout_mode = 1
+offset_left = 64.0
+offset_top = 10.0
+offset_right = 118.0
+offset_bottom = 56.0
+text = "Delete"

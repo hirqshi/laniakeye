@@ -2,11 +2,16 @@
 
 [ext_resource type="PackedScene" uid="uid://dtdgcw1yhj6l6" path="res://player/player.tscn" id="1_4wyf3"]
 [ext_resource type="Script" uid="uid://caxatl3t1mk8c" path="res://generation/world.gd" id="1_k0juu"]
+[ext_resource type="AudioStream" uid="uid://cfuaxwvj201ur" path="res://audio/Sounds_Packet_First/Little_Step2.wav" id="2_7r4gi"]
 [ext_resource type="PackedScene" uid="uid://xv6bny4xvn7w" path="res://ship/ship.tscn" id="2_k0juu"]
 [ext_resource type="PackedScene" uid="uid://dqfhr40i8k8k5" path="res://scenes/star_system.tscn" id="3_71j4m"]
+[ext_resource type="AudioStream" uid="uid://bo36pckg4clyw" path="res://audio/Sounds_Packet_First/Little_Step4.wav" id="3_w7kh3"]
+[ext_resource type="AudioStream" uid="uid://c4vjf6unrxkww" path="res://audio/Whoreshoe_Sounds_Packet_Second/UI_Mouse_Hover_Sand.wav" id="4_w7kh3"]
 [ext_resource type="Shader" uid="uid://fmjogccimpms" path="res://shaders/starfield.gdshader" id="5_71j4m"]
 [ext_resource type="PackedScene" uid="uid://denq0liqcr01g" path="res://ui/hud.tscn" id="6_qfnet"]
 [ext_resource type="Shader" uid="uid://byjjf5cs3tag7" path="res://shaders/postprocess.gdshader" id="7_i7141"]
+[ext_resource type="Script" uid="uid://dmsbvdghfxwle" path="res://ui/menus/pause_menu_controller.gd" id="11_q5onr"]
+[ext_resource type="Theme" uid="uid://3oh8qomayi5p" path="res://assets/buttons.tres" id="12_jhx03"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_k0juu"]
 shader = ExtResource("5_71j4m")
@@ -62,6 +67,9 @@ star_system = NodePath("StarSystem")
 ship = NodePath("Ship")
 player = NodePath("Player")
 hud = NodePath("Hud")
+seat_enter_stream = ExtResource("2_7r4gi")
+seat_exit_stream = ExtResource("3_w7kh3")
+return_to_ship_stream = ExtResource("4_w7kh3")
 
 [node name="Player" parent="." unique_id=1674303530 instance=ExtResource("1_4wyf3")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7941934, 0)
@@ -76,6 +84,7 @@ environment = SubResource("Environment_6m30h")
 [node name="Hud" parent="." unique_id=772229164 instance=ExtResource("6_qfnet")]
 
 [node name="PostProcessing" type="CanvasLayer" parent="." unique_id=153071619]
+layer = 22
 
 [node name="ColorRect" type="ColorRect" parent="PostProcessing" unique_id=201122214]
 material = SubResource("ShaderMaterial_6m30h")
@@ -85,3 +94,50 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
+
+[node name="PauseMenu" type="CanvasLayer" parent="." unique_id=1943042395 node_paths=PackedStringArray("resume_button", "save_and_quit_button", "quit_button", "star_system")]
+script = ExtResource("11_q5onr")
+resume_button = NodePath("Root/ResumeButton")
+save_and_quit_button = NodePath("Root/SaveAndQuitButton")
+quit_button = NodePath("Root/QuitButton")
+star_system = NodePath("../StarSystem")
+
+[node name="ColorRect" type="ColorRect" parent="PauseMenu" unique_id=848689895]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.3882353)
+
+[node name="Root" type="Control" parent="PauseMenu" unique_id=364889455]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+theme = ExtResource("12_jhx03")
+
+[node name="ResumeButton" type="Button" parent="PauseMenu/Root" unique_id=1125165999]
+layout_mode = 0
+offset_left = 451.0
+offset_top = 142.0
+offset_right = 573.0
+offset_bottom = 188.0
+text = "Resume"
+
+[node name="SaveAndQuitButton" type="Button" parent="PauseMenu/Root" unique_id=620338712]
+layout_mode = 0
+offset_left = 451.0
+offset_top = 197.0
+offset_right = 573.0
+offset_bottom = 243.0
+text = "Save and quit"
+
+[node name="QuitButton" type="Button" parent="PauseMenu/Root" unique_id=1898463198]
+layout_mode = 0
+offset_left = 451.0
+offset_top = 252.0
+offset_right = 573.0
+offset_bottom = 298.0
+text = "quit"

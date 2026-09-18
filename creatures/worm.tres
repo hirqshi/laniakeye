@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="CreatureProfile" format=3 uid="uid://bc3jeknjy6vy7"]
+
+[ext_resource type="Script" uid="uid://bagqiw6prqgu1" path="res://creatures/creature_profile.gd" id="1_oofnk"]
+[ext_resource type="Texture2D" uid="uid://ciew0e6xaws55" path="res://assets/textures/rock/rock_boulder_dry_diff_4k_resized.jpg" id="1_q53ba"]
+[ext_resource type="Texture2D" uid="uid://b3vqp0q7ae71v" path="res://assets/textures/rock/rock_boulder_dry_nor_gl_4k_resized.jpg" id="2_opnew"]
+[ext_resource type="Texture2D" uid="uid://nsd2v7mimn22" path="res://assets/textures/rock/rock_boulder_dry_rough_4k_resized.jpg" id="3_f803f"]
+
+[sub_resource type="Gradient" id="Gradient_fwu3m"]
+offsets = PackedFloat32Array(0.009138381, 0.51305485, 1)
+colors = PackedColorArray(0.35371998, 0.37, 0.3256, 1, 0.63, 0.42209998, 0.474075, 1, 0.3876, 0.52136, 0.57, 1)
+
+[resource]
+script = ExtResource("1_oofnk")
+albedo_texture = ExtResource("1_q53ba")
+normal_texture = ExtResource("2_opnew")
+roughness_texture = ExtResource("3_f803f")
+display_name = "Worm"
+preview_seed = 4290508037
+wave_amplitude_ratio = 3.9
+wave_frequency = 1.4
+wave_speed = 5.800000000000001
+min_length_m = 5.1000000000000005
+max_length_m = 30.2
+color_gradient = SubResource("Gradient_fwu3m")
+max_worm_radius_m = 1.74
+metadata/_custom_type_script = "uid://bagqiw6prqgu1"

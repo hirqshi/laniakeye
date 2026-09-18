@@ -309,6 +309,11 @@ func get_gravity_strength() -> float:
 func get_radius() -> float:
 	return planet_data.radius_m if planet_data else 80.0
 
+func get_ambient_loop() -> AudioStream:
+	if planet_data == null or planet_data.surface_profile == null:
+		return null
+	return planet_data.surface_profile.ambient_loop
+	
 
 func get_gravity_zone_radius() -> float:
 	var multiplier: float = generation_settings.gravity_zone_multiplier if generation_settings else 1.6

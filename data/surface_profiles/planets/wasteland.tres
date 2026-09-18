@@ -1,6 +1,7 @@
 [gd_resource type="Resource" script_class="SurfaceProfile" format=3 uid="uid://cxlg731uyudsj"]
 
 [ext_resource type="Texture2D" uid="uid://b0p4ywj0oojtf" path="res://assets/textures/mud/mud_cracked_dry_03_diff_4k_resized.jpg" id="1_auhju"]
+[ext_resource type="AudioStream" uid="uid://cgae77driqgu5" path="res://audio/freesound_community-oscillating-space-waves-31400.mp3" id="2_bvr8f"]
 [ext_resource type="Texture2D" uid="uid://dkkpfnikq4xr0" path="res://assets/textures/mud/mud_cracked_dry_03_ao_4k_resized.jpg" id="2_t5emb"]
 [ext_resource type="Texture2D" uid="uid://cgqj1ge2ilxkm" path="res://assets/textures/mud/mud_cracked_dry_03_disp_4k_resized.jpg" id="3_b2hhw"]
 [ext_resource type="Texture2D" uid="uid://bmefpi2q1mp80" path="res://assets/textures/mud/mud_cracked_dry_03_nor_gl_4k_resized.jpg" id="4_rnbuw"]
@@ -48,4 +49,5 @@ allow_rings = true
 ring_chance = 0.385
 ring_gradient = ExtResource("5_qhq0g")
 vegetation_profile = SubResource("Resource_5lcxi")
+ambient_loop = ExtResource("2_bvr8f")
 metadata/_custom_type_script = "uid://1t0wbuevh1oe"

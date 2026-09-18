@@ -23,8 +23,13 @@ var planet_nodes: Array[Node3D] = []
 
 func _ready() -> void:
 	process_physics_priority = -100
-	if system_seed == 0:
+
+	if SaveManager.pending_seed != 0:
+		system_seed = SaveManager.pending_seed
+		SaveManager.pending_seed = 0
+	elif system_seed == 0:
 		system_seed = randi()
+
 	_build_system(system_seed)
 
 func _build_system(seed_value: int) -> void:

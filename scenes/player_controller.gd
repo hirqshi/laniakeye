@@ -26,7 +26,6 @@ enum GravityMode { PLANET, ZERO_G }
 var gravity_mode: GravityMode = GravityMode.ZERO_G
 var gravity_strength: float = 9.8
 var planet_center: Vector3 = Vector3.ZERO
-var up_direction: Vector3 = Vector3.UP
 
 var pitch_rad: float = 0.0
 var is_running: bool = false

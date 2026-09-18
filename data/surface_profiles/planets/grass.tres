@@ -1,6 +1,7 @@
 [gd_resource type="Resource" script_class="SurfaceProfile" format=3 uid="uid://dnd43df0y4umn"]
 
 [ext_resource type="Texture2D" uid="uid://dxal5mumkfmpk" path="res://assets/textures/grass/coast_sand_rocks_02_diff_4k_resized.jpg" id="1_ty0cb"]
+[ext_resource type="AudioStream" uid="uid://q5ug7uc4e7x" path="res://audio/audiopapkin-forest-ambience-296528.mp3" id="2_0f7rh"]
 [ext_resource type="Texture2D" uid="uid://dycxuodb270vi" path="res://assets/textures/grass/coast_sand_rocks_02_ao_4k_resized.jpg" id="2_35iq8"]
 [ext_resource type="Texture2D" uid="uid://bd8wogbsc0l66" path="res://assets/textures/grass/coast_sand_rocks_02_disp_4k_resized.jpg" id="3_raji8"]
 [ext_resource type="Texture2D" uid="uid://bbrcy6o33e18y" path="res://assets/textures/grass/coast_sand_rocks_02_nor_gl_4k_resized.jpg" id="4_ynfew"]
@@ -43,4 +44,5 @@ ocean_basin_edge_softness = 0.075
 water_gradient = SubResource("Gradient_0k1rn")
 depth_fade_distance_ratio = 0.035
 vegetation_profile = ExtResource("7_c0scx")
+ambient_loop = ExtResource("2_0f7rh")
 metadata/_custom_type_script = "uid://1t0wbuevh1oe"

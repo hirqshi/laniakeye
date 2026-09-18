@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="CreatureProfile" format=3 uid="uid://dacirgsnru87v"]
+
+[ext_resource type="Texture2D" uid="uid://3jidmaucfo50" path="res://assets/textures/bark/Bark001_4K_Color_resized.jpg" id="1_8417t"]
+[ext_resource type="Script" uid="uid://bagqiw6prqgu1" path="res://creatures/creature_profile.gd" id="1_yfc36"]
+[ext_resource type="Texture2D" uid="uid://bcopaubp4c54s" path="res://assets/textures/bark/Bark001_4K_NormalGL_resized.jpg" id="2_s1ojw"]
+[ext_resource type="Texture2D" uid="uid://d08x8t5whl164" path="res://assets/textures/bark/Bark001_4K_Roughness_resized.jpg" id="3_fji5x"]
+
+[sub_resource type="Gradient" id="Gradient_vvghl"]
+offsets = PackedFloat32Array(0, 0.34595302, 0.6671018, 0.99869454)
+colors = PackedColorArray(0.21, 0.1512, 0.1512, 1, 0.24098666, 0.28, 0.2268, 1, 0.33500996, 0.3198, 0.39, 1, 0.63, 0.63, 0.63, 1)
+
+[resource]
+script = ExtResource("1_yfc36")
+albedo_texture = ExtResource("1_8417t")
+normal_texture = ExtResource("2_s1ojw")
+roughness_texture = ExtResource("3_fji5x")
+display_name = "Spider"
+creature_type = 2
+preview_seed = 1347775951
+color_gradient = SubResource("Gradient_vvghl")
+min_leg_length_m = 1.23
+max_leg_length_m = 2.31
+spider_body_radius_m = 0.9550000000000001
+spider_leg_radius_m = 0.08
+spider_leg_bend = 0.01
+metadata/_custom_type_script = "uid://bagqiw6prqgu1"

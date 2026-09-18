@@ -63,6 +63,12 @@ signal player_unseated
 @export var gravity_fade_curve_power: float = 1.5
 @export var gravity_multiplier: float = 1.0
 
+@export var flight_loop_stream: AudioStream
+@export_range(-24.0, 6.0, 0.1) var flight_loop_max_volume_db: float = -2.0
+@export_range(0.1, 5.0, 0.1, "suffix:s") var flight_loop_fade_s: float = 0.4
+
+var _flight_audio_player: AudioStreamPlayer3D
+
 var is_piloted: bool = false
 var _is_parked: bool = false
 
@@ -100,10 +106,26 @@ func _ready() -> void:
 		push_warning("ShipController (%s): 'Ship Model' export is not assigned, hull lag effect will not run" % name)
 	else:
 		_ship_model_base_basis = ship_model.transform.basis
-
+		
+	if flight_loop_stream != null:
+		_setup_flight_audio()
+		
 func set_piloted(value: bool) -> void:
 	is_piloted = value
+	
+func _setup_flight_audio() -> void:
+	if flight_loop_stream is AudioStreamOggVorbis or flight_loop_stream is AudioStreamMP3:
+		flight_loop_stream.loop = true
+	elif flight_loop_stream is AudioStreamWAV:
+		flight_loop_stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
 
+	_flight_audio_player = AudioStreamPlayer3D.new()
+	_flight_audio_player.stream = flight_loop_stream
+	_flight_audio_player.volume_db = -80.0
+	_flight_audio_player.unit_size = 20.0
+	add_child(_flight_audio_player)
+	_flight_audio_player.play()
+	
 func get_seat_camera() -> Camera3D:
 	if ship_seat == null:
 		return null
@@ -164,7 +186,9 @@ func _physics_process(delta: float) -> void:
 	# forward_input is +1 when pressing "move_forward", but local -Z is
 	# forward in Godot, so we feed it as negative Z here.
 	var input_dir: Vector3 = Vector3(strafe_input, vertical_input, -forward_input)
-
+	
+	_update_flight_audio(input_dir.length() > 0.01, delta)
+	
 	var wants_liftoff: bool = vertical_input > landing_vertical_release_threshold
 	var probe: Dictionary = _probe_landing_surface()
 	var can_magnet: bool = probe.found and probe.distance <= landing_engage_distance_m and not wants_liftoff
@@ -196,10 +220,29 @@ func _physics_process(delta: float) -> void:
 	var speed_ratio: float = clamp(velocity.length() / max_speed, 0.0, 1.0)
 	speed_changed.emit(speed_ratio)
 
+func _update_flight_audio(has_input: bool, delta: float) -> void:
+	if _flight_audio_player == null:
+		return
+
+	var target_volume_db: float = flight_loop_max_volume_db if has_input else -80.0
+
+	_flight_audio_player.volume_db = move_toward(
+		_flight_audio_player.volume_db,
+		target_volume_db,
+		(80.0 / flight_loop_fade_s) * delta
+	)
+
 ## Handles the unpiloted case: either the ship is parked (glued to its
 ## spot on gravity_source in both position AND orientation) or it's
 ## coasting/falling freely.
 func _process_unpiloted(delta: float) -> void:
+	if _flight_audio_player != null:
+		_flight_audio_player.volume_db = move_toward(
+			_flight_audio_player.volume_db,
+			-80.0,
+			80.0 * delta
+		)
+
 	if _is_parked and is_instance_valid(gravity_source):
 		if not _parked_anchor_valid:
 			_parked_local_offset = gravity_source.to_local(global_position)

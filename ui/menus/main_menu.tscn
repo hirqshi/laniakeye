@@ -1,0 +1,129 @@
+[gd_scene format=3 uid="uid://c5f1cto0o1rxa"]
+
+[ext_resource type="Script" uid="uid://bx4hsh6bleeg4" path="res://ui/menus/main_menu_controller.gd" id="1_qc8qn"]
+[ext_resource type="PackedScene" uid="uid://bck1w1iviihme" path="res://scenes/moon.tscn" id="2_5ssi0"]
+[ext_resource type="Resource" uid="uid://cc8acwk03ml4q" path="res://data/moon_surface_profile_set.tres" id="3_5ssi0"]
+[ext_resource type="Theme" uid="uid://3oh8qomayi5p" path="res://assets/buttons.tres" id="4_1njj5"]
+[ext_resource type="PackedScene" uid="uid://dfi5bu0y7f5is" path="res://ui/menus/world_select_menu.tscn" id="4_l3r6a"]
+[ext_resource type="Shader" uid="uid://byjjf5cs3tag7" path="res://shaders/postprocess.gdshader" id="5_h223f"]
+[ext_resource type="FontFile" uid="uid://qtgl5e38up3a" path="res://assets/ui/Tiny5-Regular.ttf" id="6_1kjlq"]
+
+[sub_resource type="Environment" id="Environment_6m30h"]
+background_mode = 1
+
+[sub_resource type="LabelSettings" id="LabelSettings_vuv8w"]
+font = ExtResource("6_1kjlq")
+font_size = 36
+font_color = Color(1, 0.65, 0, 0.4509804)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_h223f"]
+shader = ExtResource("5_h223f")
+shader_parameter/resolution = Vector2(400, 400)
+shader_parameter/scan_line_amount = 0.0630000029925
+shader_parameter/warp_amount = 0.10000000475
+shader_parameter/noise_amount = 0.0310000014725
+shader_parameter/interference_amount = 0.350000016625
+shader_parameter/grille_amount = 0.1
+shader_parameter/grille_size = 1.0
+shader_parameter/vignette_amount = 0.6
+shader_parameter/vignette_intensity = 0.14400000684
+shader_parameter/aberation_amount = 0.610000028975
+shader_parameter/roll_line_amount = 0.0
+shader_parameter/roll_speed = 3.7999999946691787e-07
+shader_parameter/scan_line_strength = -9.28399987099
+shader_parameter/pixel_strength = -2.58799993293
+
+[node name="MainMenu" type="Node3D" unique_id=452842391 node_paths=PackedStringArray("moon_container", "new_game_button", "continue_button", "world_select_button", "exit_button", "ui_root")]
+script = ExtResource("1_qc8qn")
+moon_scene = ExtResource("2_5ssi0")
+moon_surface_profile_set = ExtResource("3_5ssi0")
+moon_container = NodePath("MoonContainer")
+new_game_button = NodePath("UI/Root/NewGameButton")
+continue_button = NodePath("UI/Root/ContinueButton")
+world_select_button = NodePath("UI/Root/WorldSelectButton")
+exit_button = NodePath("UI/Root/ExitButton")
+world_select_scene = ExtResource("4_l3r6a")
+ui_root = NodePath("UI")
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=419440916]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 69.869995)
+
+[node name="MoonContainer" type="Node3D" parent="." unique_id=1112443539]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1202267308]
+transform = Transform3D(0.9222051, 0.15254515, 0.35534173, -0.38670114, 0.36378977, 0.84741914, 0, -0.9189053, 0.39447817, 0, 0, 0)
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1538226966]
+environment = SubResource("Environment_6m30h")
+
+[node name="UI" type="CanvasLayer" parent="." unique_id=1925443640]
+
+[node name="Root" type="Control" parent="UI" unique_id=1353189392]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme = ExtResource("4_1njj5")
+
+[node name="NewGameButton" type="Button" parent="UI/Root" unique_id=1110116865]
+layout_mode = 0
+offset_left = 62.0
+offset_top = 122.0
+offset_right = 184.0
+offset_bottom = 168.0
+text = "New game"
+
+[node name="ContinueButton" type="Button" parent="UI/Root" unique_id=2073626275]
+layout_mode = 0
+offset_left = 62.0
+offset_top = 177.0
+offset_right = 184.0
+offset_bottom = 223.0
+text = "Continue"
+
+[node name="WorldSelectButton" type="Button" parent="UI/Root" unique_id=681868570]
+layout_mode = 0
+offset_left = 61.0
+offset_top = 233.0
+offset_right = 183.0
+offset_bottom = 279.0
+text = "Select world"
+
+[node name="ExitButton" type="Button" parent="UI/Root" unique_id=1979190865]
+layout_mode = 0
+offset_left = 61.0
+offset_top = 288.0
+offset_right = 183.0
+offset_bottom = 334.0
+text = "Quit the game"
+
+[node name="TitleLabel" type="Label" parent="UI/Root" unique_id=548351348]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -77.5
+offset_top = -18.0
+offset_right = 77.5
+offset_bottom = 18.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "LANIAKEYE"
+label_settings = SubResource("LabelSettings_vuv8w")
+
+[node name="PostProcessing" type="CanvasLayer" parent="." unique_id=799844041]
+layer = 22
+
+[node name="ColorRect" type="ColorRect" parent="PostProcessing" unique_id=1614411504]
+material = SubResource("ShaderMaterial_h223f")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2

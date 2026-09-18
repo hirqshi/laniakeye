@@ -30,7 +30,7 @@ font = ExtResource("7_q43x7")
 
 [node name="Hud" type="CanvasLayer" unique_id=772229164 node_paths=PackedStringArray("root", "ship_marker", "crosshair", "speed_label", "planet_target_frame", "ship_hint_panel", "system_map")]
 script = ExtResource("1_rbyyf")
-ui_color = Color(1, 0.65, 0, 0.54901963)
+ui_color = Color(1, 0.65, 0, 0.57254905)
 root = NodePath("Root")
 ship_marker = NodePath("Root/ShipMarker")
 crosshair = NodePath("Root/Crosshair")

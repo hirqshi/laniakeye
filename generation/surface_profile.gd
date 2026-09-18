@@ -132,6 +132,13 @@ enum TerrainNoiseType {
 @export_category("Vegetation")
 @export var vegetation_profile: VegetationProfile
 
+@export_category("Creatures")
+@export var creature_profile: CreaturePlanetProfile
+
+@export_category("Ambient Audio")
+@export var ambient_loop: AudioStream
+@export_range(-24.0, 6.0, 0.1) var ambient_loop_volume_db: float = -12.0
+
 func should_generate_rings(rng: RandomNumberGenerator) -> bool:
 	return allow_rings and rng.randf() <= ring_chance
 

@@ -2,6 +2,7 @@
 
 [ext_resource type="Texture2D" uid="uid://da077uhcsyypn" path="res://assets/textures/sand/aerial_beach_01_diff_4k_resized.jpg" id="1_5egfn"]
 [ext_resource type="Texture2D" uid="uid://ctyra4hpivlpu" path="res://assets/textures/sand/aerial_beach_01_ao_4k_resized.jpg" id="2_i88nw"]
+[ext_resource type="AudioStream" uid="uid://i4yjpj2bfq7c" path="res://audio/freesound_community-space-rumble-29970.mp3" id="2_mnhdt"]
 [ext_resource type="Texture2D" uid="uid://crlipa3i2bwd0" path="res://assets/textures/sand/aerial_beach_01_disp_4k_resized.jpg" id="3_iqtci"]
 [ext_resource type="Texture2D" uid="uid://j0ap3ubdqwpa" path="res://assets/textures/sand/aerial_beach_01_nor_gl_4k_resized.jpg" id="4_m7bk0"]
 [ext_resource type="Texture2D" uid="uid://pyiwtju0xjoo" path="res://assets/textures/sand/aerial_beach_01_rough_4k_resized.jpg" id="5_3106i"]
@@ -35,4 +36,5 @@ ring_chance = 0.1
 ring_outer_radius_ratio_min = 3.995
 ring_outer_radius_ratio_max = 6.595
 ring_gradient = SubResource("Gradient_5lcxi")
+ambient_loop = ExtResource("2_mnhdt")
 metadata/_custom_type_script = "uid://1t0wbuevh1oe"

@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://wngusb5kyx84" path="res://ship/ship_controller.gd" id="1_2jgil"]
 [ext_resource type="Script" uid="uid://dpgnb6aqkm7jr" path="res://ship/ship_seat.gd" id="2_1vtf4"]
 [ext_resource type="ArrayMesh" uid="uid://py3bnvpk4rcg" path="res://assets/models/ship/shipbody.obj" id="2_7b03h"]
+[ext_resource type="AudioStream" uid="uid://c7gkp4jooqr8u" path="res://audio/dragon-studio-spaceship-interior-5-min-584742.mp3" id="2_p8eiy"]
 [ext_resource type="Material" uid="uid://br8ck0w1aix6o" path="res://assets/textures/ship/glass/glass.tres" id="3_xpm83"]
 [ext_resource type="Material" uid="uid://dyqkgjrblgmqd" path="res://assets/textures/ship/plates/plates.tres" id="4_gcsj1"]
 [ext_resource type="Script" uid="uid://bbukag3vecwud" path="res://planets/gravity_zone.gd" id="4_r4tgf"]
@@ -15,12 +16,22 @@
 [ext_resource type="ArrayMesh" uid="uid://bo8hvguusejko" path="res://assets/models/ship/shiplightstop.obj" id="10_ads1e"]
 [ext_resource type="ArrayMesh" uid="uid://i3psuoe3q0ev" path="res://assets/models/ship/shiplightsbottom.obj" id="11_gwsrt"]
 [ext_resource type="FontFile" uid="uid://qtgl5e38up3a" path="res://assets/ui/Tiny5-Regular.ttf" id="13_gwsrt"]
+[ext_resource type="ArrayMesh" uid="uid://crqjjmh18cten" path="res://assets/models/ship/shipdoor.obj" id="13_p8eiy"]
+[ext_resource type="Script" uid="uid://cyqnl26jje03w" path="res://ship/ship_door.gd" id="14_txut3"]
+[ext_resource type="AudioStream" uid="uid://cu3g0nibuob5w" path="res://audio/Whoreshoe_Sounds_Packet_Second/Dash.wav" id="15_gmwrw"]
+[ext_resource type="AudioStream" uid="uid://c07mxiel8d3ud" path="res://audio/Whoreshoe_Sounds_Packet_Second/Hook_Shoot_From_Nest.wav" id="16_5xfri"]
 [ext_resource type="ArrayMesh" uid="uid://c5vo3oi15h4nm" path="res://assets/models/ship/shipseat.obj" id="17_p8eiy"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_va357"]
 emission_enabled = true
 emission = Color(1, 0.86833334, 0.20999998, 1)
 emission_energy_multiplier = 5.36
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_7sqxl"]
+size = Vector3(1.6660156, 2.6635742, 0.23779297)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_4wiwk"]
+size = Vector3(2.6200867, 5.4621124, 2.4569016)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_6m30h"]
 size = Vector3(1.9432983, 2.2924805, 2.5021362)
@@ -72,6 +83,7 @@ hull_lag_amount_deg = 4.805
 hull_lag_recovery_speed = 6.59
 landing_raycast = NodePath("LandingRayCast")
 landing_offset_m = 0.215
+flight_loop_stream = ExtResource("2_p8eiy")
 
 [node name="ShipMesh" type="MeshInstance3D" parent="." unique_id=684156245]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, 0)
@@ -105,6 +117,41 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.1948594e-08, 0, 0.27335197
 mesh = ExtResource("11_gwsrt")
 surface_material_override/0 = ExtResource("6_kogll")
 surface_material_override/1 = SubResource("StandardMaterial3D_va357")
+
+[node name="Door" type="MeshInstance3D" parent="." unique_id=375043244 node_paths=PackedStringArray("static_body", "door_collision_shape", "interaction_area", "interaction_label")]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, 0)
+mesh = ExtResource("13_p8eiy")
+surface_material_override/0 = ExtResource("3_xpm83")
+surface_material_override/1 = ExtResource("4_gcsj1")
+script = ExtResource("14_txut3")
+static_body = NodePath("StaticBody3D")
+door_collision_shape = NodePath("StaticBody3D/CollisionShape3D")
+interaction_area = NodePath("InteractionArea")
+interaction_label = NodePath("InteractionArea/InteractionLabel")
+door_open_stream = ExtResource("15_gmwrw")
+door_close_stream = ExtResource("16_5xfri")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Door" unique_id=1200547773]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Door/StaticBody3D" unique_id=1324781851]
+transform = Transform3D(1, -2.0150401e-10, 4.654055e-13, 2.0150401e-10, 0.9999894, -0.0046098744, 4.654055e-13, 0.0046098744, 0.9999894, -0.3330079, 0.3083436, 1.2382305)
+shape = SubResource("BoxShape3D_7sqxl")
+
+[node name="InteractionArea" type="Area3D" parent="Door" unique_id=239556406]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Door/InteractionArea" unique_id=380102411]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.33839414, -0.41692352, 1.5813713)
+shape = SubResource("BoxShape3D_4wiwk")
+
+[node name="InteractionLabel" type="Label3D" parent="Door/InteractionArea" unique_id=932991387]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.372484, 0.7656356, 0.78893065)
+billboard = 1
+texture_filter = 0
+modulate = Color(1, 0.8333334, 0, 0.2784314)
+outline_modulate = Color(0, 0, 0, 0)
+text = "E - interact
+"
+font = ExtResource("13_gwsrt")
 
 [node name="Seat" type="Area3D" parent="." unique_id=1246366054 node_paths=PackedStringArray("seat_camera", "interaction_prompt_label", "ship_controller", "exit_position")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.19091308, 0.560421)

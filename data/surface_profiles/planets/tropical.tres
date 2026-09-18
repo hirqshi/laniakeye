@@ -2,6 +2,7 @@
 
 [ext_resource type="Texture2D" uid="uid://dxal5mumkfmpk" path="res://assets/textures/grass/coast_sand_rocks_02_diff_4k_resized.jpg" id="1_ks0l4"]
 [ext_resource type="Texture2D" uid="uid://dycxuodb270vi" path="res://assets/textures/grass/coast_sand_rocks_02_ao_4k_resized.jpg" id="2_2d61u"]
+[ext_resource type="AudioStream" uid="uid://d1cntftor62ew" path="res://audio/soundreality-forest-sound-576537.mp3" id="2_rxo08"]
 [ext_resource type="Texture2D" uid="uid://bd8wogbsc0l66" path="res://assets/textures/grass/coast_sand_rocks_02_disp_4k_resized.jpg" id="3_rxo08"]
 [ext_resource type="Texture2D" uid="uid://bbrcy6o33e18y" path="res://assets/textures/grass/coast_sand_rocks_02_nor_gl_4k_resized.jpg" id="4_cmw1o"]
 [ext_resource type="Texture2D" uid="uid://w660s3mu1n65" path="res://assets/textures/grass/coast_sand_rocks_02_rough_4k_resized.jpg" id="5_1ocj4"]
@@ -60,7 +61,7 @@ terrain_noise_scale_max = 0.89
 terrain_height_min_m = 11.675
 terrain_height_max_m = 28.37
 has_atmosphere = true
-atmosphere_outer_height_ratio = 0.39
+atmosphere_outer_height_ratio = 0.86
 atmosphere_rayleigh_color = Color(0.247, 0.6097, 0.65, 1)
 atmosphere_mie_color = Color(0.15602916, 0.16553117, 0.178834, 1)
 atmosphere_intensity = 18.965
@@ -76,4 +77,5 @@ ocean_basin_edge_softness = 0.075
 water_gradient = SubResource("Gradient_0k1rn")
 depth_fade_distance_ratio = 0.035
 vegetation_profile = SubResource("Resource_5lcxi")
+ambient_loop = ExtResource("2_rxo08")
 metadata/_custom_type_script = "uid://1t0wbuevh1oe"

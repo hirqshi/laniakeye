@@ -1,6 +1,7 @@
 [gd_resource type="Resource" script_class="SurfaceProfile" format=3 uid="uid://c145uc03urm2i"]
 
 [ext_resource type="Texture2D" uid="uid://ciew0e6xaws55" path="res://assets/textures/rock/rock_boulder_dry_diff_4k_resized.jpg" id="1_d1m87"]
+[ext_resource type="AudioStream" uid="uid://qugrjxcdwbo1" path="res://audio/dragon-studio-gentle-ocean-shore-waves-499665.mp3" id="2_qdt5w"]
 [ext_resource type="Texture2D" uid="uid://bgo4q64gdx3v8" path="res://assets/textures/rock/rock_boulder_dry_ao_4k_resized.jpg" id="2_vg0yi"]
 [ext_resource type="Texture2D" uid="uid://b3vqp0q7ae71v" path="res://assets/textures/rock/rock_boulder_dry_nor_gl_4k_resized.jpg" id="3_ihvlm"]
 [ext_resource type="Texture2D" uid="uid://nsd2v7mimn22" path="res://assets/textures/rock/rock_boulder_dry_rough_4k_resized.jpg" id="4_jn8q8"]
@@ -54,4 +55,5 @@ ocean_basin_edge_softness = 0.245
 water_gradient = SubResource("Gradient_0k1rn")
 depth_fade_distance_ratio = 0.035
 vegetation_profile = SubResource("Resource_aptve")
+ambient_loop = ExtResource("2_qdt5w")
 metadata/_custom_type_script = "uid://1t0wbuevh1oe"
