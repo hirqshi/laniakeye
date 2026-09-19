@@ -14,13 +14,13 @@ stencil_flags = 2
 stencil_outline_thickness = 0.0
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_6m30h"]
-radius = 100.0
+radius = 200.0
 
 [node name="Eye" type="Node3D" unique_id=2010017464]
 script = ExtResource("1_e6m2j")
 
 [node name="EyeMesh" type="MeshInstance3D" parent="." unique_id=1091211683]
-transform = Transform3D(-50, 0, -4.371139e-06, 0, 50, 0, 4.371139e-06, 0, -50, 0, 0, 0)
+transform = Transform3D(-200, 0, -3.019916e-05, 0, 200, 0, 3.019916e-05, 0, -200, 0, 0, 0)
 mesh = ExtResource("1_60o0r")
 surface_material_override/0 = SubResource("StandardMaterial3D_gd3i8")
 
@@ -31,8 +31,10 @@ shadow_enabled = true
 shadow_bias = 0.584
 shadow_normal_bias = 0.36
 shadow_blur = 3.151
-omni_range = 10000.0
+omni_range = 40000.0
 omni_attenuation = 0.186
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=79589310]
+[node name="StaticBody3D" type="StaticBody3D" parent="." unique_id=2018008508]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D" unique_id=79589310]
 shape = SubResource("SphereShape3D_6m30h")

@@ -29,6 +29,7 @@ MouseCaptureManager="*uid://bfeovmpw04fcw"
 AudioManager="*uid://chg4rfb55dehs"
 SaveManager="*uid://bw3fosv1d0m37"
 SpawnAnchorService="*uid://yogt5lcoboav"
+FloatingOriginManager="*uid://dt2t2godmtph7"
 
 [display]
 

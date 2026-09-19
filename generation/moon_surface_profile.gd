@@ -85,6 +85,10 @@ enum TextureRepeat {
 @export var crater_depth_m: float = 1.5
 @export var crater_rim_height_m: float = 0.6
 
+@export_category("Ambient Audio")
+@export var ambient_loop: AudioStream
+@export_range(-24.0, 6.0, 0.1) var ambient_loop_volume_db: float = -12.0
+
 func get_random_albedo_color(rng: RandomNumberGenerator) -> Color:
 	if albedo_gradient == null:
 		return Color.WHITE

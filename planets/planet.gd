@@ -338,7 +338,8 @@ func get_radius() -> float:
 func get_ambient_loop() -> AudioStream:
 	if planet_data == null or planet_data.surface_profile == null:
 		return null
-	return planet_data.surface_profile.ambient_loop
+	var ambient: Variant = planet_data.surface_profile.get("ambient_loop")
+	return ambient as AudioStream
 	
 
 func get_gravity_zone_radius() -> float:

@@ -46,6 +46,7 @@ func _ready() -> void:
 	ship.velocity = Vector3.ZERO
 
 	_teleport_player_to_ship_seat()
+	FloatingOriginManager.register(player, ship, star_system)
 	_setup_hud()
 
 func _validate_exports() -> bool:
