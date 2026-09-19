@@ -44,7 +44,6 @@ var _star_system: Node3D
 
 var _enabled: bool = false
 
-
 func _ready() -> void:
 	process_physics_priority = -200
 
@@ -74,7 +73,7 @@ func _physics_process(_delta: float) -> void:
 		return
 	if not is_instance_valid(_player):
 		return
-
+		
 	var distance_from_origin: float = _player.global_position.length()
 	if distance_from_origin < shift_threshold_m:
 		return
@@ -84,20 +83,5 @@ func _physics_process(_delta: float) -> void:
 
 
 func _apply_shift(shift: Vector3) -> void:
-	# Only the star system needs a direct shift - every planet and moon
-	# re-derives its position from the star system's global_position on
-	# its own next _physics_process (see class comment above).
 	_star_system.global_position += shift
-
-	# Player and ship are NOT parent-relative, so they need explicit
-	# correction. Setting global_position directly (not through velocity)
-	# is safe here: this runs before either body's own _physics_process
-	# this frame (priority -200 vs their default/near-default priority),
-	# so move_and_slide() afterwards operates on the already-corrected
-	# position with its normal velocity - no collision/teleport artifact.
-	_player.global_position += shift
-
-	if is_instance_valid(_ship):
-		_ship.global_position += shift
-
 	origin_shifted.emit(shift)

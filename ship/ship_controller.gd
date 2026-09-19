@@ -99,7 +99,7 @@ func _ready() -> void:
 		push_error("ShipController (%s): 'Landing Raycast' export is not assigned" % name)
 	elif not landing_raycast.enabled:
 		push_warning("ShipController (%s): landing_raycast is disabled, landing magnet will never engage" % name)
-
+	FloatingOriginManager.origin_shifted.connect(_on_origin_shifted)
 	if ship_seat:
 		if ship_seat.has_signal("player_seated"):
 			ship_seat.connect("player_seated", func(): player_seated.emit())
@@ -318,6 +318,14 @@ func _apply_gravity(delta: float) -> void:
 		gravity_fade_curve_power
 	)
 	velocity += gravity_dir * gravity_strength * delta
+
+func _on_origin_shifted(shift: Vector3) -> void:
+	set_physics_process(false)
+	global_position += shift
+	call_deferred("_reenable_physics_process")
+
+func _reenable_physics_process() -> void:
+	set_physics_process(true)
 
 ## Runs one frame of magnet-locked landing: orientation smoothly aligns to
 ## the surface normal, horizontal thrust input still allows taxiing, and

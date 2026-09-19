@@ -104,10 +104,19 @@ var is_controllable: bool = true
 
 func _ready() -> void:
 	SpawnAnchorService.set_active_anchor(self)
+	FloatingOriginManager.origin_shifted.connect(_on_origin_shifted)
 	add_to_group("player")
 	floor_max_angle = deg_to_rad(floor_max_angle_deg)
 	floor_stop_on_slope = true
 	safe_margin = collision_safe_margin_m
+
+func _on_origin_shifted(shift: Vector3) -> void:
+	set_physics_process(false)
+	global_position += shift
+	call_deferred("_reenable_physics_process")
+
+func _reenable_physics_process() -> void:
+	set_physics_process(true)
 
 func set_planet_gravity(source: Node3D, strength: float) -> void:
 	DebugLog.physics("MODE SWITCH to PLANET: player_pos=%s source=%s" % [global_position, source])
