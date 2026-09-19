@@ -242,7 +242,7 @@ func _process_sphere_movement(delta: float) -> void:
 		landed.emit()
 
 	if grounded_in_range and not _jump_active and not jump_requested:
-		_run_locked_ground_frame(horizontal_velocity)
+		_run_locked_ground_frame(horizontal_velocity, not _is_ground_locked)
 	elif grounded_in_range and not _jump_active and jump_requested:
 		_vertical_speed = GravityBodyMath.get_effective_jump_velocity(jump_velocity, gravity_strength)
 		_jump_active = true
@@ -258,6 +258,8 @@ func _process_sphere_movement(delta: float) -> void:
 		move_and_slide()
 
 	_local_offset = gravity_source.to_local(global_position)
+	if _local_carrier_radius > 0.0:
+		_local_offset = _local_offset.normalized() * _local_carrier_radius
 
 	moved.emit(input_dir.length() > 0.1, is_running)
 
@@ -320,7 +322,7 @@ func _process_flat_surface_movement(delta: float) -> void:
 		landed.emit()
 
 	if grounded_in_range and not _jump_active and not jump_requested:
-		_run_locked_ground_frame(horizontal_velocity)
+		_run_locked_ground_frame(horizontal_velocity, not _is_ground_locked)
 	elif grounded_in_range and not _jump_active and jump_requested:
 		_vertical_speed = GravityBodyMath.get_effective_jump_velocity(jump_velocity, surface_gravity_strength * gravity_multiplier)
 		DebugLog.physics("FLAT JUMP START: launch_v=%s gravity=%s pos=%s" % [_vertical_speed, surface_gravity_strength * gravity_multiplier, global_position])
@@ -352,7 +354,7 @@ func _process_flat_surface_movement(delta: float) -> void:
 ## position is forcibly re-pinned to the ground surface via a fresh
 ## raycast, completely overriding whatever vertical drift move_and_slide
 ## introduced. No sliding, no separation, no floor-snap flicker.
-func _run_locked_ground_frame(horizontal_velocity: Vector3) -> void:
+func _run_locked_ground_frame(horizontal_velocity: Vector3, was_falling: bool) -> void:
 	_vertical_speed = 0.0
 
 	var can_use_frozen_anchor: bool = false
@@ -378,7 +380,14 @@ func _run_locked_ground_frame(horizontal_velocity: Vector3) -> void:
 
 	var post_move_probe: Dictionary = _probe_ground()
 	if post_move_probe.found:
-		global_position = post_move_probe.hit_point + up_direction * ground_offset_m
+		var target_position: Vector3 = post_move_probe.hit_point + up_direction * ground_offset_m
+		if was_falling:
+			# easing the very first lock-in frame instead of an instant
+			# snap - the gap here is at most ground_lock_tolerance_m, so
+			# a fast lerp closes it in a couple of frames, imperceptibly
+			global_position = global_position.lerp(target_position, 0.4)
+		else:
+			global_position = target_position
 
 	_is_ground_locked = true
 
