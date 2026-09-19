@@ -35,6 +35,14 @@ const ATMOSPHERE_SPHERE_RADIAL_SEGMENTS: int = 32
 @export var vegetation_spawner: PlanetVegetationSpawner
 @export var creature_spawner: CreatureSpawner
 
+@export var mesh_instance_lod1: MeshInstance3D
+@export var mesh_instance_lod2: MeshInstance3D
+
+@export_category("LOD")
+@export_range(1.0, 50.0, 0.5) var lod1_range_multiplier: float = 8.0
+@export_range(1.0, 100.0, 0.5) var lod2_range_multiplier: float = 25.0
+@export_range(1.0, 20.0, 0.5) var collision_range_multiplier: float = 2.5
+
 var planet_data: PlanetData
 var moon_nodes: Array[Node3D] = []
 var mesh_generator: PlanetMeshGenerator = PlanetMeshGenerator.new()
@@ -44,6 +52,7 @@ var water_mesh_generator: WaterMeshGenerator = WaterMeshGenerator.new()
 var sea_level_radius_m: float = 0.0
 var has_ocean: bool = false
 
+var _collision_range_m: float = 0.0
 
 func _process(_delta: float) -> void:
 	if planet_data == null:
@@ -72,29 +81,39 @@ func _process(_delta: float) -> void:
 		if surface_material != null and has_star:
 			surface_material.set_shader_parameter("atmosphere_light_direction", light_dir)
 
+	_update_collision_range()
+	_update_lod_fade(get_viewport().get_camera_3d())
+
+func _update_lod_fade(camera: Camera3D) -> void:
+	if camera == null or planet_data == null:
+		return
+
+	var distance: float = global_position.distance_to(camera.global_position)
+	var fade_band_m: float = planet_data.radius_m * 0.5
+
+	_apply_fade_to_instance(mesh_instance, distance, mesh_instance.visibility_range_end, fade_band_m, true)
+	if mesh_instance_lod1 != null:
+		_apply_fade_to_instance(mesh_instance_lod1, distance, mesh_instance_lod1.visibility_range_end, fade_band_m, mesh_instance_lod1.visibility_range_end > 0.0)
+
+func _apply_fade_to_instance(instance: MeshInstance3D, distance: float, range_end: float, fade_band_m: float, has_upper_bound: bool) -> void:
+	if instance.material_override is not ShaderMaterial:
+		return
+	var material: ShaderMaterial = instance.material_override as ShaderMaterial
+	var alpha: float = 1.0
+	if has_upper_bound and range_end > 0.0:
+		alpha = clampf((range_end - distance) / fade_band_m, 0.0, 1.0)
+	material.set_shader_parameter("lod_fade_alpha", alpha)
+
 func setup(data: PlanetData) -> void:
 	planet_data = data
 
 	var noise_type: int = data.surface_profile.get("terrain_noise_type") if data.surface_profile else 0
 
-	var mesh: ArrayMesh = mesh_generator.generate(
-		data.radius_m,
-		data.planet_seed,
-		data.terrain_noise_scale,
-		data.terrain_height_m,
-		noise_type,
-		data.surface_profile
-	)
-	mesh_instance.mesh = mesh
-
 	var material: ShaderMaterial = ShaderMaterial.new()
 	material.shader = TRIPLANAR_SHADER
-
 	_apply_surface_profile(material, data.surface_profile, data.albedo_color)
 
-	mesh_instance.material_override = material
-
-	collision_shape.shape = mesh.create_trimesh_shape()
+	_setup_lod_meshes(data, noise_type, material)
 
 	var gravity_multiplier: float = generation_settings.gravity_zone_multiplier if generation_settings else 1.6
 	var gravity_shape: SphereShape3D = SphereShape3D.new()
@@ -109,6 +128,73 @@ func setup(data: PlanetData) -> void:
 
 	if not is_moon:
 		_spawn_moons()
+		
+
+func _update_collision_range() -> void:
+	if collision_shape == null or _collision_range_m <= 0.0:
+		return
+	var camera: Camera3D = get_viewport().get_camera_3d()
+	if camera == null:
+		return
+	var distance_to_camera: float = global_position.distance_to(camera.global_position)
+	collision_shape.disabled = distance_to_camera > _collision_range_m
+
+## Builds three detail levels of the same planet mesh and wires them to
+## Godot's built-in visibility_range fade so only one is visible/rendered
+## at a time, with a smooth cross-fade at the boundary.
+##
+## LOD0 (mesh_instance) is always the collision source - the player is
+## always physically close to whatever planet they're standing on, so
+## collision only ever needs the most detailed mesh. LOD1/LOD2 exist
+## purely for distant visual fidelity.
+##
+## LOD2 (farthest) skips terrain/crater/ocean sampling entirely via
+## use_flat_sphere - at that distance the detail is invisible anyway, so
+## a bare icosahedron avoids wasted PlanetSurfaceSampler calls per vertex.
+func _setup_lod_meshes(data: PlanetData, noise_type: int, material: ShaderMaterial) -> void:
+	var lod0_mesh: ArrayMesh = mesh_generator.generate(
+		data.radius_m, data.planet_seed, data.terrain_noise_scale,
+		data.terrain_height_m, noise_type, data.surface_profile,
+		4
+	)
+	mesh_instance.mesh = lod0_mesh
+	mesh_instance.material_override = material
+	collision_shape.shape = lod0_mesh.create_trimesh_shape()
+
+	var lod0_range_end: float = data.radius_m * lod1_range_multiplier
+	var lod1_range_end: float = data.radius_m * lod2_range_multiplier
+
+	mesh_instance.visibility_range_begin = 0.0
+	mesh_instance.visibility_range_end = lod0_range_end
+	mesh_instance.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
+
+	_collision_range_m = data.radius_m * collision_range_multiplier
+
+	if mesh_instance_lod1 != null:
+		var lod1_mesh: ArrayMesh = mesh_generator.generate(
+			data.radius_m, data.planet_seed, data.terrain_noise_scale,
+			data.terrain_height_m, noise_type, data.surface_profile,
+			2
+		)
+		var lod1_material: ShaderMaterial = material.duplicate()
+		mesh_instance_lod1.mesh = lod1_mesh
+		mesh_instance_lod1.material_override = lod1_material
+		mesh_instance_lod1.visibility_range_begin = lod0_range_end
+		mesh_instance_lod1.visibility_range_end = lod1_range_end
+		mesh_instance_lod1.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
+
+	if mesh_instance_lod2 != null:
+		var lod2_mesh: ArrayMesh = mesh_generator.generate(
+			data.radius_m, data.planet_seed, data.terrain_noise_scale,
+			data.terrain_height_m, noise_type, data.surface_profile,
+			1, true
+		)
+		var lod2_material: ShaderMaterial = material.duplicate()
+		mesh_instance_lod2.mesh = lod2_mesh
+		mesh_instance_lod2.material_override = lod2_material
+		mesh_instance_lod2.visibility_range_begin = lod1_range_end
+		mesh_instance_lod2.visibility_range_end = 0.0
+		mesh_instance_lod2.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
 
 func _setup_creatures(data: PlanetData) -> void:
 	if is_moon:

@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://qha0s4lgr3nf" path="res://planets/planet.gd" id="1_q6it2"]
 [ext_resource type="Script" uid="uid://ba588h81spcd7" path="res://planets/planet_gravity_zone.gd" id="2_fyi6v"]
 
-[node name="Moon" type="Node3D" unique_id=581055455 node_paths=PackedStringArray("mesh_instance", "collision_shape", "gravity_area", "gravity_collision_shape", "moons_container")]
+[node name="Moon" type="Node3D" unique_id=581055455 node_paths=PackedStringArray("mesh_instance", "collision_shape", "gravity_area", "gravity_collision_shape", "moons_container", "mesh_instance_lod1", "mesh_instance_lod2")]
 script = ExtResource("1_q6it2")
 mesh_instance = NodePath("MeshInstance3D")
 collision_shape = NodePath("StaticBody3D/CollisionShape3D")
@@ -11,8 +11,14 @@ gravity_area = NodePath("GravityArea")
 gravity_collision_shape = NodePath("GravityArea/CollisionShape3D")
 moons_container = NodePath("MoonsContainer")
 is_moon = true
+mesh_instance_lod1 = NodePath("MeshInstanceLOD1")
+mesh_instance_lod2 = NodePath("MeshInstanceLOD2")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1771692712]
+
+[node name="MeshInstanceLOD1" type="MeshInstance3D" parent="." unique_id=295441156]
+
+[node name="MeshInstanceLOD2" type="MeshInstance3D" parent="." unique_id=349681026]
 
 [node name="StaticBody3D" type="StaticBody3D" parent="." unique_id=1602399982]
 

@@ -4,8 +4,15 @@ extends RefCounted
 ## Builds an icosphere and displaces every vertex through PlanetSurfaceSampler.
 ## Terrain, craters and ocean basins must be sampled through the same source
 ## so vegetation, collision and visible terrain cannot diverge.
+##
+## LOD: subdivisions is now a parameter (was a hardcoded const) so
+## planet.gd can generate multiple detail levels from the same generator.
+## use_flat_sphere skips PlanetSurfaceSampler entirely and returns a plain
+## icosahedron at radius_m - meant for the farthest LOD, where per-vertex
+## noise/crater/ocean sampling would be wasted work since the detail is
+## invisible at that distance anyway.
 
-const SUBDIVISIONS: int = 4
+const DEFAULT_SUBDIVISIONS: int = 4
 
 var _icosphere_indices: PackedInt32Array = PackedInt32Array()
 var _surface_sampler: PlanetSurfaceSampler = PlanetSurfaceSampler.new()
@@ -16,18 +23,11 @@ func generate(
 	noise_scale: float,
 	height_m: float,
 	noise_type: int = 0,
-	surface_profile: Resource = null
+	surface_profile: Resource = null,
+	subdivisions: int = DEFAULT_SUBDIVISIONS,
+	use_flat_sphere: bool = false
 ) -> ArrayMesh:
-	_surface_sampler.setup(
-		radius_m,
-		mesh_seed,
-		noise_scale,
-		height_m,
-		noise_type,
-		surface_profile
-	)
-
-	var vertices: PackedVector3Array = _build_icosphere(SUBDIVISIONS)
+	var vertices: PackedVector3Array = _build_icosphere(subdivisions)
 
 	var surface_tool: SurfaceTool = SurfaceTool.new()
 	surface_tool.begin(Mesh.PRIMITIVE_TRIANGLES)
@@ -35,9 +35,22 @@ func generate(
 	var displaced_vertices: PackedVector3Array = PackedVector3Array()
 	displaced_vertices.resize(vertices.size())
 
-	for vertex_index: int in range(vertices.size()):
-		var direction: Vector3 = vertices[vertex_index].normalized()
-		displaced_vertices[vertex_index] = _surface_sampler.get_surface_position(direction)
+	if use_flat_sphere:
+		for vertex_index: int in range(vertices.size()):
+			displaced_vertices[vertex_index] = vertices[vertex_index].normalized() * radius_m
+	else:
+		_surface_sampler.setup(
+			radius_m,
+			mesh_seed,
+			noise_scale,
+			height_m,
+			noise_type,
+			surface_profile
+		)
+
+		for vertex_index: int in range(vertices.size()):
+			var direction: Vector3 = vertices[vertex_index].normalized()
+			displaced_vertices[vertex_index] = _surface_sampler.get_surface_position(direction)
 
 	for index_offset: int in range(0, _icosphere_indices.size(), 3):
 		var index_a: int = _icosphere_indices[index_offset]

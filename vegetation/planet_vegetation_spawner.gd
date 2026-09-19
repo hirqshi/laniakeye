@@ -28,6 +28,8 @@ var tree_geometry_quality: float = 0.5
 		if Engine.is_editor_hint():
 			_regenerate_from_current_data()
 
+@export_category("LOD")
+@export_range(10.0, 2000.0, 10.0, "suffix:m") var vegetation_visibility_margin_m: float = 300.0
 var _planet_data: PlanetData
 var _surface_profile: Resource
 var _vegetation_profile: VegetationProfile
@@ -197,6 +199,8 @@ func _spawn_global_layer(
 		layer.display_name
 	]
 	multimesh_instance.multimesh = multimesh
+	multimesh_instance.visibility_range_end = _planet_data.radius_m + vegetation_visibility_margin_m
+	multimesh_instance.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
 
 	add_child(multimesh_instance)
 

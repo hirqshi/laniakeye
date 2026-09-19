@@ -42,16 +42,11 @@ func _ready() -> void:
 	_rng.randomize()
 
 	var spawn_position: Vector3 = _find_safe_ship_spawn_position()
-	print("[DEBUG] spawn_position computed: ", spawn_position)
-
+	
 	ship.global_position = spawn_position
 	ship.velocity = Vector3.ZERO
-	print("[DEBUG] ship.global_position after assign: ", ship.global_position)
-
+	
 	_teleport_player_to_ship_seat()
-	print("[DEBUG] player.global_position after teleport: ", player.global_position)
-	print("[DEBUG] ship.global_position after teleport: ", ship.global_position)
-	print("[DEBUG] distance ship<->player right after teleport: ", ship.global_position.distance_to(player.global_position))
 
 	call_deferred("_register_floating_origin")
 	_setup_hud()
@@ -100,16 +95,11 @@ func _teleport_player_to_ship_seat() -> void:
 		push_error("World: ship.get_seat_exit_transform() returned null")
 		return
 
-	print("[DEBUG] exit_transform.origin BEFORE applying to player: ", exit_transform.origin)
-	print("[DEBUG] ship.global_position at moment of teleport: ", ship.global_position)
-
 	if player.has_method("set_controllable"):
 		player.call("set_controllable", false)
 
 	player.global_transform = exit_transform
 	player.velocity = Vector3.ZERO
-
-	print("[DEBUG] player.global_position AFTER applying exit_transform: ", player.global_position)
 
 	if player.has_method("set_controllable"):
 		player.call("set_controllable", true)

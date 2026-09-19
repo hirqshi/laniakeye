@@ -79,6 +79,8 @@ uniform float atmosphere_tint_strength : hint_range(0.0, 2.0) = 0.3;
 uniform float atmosphere_tint_rim_power : hint_range(0.5, 8.0) = 2.0;
 uniform vec3 atmosphere_light_direction = vec3(1.0, 0.0, 0.0);
 
+uniform float lod_fade_alpha : hint_range(0.0, 1.0) = 1.0;
+
 varying vec3 object_position;
 varying vec3 object_normal;
 varying vec3 world_normal_for_tint;
@@ -377,6 +379,14 @@ void fragment() {
 		float rim = pow(1.0 - clamp(dot(world_normal_for_tint, VIEW), 0.0, 1.0), atmosphere_tint_rim_power);
 		albedo = mix(albedo, atmosphere_tint_color, rim * light_term * atmosphere_tint_strength);
 	}
-
+	
+	if (lod_fade_alpha < 0.999) {
+		vec2 screen_pos = FRAGCOORD.xy;
+		float dither = fract(sin(dot(screen_pos, vec2(12.9898, 78.233))) * 43758.5453);
+		if (dither > lod_fade_alpha) {
+			discard;
+		}
+	}
+	
 	ALBEDO = albedo;
 }
