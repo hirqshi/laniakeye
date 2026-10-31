@@ -47,6 +47,7 @@ density = 1.0
 minimum_spacing_m = 4.4
 biome_noise_threshold = -1.0
 biome_noise_softness = 0.18
+cluster_scale_m = 256.0
 metadata/_custom_type_script = "uid://da8uuodwnok4"
 
 [sub_resource type="Resource" id="Resource_s46xm"]
@@ -60,6 +61,9 @@ metadata/_custom_type_script = "uid://da8uuodwnok4"
 [sub_resource type="Resource" id="Resource_5lcxi"]
 script = ExtResource("7_xi8qf")
 tree_layers = Array[ExtResource("8_7quc1")]([SubResource("Resource_i1a5a"), SubResource("Resource_s46xm")])
+chunk_size_m = 200.0
+active_chunk_radius = 4
+vegetation_view_distance_m = 465.0
 metadata/_custom_type_script = "uid://kcsw7i33p7vt"
 
 [sub_resource type="Gradient" id="Gradient_0k1rn"]
@@ -79,10 +83,11 @@ normal_strength = 1.0
 triplanar_scale = 0.105
 albedo_gradient = SubResource("Gradient_e6m2j")
 vegetation_density_min = 0.56
-vegetation_density_max = 0.98
-terrain_noise_scale_max = 0.89
-terrain_height_min_m = 11.675
-terrain_height_max_m = 28.37
+vegetation_density_max = 100.0
+terrain_noise_scale_min = 0.155
+terrain_noise_scale_max = 3.22
+terrain_height_min_m = 200.0
+terrain_height_max_m = 2000.0
 has_atmosphere = true
 atmosphere_outer_height_ratio = 0.86
 atmosphere_rayleigh_color = Color(0.247, 0.6097, 0.65, 1)

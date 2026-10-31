@@ -31,7 +31,7 @@ shadow_enabled = true
 shadow_bias = 0.584
 shadow_normal_bias = 0.36
 shadow_blur = 3.151
-omni_range = 40000.0
+omni_range = 900000.0
 omni_attenuation = 0.186
 
 [node name="StaticBody3D" type="StaticBody3D" parent="." unique_id=2018008508]

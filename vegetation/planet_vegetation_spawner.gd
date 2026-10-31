@@ -5,8 +5,8 @@ extends Node3D
 const FOLIAGE_SHADER: Shader = preload("res://shaders/foliage.gdshader")
 
 @export_category("Global Generation")
-@export_range(100, 100_000, 100) var candidate_count_per_layer: int = 8_000
-@export_range(0, 20_000, 1) var max_instances_per_layer: int = 1_500
+@export_range(100, 1000_000, 100) var candidate_count_per_layer: int = 8_000
+@export_range(0, 2000_000, 1) var max_instances_per_layer: int = 1_500
 
 @export_category("Placement")
 @export_range(-1.0, 1.0, 0.001, "suffix:m") var surface_offset_m: float = -0.5

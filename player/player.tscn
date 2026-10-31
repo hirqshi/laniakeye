@@ -39,7 +39,7 @@ shape = SubResource("CapsuleShape3D_6m30h")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.39062613, 0)
 
 [node name="PlayerCamera" type="Camera3D" parent="BodyPivot/CameraPivot" unique_id=585074050 node_paths=PackedStringArray("player_camera", "player_controller")]
-far = 40000.0
+far = 800000.0
 script = ExtResource("2_g1dw6")
 player_camera = NodePath(".")
 player_controller = NodePath("../../..")

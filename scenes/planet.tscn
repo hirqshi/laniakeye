@@ -46,7 +46,6 @@ vegetation_spawner = NodePath("VegetationSpawner")
 creature_spawner = NodePath("CreatureSpawner")
 mesh_instance_lod1 = NodePath("PlanetMeshLOD1")
 mesh_instance_lod2 = NodePath("PlanetMeshLOD2")
-collision_range_multiplier = null
 
 [node name="PlanetMesh" type="MeshInstance3D" parent="." unique_id=1771692712]
 
@@ -75,10 +74,9 @@ planet_root = NodePath("..")
 
 [node name="VegetationSpawner" type="Node3D" parent="." unique_id=964131640]
 script = ExtResource("5_48b8c")
-candidate_count_per_layer = 15000
-max_instances_per_layer = 4000
+candidate_count_per_layer = 50000
+max_instances_per_layer = 200000
 generate_in_editor = true
-vegetation_visibility_margin_m = null
 
 [node name="CreatureSpawner" type="Node3D" parent="." unique_id=1959080408]
 script = ExtResource("7_ekhpw")
