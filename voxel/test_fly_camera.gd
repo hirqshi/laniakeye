@@ -26,7 +26,7 @@ func _physics_process(delta: float) -> void:
 	var input_dir: Vector3 = Vector3(
 		Input.get_axis("move_left", "move_right"),
 		Input.get_axis("move_down", "move_up"),
-		Input.get_axis("move_back", "move_forward")
+		Input.get_axis("move_forward", "move_back")
 	)
 
 	var speed: float = move_speed_m_s
