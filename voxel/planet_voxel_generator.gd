@@ -25,11 +25,8 @@ func _generate_block(out_buffer: VoxelBuffer, origin_in_voxels: Vector3i, lod: i
 	for x: int in range(buffer_size.x):
 		for y: int in range(buffer_size.y):
 			for z: int in range(buffer_size.z):
-				var local: Vector3 = Vector3(float(x), float(y), float(z)) + Vector3.ONE * 0.5
-				var world_pos: Vector3 = (
-					Vector3(float(origin_in_voxels.x), float(origin_in_voxels.y), float(origin_in_voxels.z))
-					+ local
-				) * voxel_size_m
+				var local: Vector3 = Vector3(float(x), float(y), float(z))
+				var world_pos: Vector3 = Vector3(origin_in_voxels) + local * voxel_size_m
 
 				var dx: float = world_pos.x
 				var dy: float = world_pos.y
