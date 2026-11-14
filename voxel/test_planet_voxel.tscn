@@ -23,7 +23,7 @@ rotation = Vector3(-0.785398, 0.523599, 0)
 light_energy = 1.2
 
 [node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6371002, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6375100, 0)
 far = 200000.0
 near = 0.05
 current = true
