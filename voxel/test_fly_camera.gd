@@ -13,7 +13,7 @@ func _ready() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion:
-		rotate_object_local(Vector3.UP, -event.relative.x * mouse_sensitivity)
+		rotation.y -= event.relative.x * mouse_sensitivity
 		_pitch_rad = clampf(
 			_pitch_rad - event.relative.y * mouse_sensitivity,
 			-deg_to_rad(89.0),

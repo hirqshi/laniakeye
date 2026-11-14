@@ -28,6 +28,10 @@ func _setup_terrain() -> void:
 	while planet_radius_m >= float(pot):
 		pot *= 2
 
+	var material: StandardMaterial3D = StandardMaterial3D.new()
+	material.albedo_color = Color(0.35, 0.45, 0.3)
+	material.roughness = 1.0
+
 	_terrain = VoxelLodTerrain.new()
 	_terrain.lod_count = lod_count
 	_terrain.lod_distance = 60.0
@@ -41,6 +45,7 @@ func _setup_terrain() -> void:
 	_terrain.mesh_block_size = 32
 	_terrain.mesher = VoxelMesherTransvoxel.new()
 	_terrain.threaded_update_enabled = false
+	_terrain.material = material
 	add_child(_terrain)
 
 
