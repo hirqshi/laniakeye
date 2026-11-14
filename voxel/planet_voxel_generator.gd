@@ -19,7 +19,7 @@ func _init() -> void:
 
 
 func _generate_block(out_buffer: VoxelBuffer, origin_in_voxels: Vector3i, lod: int) -> void:
-	var block_size: int = out_buffer.get_size()
+	var block_size: int = out_buffer.get_size().x
 	var voxel_size_m: float = float(1 << lod)
 
 	for x: int in range(block_size):
