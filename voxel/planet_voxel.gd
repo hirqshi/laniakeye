@@ -9,7 +9,7 @@ extends Node3D
 
 var universe_position: UniversePosition
 var _terrain: VoxelLodTerrain
-var _debug_timer_s: float = 3.0
+var _debug_timer_s: float = 10.0
 var _debug_printed: bool = false
 
 
@@ -40,7 +40,7 @@ func _setup_terrain() -> void:
 	)
 	_terrain.mesh_block_size = 32
 	_terrain.mesher = VoxelMesherTransvoxel.new()
-	_terrain.threaded_update_enabled = true
+	_terrain.threaded_update_enabled = false
 	add_child(_terrain)
 
 
