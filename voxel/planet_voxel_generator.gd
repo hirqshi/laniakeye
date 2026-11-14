@@ -19,12 +19,12 @@ func _init() -> void:
 
 
 func _generate_block(out_buffer: VoxelBuffer, origin_in_voxels: Vector3i, lod: int) -> void:
-	var block_size: int = out_buffer.get_size().x
+	var buffer_size: Vector3i = out_buffer.get_size()
 	var voxel_size_m: float = float(1 << lod)
 
-	for x: int in range(block_size):
-		for y: int in range(block_size):
-			for z: int in range(block_size):
+	for x: int in range(buffer_size.x):
+		for y: int in range(buffer_size.y):
+			for z: int in range(buffer_size.z):
 				var local: Vector3 = Vector3(float(x), float(y), float(z)) + Vector3.ONE * 0.5
 				var world_pos: Vector3 = (
 					Vector3(float(origin_in_voxels.x), float(origin_in_voxels.y), float(origin_in_voxels.z))
