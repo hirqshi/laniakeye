@@ -31,7 +31,6 @@ func _generate_block(out_buffer: VoxelBuffer, origin_in_voxels: Vector3i, lod: i
 					+ local
 				) * voxel_size_m
 
-				# normalize in double precision (GDScript float is 64-bit)
 				var dx: float = world_pos.x
 				var dy: float = world_pos.y
 				var dz: float = world_pos.z
@@ -44,8 +43,8 @@ func _generate_block(out_buffer: VoxelBuffer, origin_in_voxels: Vector3i, lod: i
 				var density_m: float = length - surface_radius_m
 				var sdf: float = clampf(density_m / voxel_size_m, -1.0, 1.0)
 
-				out_buffer.set_voxel(
-					int(sdf * 127.0),
+				out_buffer.set_voxel_f(
+					sdf,
 					x,
 					y,
 					z,
