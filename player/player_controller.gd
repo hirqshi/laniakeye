@@ -109,6 +109,11 @@ func _ready() -> void:
 	floor_max_angle = deg_to_rad(floor_max_angle_deg)
 	floor_stop_on_slope = true
 	safe_margin = collision_safe_margin_m
+	if player_camera != null:
+		player_camera.current = true
+	else:
+		push_error("PlayerController: player_camera export is null in _ready()")
+
 
 func _on_origin_shifted(shift: Vector3) -> void:
 	set_physics_process(false)

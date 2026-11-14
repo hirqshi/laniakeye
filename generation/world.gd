@@ -27,6 +27,7 @@ extends Node
 @export var ship_spawn_max_attempts: int = 64
 
 @export var hud: HudController
+@export var distant_body_renderer: DistantBodyRenderer
 
 @export var seat_enter_stream: AudioStream
 @export var seat_exit_stream: AudioStream
@@ -42,14 +43,15 @@ func _ready() -> void:
 	_rng.randomize()
 
 	var spawn_position: Vector3 = _find_safe_ship_spawn_position()
-	
+
 	ship.global_position = spawn_position
 	ship.velocity = Vector3.ZERO
-	
+
 	_teleport_player_to_ship_seat()
 
 	call_deferred("_register_floating_origin")
 	_setup_hud()
+	_setup_distant_body_renderer()
 
 func _register_floating_origin() -> void:
 	FloatingOriginManager.register(player, ship, star_system)
@@ -127,6 +129,56 @@ func _find_safe_ship_spawn_position() -> Vector3:
 
 	push_warning("World: could not find a clear random ship spawn after %d attempts, using polar fallback" % ship_spawn_max_attempts)
 	return star_center + Vector3.UP * (outer_bound_m + ship_spawn_margin_m)
+
+
+func _setup_distant_body_renderer() -> void:
+	if distant_body_renderer == null:
+		push_warning("World: 'Distant Body Renderer' export is not assigned")
+		return
+
+	var player_camera: Camera3D = player.get("player_camera")
+	if player_camera == null:
+		push_error("World: player has no 'player_camera' property")
+		return
+
+	distant_body_renderer.set_main_camera(player_camera)
+
+
+func _process(_delta: float) -> void:
+	if distant_body_renderer == null or not is_instance_valid(star_system):
+		return
+
+	var active_camera: Camera3D = distant_body_renderer.get_main_camera()
+	if active_camera == null or not is_instance_valid(active_camera):
+		return
+
+	var distant_bodies: Array[Node3D] = []
+	var radii_m: Dictionary[Node3D, float] = {}
+	var colors: Dictionary[Node3D, Color] = {}
+	var textures: Dictionary[Node3D, Texture2D] = {}
+
+	for celestial_node in star_system.call("get_all_celestial_nodes"):
+		var distance_m: float = active_camera.global_position.distance_to(celestial_node.global_position)
+		if distance_m > distant_body_renderer.near_limit_m:
+			distant_bodies.append(celestial_node)
+			radii_m[celestial_node] = celestial_node.call("get_radius")
+			colors[celestial_node] = _get_body_albedo_color(celestial_node)
+			textures[celestial_node] = _get_body_albedo_texture(celestial_node)
+
+	distant_body_renderer.update_bodies(distant_bodies, radii_m, colors, textures)
+
+
+func _get_body_albedo_color(celestial_node: Node3D) -> Color:
+	var data: PlanetData = celestial_node.get("planet_data")
+	return data.albedo_color if data != null else Color.WHITE
+
+
+func _get_body_albedo_texture(celestial_node: Node3D) -> Texture2D:
+	var data: PlanetData = celestial_node.get("planet_data")
+	if data == null or data.surface_profile == null:
+		return null
+	return data.surface_profile.get("albedo_texture") as Texture2D
+
 
 func _compute_outer_bound_m(system_data: SystemData, star_radius_m: float) -> float:
 	var outer_bound_m: float = star_radius_m + ship_spawn_margin_m
@@ -208,18 +260,20 @@ func _setup_hud() -> void:
 	if ship.has_signal("player_unseated"):
 		ship.connect("player_unseated", _on_player_unseated)
 
+
 func _on_player_seated() -> void:
 	if hud == null:
 		return
-	hud.set_ship_reference(ship.call("get_seat_camera"), ship)
+	var seat_camera: Camera3D = ship.call("get_seat_camera")
+	hud.set_ship_reference(seat_camera, ship)
 	hud.set_piloting_ship(true)
 
+	if distant_body_renderer != null:
+		distant_body_renderer.set_main_camera(seat_camera)
+
 	if is_instance_valid(ship):
-		AudioManager.play_sfx_3d(
-			seat_enter_stream,
-			ship.global_position,
-			seat_audio_volume_db
-		)
+		AudioManager.play_sfx_3d(seat_enter_stream, ship.global_position, seat_audio_volume_db)
+
 
 func _on_player_unseated() -> void:
 	if hud == null:
@@ -227,11 +281,9 @@ func _on_player_unseated() -> void:
 	var player_camera: Camera3D = player.get_player_camera()
 	if player_camera:
 		hud.set_ship_reference(player_camera, ship)
+		if distant_body_renderer != null:
+			distant_body_renderer.set_main_camera(player_camera)
 	hud.set_piloting_ship(false)
 
 	if is_instance_valid(ship):
-		AudioManager.play_sfx_3d(
-			seat_exit_stream,
-			ship.global_position,
-			seat_audio_volume_db
-		)
+		AudioManager.play_sfx_3d(seat_exit_stream, ship.global_position, seat_audio_volume_db)

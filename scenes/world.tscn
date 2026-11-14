@@ -10,7 +10,9 @@
 [ext_resource type="Shader" uid="uid://fmjogccimpms" path="res://shaders/starfield.gdshader" id="5_71j4m"]
 [ext_resource type="PackedScene" uid="uid://denq0liqcr01g" path="res://ui/hud.tscn" id="6_qfnet"]
 [ext_resource type="Shader" uid="uid://byjjf5cs3tag7" path="res://shaders/postprocess.gdshader" id="7_i7141"]
+[ext_resource type="Script" uid="uid://cll05i0kpysfx" path="res://player/distant_body_renderer.gd" id="10_o8fc1"]
 [ext_resource type="Script" uid="uid://dmsbvdghfxwle" path="res://ui/menus/pause_menu_controller.gd" id="11_q5onr"]
+[ext_resource type="PackedScene" uid="uid://crky025rit2i2" path="res://planets/planet_proxy.tscn" id="11_xo05s"]
 [ext_resource type="Theme" uid="uid://3oh8qomayi5p" path="res://assets/buttons.tres" id="12_jhx03"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_k0juu"]
@@ -61,12 +63,13 @@ shader_parameter/roll_speed = 3.7999999946691787e-07
 shader_parameter/scan_line_strength = -9.28399987099
 shader_parameter/pixel_strength = -2.58799993293
 
-[node name="World" type="Node3D" unique_id=1083926892 node_paths=PackedStringArray("star_system", "ship", "player", "hud")]
+[node name="World" type="Node3D" unique_id=1083926892 node_paths=PackedStringArray("star_system", "ship", "player", "hud", "distant_body_renderer")]
 script = ExtResource("1_k0juu")
 star_system = NodePath("StarSystem")
 ship = NodePath("Ship")
 player = NodePath("Player")
 hud = NodePath("Hud")
+distant_body_renderer = NodePath("DistantBodyRenderer")
 seat_enter_stream = ExtResource("2_7r4gi")
 seat_exit_stream = ExtResource("3_w7kh3")
 return_to_ship_stream = ExtResource("4_w7kh3")
@@ -80,6 +83,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7941934, 0)
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1624348766]
 environment = SubResource("Environment_6m30h")
+
+[node name="DistantBodyRenderer" type="Node3D" parent="." unique_id=128563086]
+script = ExtResource("10_o8fc1")
+proxy_mesh_scene = ExtResource("11_xo05s")
+near_limit_m = 200000.0
+log_scale_m = 10000.0
 
 [node name="Hud" parent="." unique_id=772229164 instance=ExtResource("6_qfnet")]
 
