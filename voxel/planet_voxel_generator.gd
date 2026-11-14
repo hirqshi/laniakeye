@@ -38,7 +38,7 @@ func _generate_block(out_buffer: VoxelBuffer, origin_in_voxels: Vector3i, lod: i
 				var direction: Vector3 = Vector3(dx / length, dy / length, dz / length)
 				var surface_radius_m: float = _get_surface_radius(direction)
 				var density_m: float = length - surface_radius_m
-				var sdf: float = clampf(density_m / voxel_size_m, -1.0, 1.0)
+				var sdf: float = clampf(density_m / voxel_size_m, -4.0, 4.0)
 
 				out_buffer.set_voxel_f(
 					sdf,

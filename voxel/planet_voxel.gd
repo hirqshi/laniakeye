@@ -9,6 +9,7 @@ extends Node3D
 
 var universe_position: UniversePosition
 var _terrain: VoxelLodTerrain
+var _far_mesh: PlanetFarMesh
 var _debug_timer_s: float = 10.0
 var _debug_printed: bool = false
 
@@ -31,6 +32,13 @@ func _setup_terrain() -> void:
 	var material: StandardMaterial3D = StandardMaterial3D.new()
 	material.albedo_color = Color(0.35, 0.45, 0.3)
 	material.roughness = 1.0
+
+	_far_mesh = PlanetFarMesh.new()
+	_far_mesh.planet_radius_m = planet_radius_m
+	_far_mesh.terrain_height_m = terrain_height_m
+	_far_mesh.noise_seed = noise_seed
+	_far_mesh.material = material
+	add_child(_far_mesh)
 
 	_terrain = VoxelLodTerrain.new()
 	_terrain.lod_count = lod_count
@@ -77,3 +85,7 @@ func _print_terrain_stats() -> void:
 
 func get_terrain() -> VoxelLodTerrain:
 	return _terrain
+
+
+func get_far_mesh() -> PlanetFarMesh:
+	return _far_mesh
