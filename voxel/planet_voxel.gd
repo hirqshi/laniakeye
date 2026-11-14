@@ -37,7 +37,7 @@ func _setup_terrain() -> void:
 	_far_mesh.planet_radius_m = planet_radius_m
 	_far_mesh.terrain_height_m = terrain_height_m
 	_far_mesh.noise_seed = noise_seed
-	_far_mesh.material = material
+	_far_mesh.material_override = material
 	add_child(_far_mesh)
 
 	_terrain = VoxelLodTerrain.new()
