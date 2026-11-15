@@ -1,8 +1,8 @@
 extends Node
 
 @export_range(1.0, 4.0, 0.25) var brush_radius_m: float = 1.5
+@export_range(0.05, 2.0, 0.05) var brush_strength: float = 0.35
 @export var reach_m: float = 8.0
-@export var edit_interval_s: float = 0.25
 
 var _terrain: VoxelLodTerrain
 var _body: CharacterBody3D
@@ -12,7 +12,6 @@ var _tool: VoxelToolLodTerrain
 var _marker: MeshInstance3D
 var _material: StandardMaterial3D
 var _label: Label
-var _cooldown: float = 0.0
 var _ready_for_edits: bool = false
 var _requests: int = 0
 var _last: String = "No edits; changes are NOT saved"
@@ -75,7 +74,7 @@ func _initialize() -> void:
 	canvas.add_child(crosshair)
 	sandbox.add_child(canvas)
 	_ready_for_edits = true
-	print("VoxelBrush: LMB dig, RMB build, wheel radius; no persistence")
+	print("VoxelBrush: continuous SDF editing enabled; LMB dig, RMB build, wheel radius")
 
 
 func _near_capsule(center: Vector3) -> bool:
@@ -89,9 +88,8 @@ func _near_capsule(center: Vector3) -> bool:
 func _physics_process(delta: float) -> void:
 	if not _ready_for_edits:
 		return
-	_cooldown = maxf(_cooldown - delta, 0.0)
 	_label.position = Vector2(12.0, maxf(get_viewport().get_visible_rect().size.y - 86.0, 180.0))
-	_label.text = "LMB dig | RMB build | Wheel radius: %.2f m | reach %.1f m\nEdit requests: %d | %s\nSession only: edits may be lost on unload/restart" % [brush_radius_m, reach_m, _requests, _last]
+	_label.text = "LMB dig | RMB build | Wheel radius: %.2f m | strength %.2f/tick\nEdit ticks: %d | %s\nSession only: edits may be lost on unload/restart" % [brush_radius_m, brush_strength, _requests, _last]
 	_marker.visible = false
 	if bool(get_parent().get("_waiting")) or Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 		return
@@ -105,6 +103,11 @@ func _physics_process(delta: float) -> void:
 		normal = -direction
 	var building: bool = Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT)
 	var digging: bool = Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
+	if not digging and not building:
+		return
+	if digging and building:
+		_last = "Use one mouse button at a time"
+		return
 	var surface_point: Vector3 = origin + direction * hit.distance
 	var center: Vector3 = surface_point + normal * brush_radius_m * (0.25 if building else -0.25)
 	var local_center: Vector3 = _terrain.to_local(center)
@@ -118,23 +121,13 @@ func _physics_process(delta: float) -> void:
 	_marker.global_position = center
 	_marker.scale = Vector3.ONE * brush_radius_m
 	_material.albedo_color = Color(0.1, 1.0, 0.8) if allowed else Color(1.0, 0.15, 0.1)
-	if not digging and not building:
-		return
-	if _cooldown > 0.0:
-		return
-	_cooldown = maxf(edit_interval_s, 0.1)
-	if digging and building:
-		_last = "Use one mouse button at a time"
-		return
 	if not allowed:
 		_last = "Build blocked near capsule" if capsule_blocked else "Area not loaded or outside test bounds"
 		return
 	_tool.mode = VoxelTool.MODE_ADD if building else VoxelTool.MODE_REMOVE
-	_tool.do_sphere(local_center, brush_radius_m)
+	_tool.grow_sphere(local_center, brush_radius_m, brush_strength)
 	_requests += 1
-	var block: Vector3i = Vector3i((local_center / 16.0).floor())
-	_last = "%s requested at block %s" % ["BUILD" if building else "DIG", block]
-	print("VoxelBrush: ", _last, " center=", local_center, " radius=", brush_radius_m)
+	_last = "%s SDF by %.2f at local %s" % ["BUILDING" if building else "DIGGING", brush_strength, local_center]
 
 
 func _unhandled_input(event: InputEvent) -> void:
