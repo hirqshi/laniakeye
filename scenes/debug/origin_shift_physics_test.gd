@@ -11,7 +11,10 @@ const SIMULATION_SECONDS: float = 8.0
 const SHIFT_THRESHOLD_M: float = 64.0
 const MOVE_SPEED_MPS: float = 17.125
 const MIN_SHIFTS: int = 2
-const POSITION_TOLERANCE_M: float = 0.000001
+# Godot's standard Vector3 is 32-bit. After a rebase, restoring a local
+# transform can quantize its position; 0.1 mm is a practical gameplay tolerance
+# while still detecting meaningful rebase drift.
+const POSITION_TOLERANCE_M: float = 0.0001
 
 var _frame: LkCoordinateFrame
 var _body: CharacterBody3D
