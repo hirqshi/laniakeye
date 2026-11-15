@@ -6,12 +6,29 @@ extends Node3D
 # This does not integrate with the main game scene or persist edits to disk.
 
 const PLANET_RADIUS_M: float = 6371000.0
-const TERRAIN_HEIGHT_M: float = 2000.0
 const SHIFT_THRESHOLD_M: float = 48.0
 const MOVE_SPEED_MPS: float = 6.0
 const RETURN_DISTANCE_M: float = 40.0
 const DIG_RADIUS_M: float = 1.5
 const DIG_STRENGTH: float = 0.5
+
+
+class FlatGenerator:
+	extends VoxelGeneratorScript
+
+	func _get_used_channels_mask() -> int:
+		return 1 << VoxelBuffer.CHANNEL_SDF
+
+	func _generate_block(buffer: VoxelBuffer, origin: Vector3i, lod: int) -> void:
+		var size: Vector3i = buffer.get_size()
+		var stride: float = float(1 << lod)
+		for x: int in range(size.x):
+			for y: int in range(size.y):
+				var world_y: float = float(origin.y) + float(y) * stride
+				var sdf: float = clampf(world_y / stride, -4.0, 4.0)
+				for z: int in range(size.z):
+					buffer.set_voxel_f(sdf, x, y, z, VoxelBuffer.CHANNEL_SDF)
+
 
 var _frame: LkCoordinateFrame
 var _adapter: LkVoxelOriginAdapter
@@ -52,12 +69,7 @@ func _ready() -> void:
 		return
 	_terrain = VoxelLodTerrain.new()
 	_terrain.name = "LocalTerrain"
-	var generator: VoxelGeneratorHeightmap = VoxelGeneratorHeightmap.new()
-	generator.height = 0.0
-	generator.noise = FastNoiseLite.new()
-	generator.noise.seed = 12345
-	generator.noise.frequency = 0.01
-	_terrain.generator = generator
+	_terrain.generator = FlatGenerator.new()
 	_terrain.mesher = VoxelMesherBlocky.new()
 	_terrain.mesh_block_size = 16
 	_terrain.view_distance = 96
@@ -154,7 +166,7 @@ func _walk_and_dig(delta: float) -> void:
 				_result = "HOLE RECORDED IN ABSOLUTE COORDINATES"
 			else:
 				_result = "DIGGING"
-	if _absolute.minus(_dig_target_absolute if _dig_recorded else _absolute).length() >= RETURN_DISTANCE_M and _dig_recorded:
+	if _dig_recorded and _absolute.minus(_dig_target_absolute).length() >= RETURN_DISTANCE_M:
 		_returning = true
 		_result = "WALKING BACK TO ABSOLUTE HOLE LOCATION"
 
