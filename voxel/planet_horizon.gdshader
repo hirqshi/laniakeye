@@ -1,38 +1,86 @@
 shader_type spatial;
-render_mode unshaded, fog_disabled, cull_disabled, depth_draw_never, depth_test_disabled;
+render_mode fog_disabled, cull_disabled, depth_draw_never, depth_test_disabled, specular_disabled;
 
 uniform sampler2D scene_depth : hint_depth_texture, repeat_disable, filter_nearest;
+uniform sampler2D height_map : repeat_enable, filter_linear;
 uniform vec3 center_relative = vec3(0.0, -1.0, 0.0);
-uniform float radius_relative = 0.99;
+uniform float radius_relative = 1.0;
+uniform float height_limit_relative = 0.001;
+uniform float meters_to_relative = 0.000001;
+uniform float pixel_angle = 0.001;
 uniform vec3 surface_color : source_color = vec3(0.35, 0.45, 0.3);
-uniform vec3 direction_to_sun = vec3(0.35, 0.8, 0.4);
+
+float field(vec3 p) {
+	float radial = max(length(p), 1e-12);
+	vec3 n = p / radial;
+	vec2 tex_size = vec2(textureSize(height_map, 0));
+	vec2 uv = vec2(atan(n.z, n.x) / 6.28318530718, acos(clamp(n.y, -1.0, 1.0)) / 3.14159265359);
+	uv.x = fract(uv.x);
+	uv.y = clamp(uv.y, 0.5 / tex_size.y, 1.0 - 0.5 / tex_size.y);
+	float elevation = textureLod(height_map, uv, 0.0).r * meters_to_relative;
+	return radial - radius_relative - elevation;
+}
 
 void vertex() {
 	POSITION = vec4(VERTEX.xy, 1.0, 1.0);
 }
 
 void fragment() {
-	float opaque_depth = texture(scene_depth, SCREEN_UV).r;
-	// Preserve every opaque near object; this pass only fills the background.
-	if (opaque_depth > 0.0) {
-		discard;
-	}
-	vec2 ndc_xy = SCREEN_UV * 2.0 - 1.0;
-	vec4 view_point = INV_PROJECTION_MATRIX * vec4(ndc_xy, 1.0, 1.0);
-	vec3 view_ray = normalize(view_point.xyz / view_point.w);
-	vec3 ray = normalize(mat3(INV_VIEW_MATRIX) * view_ray);
+	if (texture(scene_depth, SCREEN_UV).r > 0.0) { discard; }
+	vec4 view_point = INV_PROJECTION_MATRIX * vec4(SCREEN_UV * 2.0 - 1.0, 1.0, 1.0);
+	vec3 ray = normalize(mat3(INV_VIEW_MATRIX) * normalize(view_point.xyz / view_point.w));
+	float outer = radius_relative + height_limit_relative + 2.0 * meters_to_relative;
 	float along_ray = dot(ray, center_relative);
 	vec3 perpendicular = center_relative - along_ray * ray;
-	float discriminant = radius_relative * radius_relative - dot(perpendicular, perpendicular);
-	if (discriminant < 0.0 || along_ray <= 0.0) {
-		discard;
+	float disc = outer * outer - dot(perpendicular, perpendicular);
+	if (disc < 0.0) { discard; }
+	float root = sqrt(max(disc, 0.0));
+	float start = max(along_ray - root, 0.0);
+	float finish = along_ray + root;
+	if (finish <= start) { discard; }
+	float t = start;
+	float previous_t = start;
+	bool hit = false;
+	vec3 p = ray * t - center_relative;
+	// Radial heightfield is not an exact SDF: conservative heuristic steps.
+	for (int i = 0; i < 384; i++) {
+		p = ray * t - center_relative;
+		float value = field(p);
+		float tolerance = max(0.5 * meters_to_relative, t * pixel_angle * 0.25);
+		if (value <= tolerance) {
+			if (value < 0.0 && t > previous_t) {
+				float lo = previous_t;
+				float hi = t;
+				for (int j = 0; j < 10; j++) {
+					float mid = (lo + hi) * 0.5;
+					if (field(ray * mid - center_relative) > 0.0) { lo = mid; } else { hi = mid; }
+				}
+				t = (lo + hi) * 0.5;
+			}
+			hit = true;
+			break;
+		}
+		previous_t = t;
+		t += max(value * 0.125, tolerance * 0.5);
+		if (t > finish) { break; }
 	}
-	float entry = along_ray - sqrt(max(discriminant, 0.0));
-	if (entry <= 0.0) {
-		discard;
+	// Retain a conservative sphere fallback if the iteration budget expires.
+	if (!hit) {
+		float inner = max(radius_relative - height_limit_relative, 1e-8);
+		float inner_disc = inner * inner - dot(perpendicular, perpendicular);
+		if (inner_disc < 0.0) { discard; }
+		t = along_ray - sqrt(inner_disc);
+		if (t <= 0.0) { discard; }
 	}
-	vec3 normal = normalize(entry * ray - center_relative);
-	float diffuse = max(dot(normal, normalize(direction_to_sun)), 0.0);
-	ALBEDO = surface_color * (0.22 + 0.78 * diffuse);
+	p = ray * t - center_relative;
+	float e = max(2.0 * meters_to_relative, radius_relative * 0.00001);
+	vec3 normal = normalize(vec3(
+		field(p + vec3(e, 0.0, 0.0)) - field(p - vec3(e, 0.0, 0.0)),
+		field(p + vec3(0.0, e, 0.0)) - field(p - vec3(0.0, e, 0.0)),
+		field(p + vec3(0.0, 0.0, e)) - field(p - vec3(0.0, 0.0, e))
+	));
+	NORMAL = normalize(mat3(VIEW_MATRIX) * normal);
+	ALBEDO = surface_color;
+	ROUGHNESS = 1.0;
 	ALPHA = 1.0;
 }
