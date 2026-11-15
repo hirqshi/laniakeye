@@ -16,8 +16,10 @@ func _init(frame: LkCoordinateFrame, target_terrain: VoxelLodTerrain, anchor_abs
 	terrain_anchor_absolute = anchor_absolute.copy()
 
 func absolute_to_voxel(absolute_point: LkPosition64) -> Vector3i:
+	# First obtain a normal 32-bit local Vector3; then convert it into the
+	# terrain node's local space. Never pass LkPosition64 to Node3D APIs.
 	var local: Vector3 = coordinate_frame.to_local(absolute_point)
-	var terrain_local: Vector3 = terrain.to_local(coordinate_frame.get_origin().plus_local(local))
+	var terrain_local: Vector3 = terrain.to_local(local)
 	return Vector3i(terrain_local.floor())
 
 func voxel_to_absolute(voxel: Vector3i) -> LkPosition64:
