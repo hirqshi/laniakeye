@@ -70,7 +70,9 @@ func _ready() -> void:
 	_terrain = VoxelLodTerrain.new()
 	_terrain.name = "LocalTerrain"
 	_terrain.generator = FlatGenerator.new()
-	_terrain.mesher = VoxelMesherBlocky.new()
+	# SDF data requires a smooth/implicit-surface mesher; VoxelMesherBlocky
+	# expects blocky voxel content and cannot mesh this generator's output.
+	_terrain.mesher = VoxelMesherTransvoxel.new()
 	_terrain.mesh_block_size = 16
 	_terrain.view_distance = 96
 	_terrain.lod_count = 1
