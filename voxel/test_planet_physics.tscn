@@ -1,6 +1,10 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://voxel/test_planet_physics.gd" id="1"]
+[ext_resource type="Script" path="res://voxel/test_voxel_brush.gd" id="2"]
 
 [node name="TestPlanetPhysics" type="Node3D"]
 script = ExtResource("1")
+
+[node name="VoxelBrush" type="Node" parent="."]
+script = ExtResource("2")
