@@ -1,6 +1,6 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://baoslpa3g6c41"]
 
-[ext_resource type="Script" path="res://scenes/debug/origin_shift_physics_test.gd" id="1"]
+[ext_resource type="Script" uid="uid://daac8xbnqxrcu" path="res://scenes/debug/origin_shift_physics_test.gd" id="1"]
 
-[node name="OriginShiftPhysicsTest" type="Node3D"]
+[node name="OriginShiftPhysicsTest" type="Node3D" unique_id=10652429]
 script = ExtResource("1")

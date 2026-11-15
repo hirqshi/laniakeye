@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://645uw1p4cvu7"]
+
+[ext_resource type="Script" uid="uid://dpqhbuhyfemdg" path="res://scenes/debug/test_voxel_origin_shift.gd" id="1"]
+
+[node name="TestVoxelOriginShift" type="Node3D" unique_id=1147905032]
+script = ExtResource("1")

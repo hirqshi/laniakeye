@@ -1,10 +1,10 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene format=3 uid="uid://cngais5081aua"]
 
-[ext_resource type="Script" path="res://voxel/test_planet_physics.gd" id="1"]
-[ext_resource type="Script" path="res://voxel/test_voxel_brush.gd" id="2"]
+[ext_resource type="Script" uid="uid://b7frctg5mkdme" path="res://voxel/test_planet_physics.gd" id="1"]
+[ext_resource type="Script" uid="uid://bgychtobjm7qf" path="res://voxel/test_voxel_brush.gd" id="2"]
 
-[node name="TestPlanetPhysics" type="Node3D"]
+[node name="TestPlanetPhysics" type="Node3D" unique_id=2009908409]
 script = ExtResource("1")
 
-[node name="VoxelBrush" type="Node" parent="."]
+[node name="VoxelBrush" type="Node" parent="." unique_id=825231392]
 script = ExtResource("2")

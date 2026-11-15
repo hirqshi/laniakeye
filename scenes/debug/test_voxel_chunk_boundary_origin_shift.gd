@@ -16,6 +16,7 @@ var _area: AABB = AABB(Vector3(-6.0, -8.0, -6.0), Vector3(12.0, 18.0, 12.0))
 
 func _ready() -> void:
 	super._ready()
+	_tool.set_raycast_binary_search_iterations(8)
 	_body.position = Vector3(5.0, 3.0, 5.0)
 	_body.rotation.y = PI / 4.0
 	_terrain.collision_update_delay = 0
