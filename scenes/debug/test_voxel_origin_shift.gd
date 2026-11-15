@@ -70,8 +70,6 @@ func _ready() -> void:
 	_terrain = VoxelLodTerrain.new()
 	_terrain.name = "LocalTerrain"
 	_terrain.generator = FlatGenerator.new()
-	# SDF data requires a smooth/implicit-surface mesher; VoxelMesherBlocky
-	# expects blocky voxel content and cannot mesh this generator's output.
 	_terrain.mesher = VoxelMesherTransvoxel.new()
 	_terrain.mesh_block_size = 16
 	_terrain.view_distance = 96
@@ -107,6 +105,14 @@ func _ready() -> void:
 	_camera.far = 500.0
 	_camera.current = true
 	camera_pivot.add_child(_camera)
+	# VoxelLodTerrain generates blocks around active VoxelViewer nodes.
+	# Without a viewer requesting visuals and collisions, is_area_meshed()
+	# never becomes true.
+	var viewer: VoxelViewer = VoxelViewer.new()
+	viewer.view_distance = 96
+	viewer.requires_visuals = true
+	viewer.requires_collisions = true
+	camera_pivot.add_child(viewer)
 	add_child(_body)
 	if not (_frame.register_root(_body) and _frame.register_root(_terrain)):
 		push_error("VoxelOriginShiftTest: failed to register roots")
