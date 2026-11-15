@@ -1,13 +1,16 @@
 extends Node3D
 
-# Isolated voxel origin-shift gate.
+# Isolated voxel origin-shift gate with normal first-person controls.
 # Terrain remains a LOCAL Node3D and is rebased with the scene. Voxel edit
 # addresses are recorded in ABSOLUTE coordinates through LkVoxelOriginAdapter.
 # This does not integrate with the main game scene or persist edits to disk.
 
 const PLANET_RADIUS_M: float = 6371000.0
 const SHIFT_THRESHOLD_M: float = 48.0
-const MOVE_SPEED_MPS: float = 6.0
+const WALK_SPEED_MPS: float = 4.0
+const RUN_SPEED_MPS: float = 7.0
+const JUMP_SPEED_MPS: float = 5.0
+const GRAVITY_MPS2: float = 9.81
 const RETURN_DISTANCE_M: float = 40.0
 const DIG_RADIUS_M: float = 1.5
 const DIG_STRENGTH: float = 0.5
@@ -45,6 +48,7 @@ var _shifts: int = 0
 var _waiting_for_mesh: bool = true
 var _wait_time: float = 0.0
 var _elapsed: float = 0.0
+var _pitch: float = 0.0
 var _result: String = "DIG A HOLE WITH LMB"
 
 func _ready() -> void:
@@ -91,6 +95,7 @@ func _ready() -> void:
 	_body.position = Vector3(0.0, 3.0, 0.0)
 	_body.collision_layer = 2
 	_body.collision_mask = 1
+	_body.floor_max_angle = deg_to_rad(55.0)
 	var shape: CapsuleShape3D = CapsuleShape3D.new()
 	shape.radius = 0.35
 	shape.height = 1.8
@@ -105,9 +110,6 @@ func _ready() -> void:
 	_camera.far = 500.0
 	_camera.current = true
 	camera_pivot.add_child(_camera)
-	# VoxelLodTerrain generates blocks around active VoxelViewer nodes.
-	# Without a viewer requesting visuals and collisions, is_area_meshed()
-	# never becomes true.
 	var viewer: VoxelViewer = VoxelViewer.new()
 	viewer.view_distance = 96
 	viewer.requires_visuals = true
@@ -125,7 +127,8 @@ func _ready() -> void:
 	_label.add_theme_font_size_override("font_size", 15)
 	canvas.add_child(_label)
 	add_child(canvas)
-	print("VoxelOriginShiftTest: dig a hole, then walk forward to trigger rebases")
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	print("VoxelOriginShiftTest: WASD move, mouse look, LMB dig; walk 48 m for a rebase")
 
 func _physics_process(delta: float) -> void:
 	if _waiting_for_mesh:
@@ -144,23 +147,32 @@ func _physics_process(delta: float) -> void:
 	if _returning:
 		_return_to_hole(delta)
 	else:
-		_walk_and_dig(delta)
+		_move_and_dig(delta)
 	if _frame.maybe_shift(_body.global_position):
 		_shifts += 1
-		_result = "REBASED; RETURNING TO HOLE" if _returning else "REBASED; KEEP DIGGING OR WALK FORWARD"
+		_result = "REBASED; RETURN TO THE HOLE WITH LMB" if _returning else "REBASED; WALK 40 m FROM THE HOLE"
 		print("VoxelOriginShiftTest: rebase #", _shifts, " origin=", _frame.get_origin().x, ",", _frame.get_origin().y, ",", _frame.get_origin().z)
 	_absolute = _frame.to_absolute(_body.global_position)
 	_update_hud()
 
-func _walk_and_dig(delta: float) -> void:
-	_body.velocity = Vector3(MOVE_SPEED_MPS, 0.0, 0.0)
+func _move_and_dig(delta: float) -> void:
+	var input: Vector2 = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
+	var direction: Vector3 = (_body.global_basis * Vector3(input.x, 0.0, input.y)).limit_length()
+	var speed: float = RUN_SPEED_MPS if Input.is_action_pressed("run") else WALK_SPEED_MPS
+	var vertical: float = _body.velocity.y
+	if _body.is_on_floor() and vertical < 0.0:
+		vertical = 0.0
+	if _body.is_on_floor() and Input.is_action_just_pressed("jump"):
+		vertical = JUMP_SPEED_MPS
+	vertical -= GRAVITY_MPS2 * delta
+	_body.velocity = direction * speed + Vector3.UP * vertical
 	_body.move_and_slide()
 	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 		var camera_origin: Vector3 = _camera.global_position
-		var direction: Vector3 = -_camera.global_basis.z.normalized()
-		var hit: VoxelRaycastResult = _tool.raycast(camera_origin, direction, 8.0)
+		var look: Vector3 = -_camera.global_basis.z.normalized()
+		var hit: VoxelRaycastResult = _tool.raycast(camera_origin, look, 8.0)
 		if hit != null:
-			var surface_local: Vector3 = camera_origin + direction * hit.distance
+			var surface_local: Vector3 = camera_origin + look * hit.distance
 			var surface_absolute: LkPosition64 = _frame.to_absolute(_terrain.to_global(surface_local))
 			var center_absolute: LkPosition64 = surface_absolute.plus(LkPosition64.new(0.0, -DIG_RADIUS_M * 0.25, 0.0))
 			var voxel_center: Vector3i = _adapter.absolute_to_voxel(center_absolute)
@@ -174,9 +186,9 @@ func _walk_and_dig(delta: float) -> void:
 				_result = "HOLE RECORDED IN ABSOLUTE COORDINATES"
 			else:
 				_result = "DIGGING"
-	if _dig_recorded and _absolute.minus(_dig_target_absolute).length() >= RETURN_DISTANCE_M:
+	if _dig_recorded and not _returning and _absolute.minus(_dig_target_absolute).length() >= RETURN_DISTANCE_M:
 		_returning = true
-		_result = "WALKING BACK TO ABSOLUTE HOLE LOCATION"
+		_result = "WALK BACK TO THE ABSOLUTE HOLE LOCATION"
 
 func _return_to_hole(delta: float) -> void:
 	var target_local: Vector3 = _frame.to_local(_dig_target_absolute)
@@ -189,12 +201,28 @@ func _return_to_hole(delta: float) -> void:
 		print("VoxelOriginShiftTest: ", _result, " shifts=", _shifts, " edits=", _adapter.edit_count())
 		set_physics_process(false)
 		return
-	_body.velocity = direction.normalized() * MOVE_SPEED_MPS
+	var input: Vector2 = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
+	var move_direction: Vector3 = (_body.global_basis * Vector3(input.x, 0.0, input.y)).limit_length()
+	var vertical: float = _body.velocity.y
+	if _body.is_on_floor() and vertical < 0.0:
+		vertical = 0.0
+	if _body.is_on_floor() and Input.is_action_just_pressed("jump"):
+		vertical = JUMP_SPEED_MPS
+	vertical -= GRAVITY_MPS2 * delta
+	_body.velocity = move_direction * WALK_SPEED_MPS + Vector3.UP * vertical
 	_body.move_and_slide()
 	_result = "RETURNING: %.1f m TO ABSOLUTE HOLE" % direction.length()
 
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+		_body.rotate_object_local(Vector3.UP, -event.relative.x * 0.002)
+		_pitch = clampf(_pitch - event.relative.y * 0.002, -1.5, 1.5)
+		_camera.rotation.x = _pitch
+	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED else Input.MOUSE_MODE_CAPTURED
+
 func _update_hud() -> void:
-	_label.text = "Voxel origin-shift gate\n%s\nShifts: %d | threshold %.0f m\nEdits: %d | dig recorded: %s\nAbsolute position: %.3f, %.3f, %.3f m\nLocal position: %s\n\nLMB: dig | Walk +X to trigger rebase\nAfter rebase, walk back: the hole must remain in place.\nScope: local voxel terrain only; no persistence, main scene, or planet rotation." % [
+	_label.text = "Voxel origin-shift gate\n%s\nShifts: %d | threshold %.0f m\nEdits: %d | dig recorded: %s\nAbsolute position: %.3f, %.3f, %.3f m\nLocal position: %s\n\nWASD move | Shift run | Space jump | LMB dig\nMouse look | Esc release mouse\nWalk 48 m from the hole to trigger rebase, then return to it.\nScope: local voxel terrain only; no persistence, main scene, or planet rotation." % [
 		_result,
 		_shifts,
 		SHIFT_THRESHOLD_M,
