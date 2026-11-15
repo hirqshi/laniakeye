@@ -1,5 +1,5 @@
 shader_type spatial;
-render_mode fog_disabled, cull_disabled, depth_draw_never, depth_test_disabled, specular_disabled;
+render_mode unshaded, fog_disabled, cull_disabled, depth_draw_never, depth_test_disabled;
 
 uniform sampler2D scene_depth : hint_depth_texture, repeat_disable, filter_nearest;
 uniform sampler2D height_map : repeat_enable, filter_linear;
@@ -9,6 +9,13 @@ uniform float height_limit_relative = 0.001;
 uniform float meters_to_relative = 0.000001;
 uniform float pixel_angle = 0.001;
 uniform vec3 surface_color : source_color = vec3(0.35, 0.45, 0.3);
+uniform vec3 direction_to_sun = vec3(0.353553, 0.707107, 0.612372);
+uniform vec3 sunlight : source_color = vec3(1.2);
+uniform vec3 ambient_light : source_color = vec3(0.09, 0.105, 0.135);
+uniform float agreement_tolerance_m = 250.0;
+uniform float agreement_fraction = 0.15;
+// 0: color; 1: log distance; 2: red sphere fallback; 3: overlay agreement.
+uniform int debug_view : hint_range(0, 3) = 0;
 
 float field(vec3 p) {
 	float radial = max(length(p), 1e-12);
@@ -17,8 +24,7 @@ float field(vec3 p) {
 	vec2 uv = vec2(atan(n.z, n.x) / 6.28318530718, acos(clamp(n.y, -1.0, 1.0)) / 3.14159265359);
 	uv.x = fract(uv.x);
 	uv.y = clamp(uv.y, 0.5 / tex_size.y, 1.0 - 0.5 / tex_size.y);
-	float elevation = textureLod(height_map, uv, 0.0).r * meters_to_relative;
-	return radial - radius_relative - elevation;
+	return radial - radius_relative - textureLod(height_map, uv, 0.0).r * meters_to_relative;
 }
 
 void vertex() {
@@ -26,6 +32,7 @@ void vertex() {
 }
 
 void fragment() {
+	// This exact guard is replaced by PlanetFarMesh for the terrain overlay.
 	if (texture(scene_depth, SCREEN_UV).r > 0.0) { discard; }
 	vec4 view_point = INV_PROJECTION_MATRIX * vec4(SCREEN_UV * 2.0 - 1.0, 1.0, 1.0);
 	vec3 ray = normalize(mat3(INV_VIEW_MATRIX) * normalize(view_point.xyz / view_point.w));
@@ -38,14 +45,13 @@ void fragment() {
 	float start = max(along_ray - root, 0.0);
 	float finish = along_ray + root;
 	if (finish <= start) { discard; }
+	// A camera below the sampled heightfield must not become a t=0 hit.
+	if (start == 0.0 && field(-center_relative) <= 0.5 * meters_to_relative) { discard; }
 	float t = start;
 	float previous_t = start;
 	bool hit = false;
-	vec3 p = ray * t - center_relative;
-	// Radial heightfield is not an exact SDF: conservative heuristic steps.
 	for (int i = 0; i < 384; i++) {
-		p = ray * t - center_relative;
-		float value = field(p);
+		float value = field(ray * t - center_relative);
 		float tolerance = max(0.5 * meters_to_relative, t * pixel_angle * 0.25);
 		if (value <= tolerance) {
 			if (value < 0.0 && t > previous_t) {
@@ -64,7 +70,6 @@ void fragment() {
 		t += max(value * 0.125, tolerance * 0.5);
 		if (t > finish) { break; }
 	}
-	// Retain a conservative sphere fallback if the iteration budget expires.
 	if (!hit) {
 		float inner = max(radius_relative - height_limit_relative, 1e-8);
 		float inner_disc = inner * inner - dot(perpendicular, perpendicular);
@@ -72,15 +77,40 @@ void fragment() {
 		t = along_ray - sqrt(inner_disc);
 		if (t <= 0.0) { discard; }
 	}
-	p = ray * t - center_relative;
-	float e = max(2.0 * meters_to_relative, radius_relative * 0.00001);
-	vec3 normal = normalize(vec3(
-		field(p + vec3(e, 0.0, 0.0)) - field(p - vec3(e, 0.0, 0.0)),
-		field(p + vec3(0.0, e, 0.0)) - field(p - vec3(0.0, e, 0.0)),
-		field(p + vec3(0.0, 0.0, e)) - field(p - vec3(0.0, 0.0, e))
-	));
-	NORMAL = normalize(mat3(VIEW_MATRIX) * normal);
-	ALBEDO = surface_color;
-	ROUGHNESS = 1.0;
+	if (t <= 0.5 * meters_to_relative) { discard; }
+	vec3 p = ray * t - center_relative;
+	vec3 normal = normalize(p);
+	if (hit) {
+		float e = max(2.0 * meters_to_relative, max(radius_relative * 0.00005, t * pixel_angle));
+		vec3 gradient = vec3(
+			field(p + vec3(e, 0.0, 0.0)) - field(p - vec3(e, 0.0, 0.0)),
+			field(p + vec3(0.0, e, 0.0)) - field(p - vec3(0.0, e, 0.0)),
+			field(p + vec3(0.0, 0.0, e)) - field(p - vec3(0.0, 0.0, e))
+		);
+		if (dot(gradient, gradient) > 1e-20) { normal = normalize(gradient); }
+	}
+	float far_distance_m = t / max(meters_to_relative, 1e-30);
+	float agreement = 1.0;
+	float opaque_depth = texture(scene_depth, SCREEN_UV).r;
+	if (opaque_depth > 0.0) {
+		vec4 opaque_point = INV_PROJECTION_MATRIX * vec4(SCREEN_UV * 2.0 - 1.0, opaque_depth, 1.0);
+		float near_distance_m = length(opaque_point.xyz / opaque_point.w);
+		float allowed_error = max(agreement_tolerance_m, near_distance_m * agreement_fraction);
+		float mismatch = abs(far_distance_m - near_distance_m);
+		agreement = 1.0 - smoothstep(allowed_error, allowed_error * 2.0, mismatch);
+		if (!hit) { agreement = 0.0; }
+	}
+	vec3 color = surface_color * (ambient_light + sunlight * max(dot(normal, normalize(direction_to_sun)), 0.0));
+	if (debug_view == 1) {
+		float d = clamp(log2(1.0 + far_distance_m) / 24.0, 0.0, 1.0);
+		color = vec3(d);
+	} else if (debug_view == 2) {
+		color = hit ? vec3(0.1, 0.65, 0.15) : vec3(1.0, 0.0, 0.0);
+	} else if (debug_view == 3) {
+		color = vec3(1.0 - agreement, agreement, 0.0);
+	}
+	ALBEDO = color;
+	// Keep this assignment: overlay variant replaces it with ALPHA = weight.
 	ALPHA = 1.0;
+	if (debug_view == 0) { ALPHA *= agreement; }
 }
