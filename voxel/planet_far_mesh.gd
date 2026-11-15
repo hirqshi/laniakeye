@@ -62,15 +62,15 @@ float digit(vec2 p, int d) {
     }
     return (masks[clamp(d, 0, 9)] & bit) != 0 ? 1.0 : 0.0;
 }
-float distance_at(vec2 uv) {
+float distance_at(vec2 uv, mat4 inverse_projection) {
     float d = texture(scene_depth, uv).r;
     if (d <= 0.0) { return -1.0; }
-    vec4 v = INV_PROJECTION_MATRIX * vec4(uv * 2.0 - 1.0, d, 1.0);
+    vec4 v = inverse_projection * vec4(uv * 2.0 - 1.0, d, 1.0);
     return length(v.xyz / v.w);
 }
 void vertex() { POSITION = vec4(VERTEX.xy, 1.0, 1.0); }
 void fragment() {
-    float meters = distance_at(SCREEN_UV);
+    float meters = distance_at(SCREEN_UV, INV_PROJECTION_MATRIX);
     vec3 c = vec3(0.02);
     if (meters >= 0.0) {
         if (meters <= far_min_distance_m) { c = vec3(1.0, 0.1, 0.05); }
@@ -80,7 +80,7 @@ void fragment() {
     vec2 pixels = SCREEN_UV * VIEWPORT_SIZE;
     vec2 text = (pixels - vec2(16.0, 16.0)) / vec2(20.0, 32.0);
     if (text.x >= 0.0 && text.x < 8.0 && text.y >= 0.0 && text.y < 1.0) {
-        float center_m = distance_at(vec2(0.5));
+        float center_m = distance_at(vec2(0.5), INV_PROJECTION_MATRIX);
         c = vec3(0.0);
         if (center_m >= 0.0) {
             float place = pow(10.0, 7.0 - floor(text.x));
@@ -224,7 +224,7 @@ func _sync_camera() -> void:
 			_blend_material.shader = wanted
 		_blend_material.set_shader_parameter("height_map", _horizon_material.get_shader_parameter("height_map"))
 	if _last_mode != display_mode:
-		var labels: Array[String] = ["F1 Combined", "F2 Near only", "F3 Raw far only", "F4 Cyan background / magenta overlay", "F5 Near depth; 8 digits = center distance in meters; red box = no center depth", "F6 Reasons: green=accepted, red=near cutoff, blue=before blend, yellow=distance disagreement, violet=fallback, cyan=no intersection, magenta=inside/zero hit, gray=other guard; uncolored near=visibility rejection or no overlay coverage"]
+		var labels: Array[String] = ["F1 Combined", "F2 Near only", "F3 Raw far only", "F4 Cyan background / magenta overlay", "F5 Near depth; 8 digits = center distance in meters; red box = no center depth", "F6 Reasons: green=accepted, red=near cutoff, blue=before blend, yellow=distance disagreement (diagnostic only), violet=fallback, cyan=no intersection, magenta=inside/zero hit, gray=other guard; uncolored near=visibility rejection or no overlay coverage"]
 		print("PlanetFarMesh: ", labels[display_mode])
 		_last_mode = display_mode
 	var center: Vector3 = planet.global_position

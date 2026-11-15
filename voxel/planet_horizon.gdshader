@@ -60,7 +60,7 @@ void fragment() {
 	float t = start;
 	float previous_t = start;
 	bool hit = false;
-	for (int i = 0; i < 384; i++) {
+	for (int i = 0; i < 512; i++) {
 		float value = field(ray * t - center_relative);
 		float tolerance = max(0.5 * meters_to_relative, t * pixel_angle * 0.25);
 		if (value <= tolerance) {
@@ -77,7 +77,7 @@ void fragment() {
 			break;
 		}
 		previous_t = t;
-		t += max(value * 0.125, tolerance * 0.5);
+		t += max(value * 0.5, t * pixel_angle);
 		if (t > finish) { break; }
 	}
 	if (!hit) {
@@ -127,5 +127,4 @@ void fragment() {
 	// Keep this assignment: overlay variant replaces it with ALPHA = weight.
 	ALPHA = 1.0;
 	ALPHA *= distance_alpha;
-	if (debug_view == 0) { ALPHA *= agreement; }
 }
