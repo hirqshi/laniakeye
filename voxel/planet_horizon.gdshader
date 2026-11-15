@@ -14,6 +14,8 @@ uniform vec3 sunlight : source_color = vec3(1.2);
 uniform vec3 ambient_light : source_color = vec3(0.09, 0.105, 0.135);
 uniform float agreement_tolerance_m = 250.0;
 uniform float agreement_fraction = 0.15;
+uniform float far_min_distance_m : hint_range(0.0, 100000.0, 100.0) = 5000.0;
+uniform float far_fade_width_m : hint_range(1.0, 100000.0, 100.0) = 3000.0;
 // 0: color; 1: log distance; 2: red sphere fallback; 3: overlay agreement.
 uniform int debug_view : hint_range(0, 3) = 0;
 
@@ -32,6 +34,14 @@ void vertex() {
 }
 
 void fragment() {
+	// Shared hard exclusion, including the generated terrain overlay.
+	float exclusion_depth = texture(scene_depth, SCREEN_UV).r;
+	float exclusion_near_m = 1e30;
+	if (exclusion_depth > 0.0) {
+		vec4 exclusion_point = INV_PROJECTION_MATRIX * vec4(SCREEN_UV * 2.0 - 1.0, exclusion_depth, 1.0);
+		exclusion_near_m = length(exclusion_point.xyz / exclusion_point.w);
+		if (exclusion_near_m <= far_min_distance_m) { discard; }
+	}
 	// This exact guard is replaced by PlanetFarMesh for the terrain overlay.
 	if (texture(scene_depth, SCREEN_UV).r > 0.0) { discard; }
 	vec4 view_point = INV_PROJECTION_MATRIX * vec4(SCREEN_UV * 2.0 - 1.0, 1.0, 1.0);
@@ -78,6 +88,11 @@ void fragment() {
 		if (t <= 0.0) { discard; }
 	}
 	if (t <= 0.5 * meters_to_relative) { discard; }
+	float far_distance_m = t / max(meters_to_relative, 1e-30);
+	float visible_distance_m = min(far_distance_m, exclusion_near_m);
+	if (visible_distance_m <= far_min_distance_m) { discard; }
+	float distance_alpha = clamp((visible_distance_m - far_min_distance_m) / max(far_fade_width_m, 1.0), 0.0, 1.0);
+	distance_alpha = distance_alpha * distance_alpha * distance_alpha * (distance_alpha * (distance_alpha * 6.0 - 15.0) + 10.0);
 	vec3 p = ray * t - center_relative;
 	vec3 normal = normalize(p);
 	if (hit) {
@@ -89,7 +104,6 @@ void fragment() {
 		);
 		if (dot(gradient, gradient) > 1e-20) { normal = normalize(gradient); }
 	}
-	float far_distance_m = t / max(meters_to_relative, 1e-30);
 	float agreement = 1.0;
 	float opaque_depth = texture(scene_depth, SCREEN_UV).r;
 	if (opaque_depth > 0.0) {
@@ -112,5 +126,6 @@ void fragment() {
 	ALBEDO = color;
 	// Keep this assignment: overlay variant replaces it with ALPHA = weight.
 	ALPHA = 1.0;
+	ALPHA *= distance_alpha;
 	if (debug_view == 0) { ALPHA *= agreement; }
 }
