@@ -1,18 +1,23 @@
 extends Node3D
 
 # Isolated physics gate for LkCoordinateFrame.
-# It does NOT test voxel terrain, collisions, save/load, camera effects, or RigidBody3D.
+# It verifies that a translation-only rebase preserves an actor's absolute
+# position through its ACTUAL physics displacement. It does not require
+# move_and_slide() to integrate velocity with zero integration error.
+# It does NOT test voxel terrain, collision streaming, camera effects,
+# RigidBody3D, or save/load.
 
 const SIMULATION_SECONDS: float = 8.0
 const SHIFT_THRESHOLD_M: float = 64.0
 const MOVE_SPEED_MPS: float = 17.125
+const MIN_SHIFTS: int = 2
+const POSITION_TOLERANCE_M: float = 0.000001
 
 var _frame: LkCoordinateFrame
 var _body: CharacterBody3D
 var _landmark: Node3D
 var _camera: Camera3D
 var _label: Label
-var _absolute: LkPosition64
 var _landmark_absolute: LkPosition64
 var _velocity: Vector3
 var _elapsed: float = 0.0
@@ -21,7 +26,6 @@ var _max_error: float = 0.0
 var _max_landmark_error: float = 0.0
 var _max_speed_error: float = 0.0
 var _max_basis_error: float = 0.0
-var _last_shift_frame: int = -100
 var _started: bool = false
 var _finished: bool = false
 var _result: String = "RUNNING"
@@ -84,7 +88,6 @@ func _ready() -> void:
 		push_error("OriginShiftPhysicsTest: failed to register roots")
 		set_physics_process(false)
 		return
-	_absolute = _frame.to_absolute(_body.global_position)
 	_landmark_absolute = _frame.to_absolute(_landmark.global_position)
 	_velocity = Vector3(MOVE_SPEED_MPS, 0.0, 0.0)
 	var canvas: CanvasLayer = CanvasLayer.new()
@@ -100,19 +103,21 @@ func _physics_process(delta: float) -> void:
 	if not _started or _finished:
 		return
 	_elapsed += delta
-	# Deliberately integrate motion BEFORE rebase, then rebase at a fixed point
-	# in this script's physics step. A production coordinator must use one shared
-	# boundary for every active system.
+	# Snapshot the actor immediately before this physics integration.
+	var before_local: Vector3 = _body.global_position
+	var before_absolute: LkPosition64 = _frame.to_absolute(before_local)
+	# Move using the engine's normal physics integration.
 	_body.velocity = _velocity
 	_body.move_and_slide()
-	var shifted: bool = _frame.maybe_shift(_body.global_position)
-	if shifted:
+	# The expected absolute position uses the ACTUAL displacement produced by
+	# move_and_slide, not an idealized velocity * delta integration.
+	var actual_displacement: Vector3 = _body.global_position - before_local
+	var expected_absolute: LkPosition64 = before_absolute.plus_local(actual_displacement)
+	# Rebase only after the physics motion boundary.
+	if _frame.maybe_shift(_body.global_position):
 		_shifts += 1
-		_last_shift_frame = Engine.get_physics_frames()
-	var expected: LkPosition64 = _absolute.plus_local(_velocity * delta)
-	_absolute = expected
-	var actual: LkPosition64 = _frame.to_absolute(_body.global_position)
-	_max_error = maxf(_max_error, actual.minus(expected).length())
+	var actual_absolute: LkPosition64 = _frame.to_absolute(_body.global_position)
+	_max_error = maxf(_max_error, actual_absolute.minus(expected_absolute).length())
 	_max_landmark_error = maxf(_max_landmark_error, _frame.to_absolute(_landmark.global_position).minus(_landmark_absolute).length())
 	_max_speed_error = maxf(_max_speed_error, absf(_body.velocity.length() - MOVE_SPEED_MPS))
 	_max_basis_error = maxf(_max_basis_error, _body.global_basis.get_euler().length())
@@ -123,15 +128,15 @@ func _physics_process(delta: float) -> void:
 
 func _evaluate() -> void:
 	var passed: bool = true
-	if _shifts < 3:
+	if _shifts < MIN_SHIFTS:
 		passed = false
-		push_error("OriginShiftPhysicsTest: expected at least 3 rebases, got %d" % _shifts)
-	if _max_error > 0.001:
+		push_error("OriginShiftPhysicsTest: expected at least %d rebases, got %d" % [MIN_SHIFTS, _shifts])
+	if _max_error > POSITION_TOLERANCE_M:
 		passed = false
-		push_error("OriginShiftPhysicsTest: actor absolute-position error %.9f m" % _max_error)
-	if _max_landmark_error > 0.001:
+		push_error("OriginShiftPhysicsTest: actor rebase error %.9f m" % _max_error)
+	if _max_landmark_error > POSITION_TOLERANCE_M:
 		passed = false
-		push_error("OriginShiftPhysicsTest: landmark absolute-position error %.9f m" % _max_landmark_error)
+		push_error("OriginShiftPhysicsTest: landmark rebase error %.9f m" % _max_landmark_error)
 	if _max_speed_error > 0.000001:
 		passed = false
 		push_error("OriginShiftPhysicsTest: velocity changed by %.9f m/s" % _max_speed_error)
@@ -142,10 +147,11 @@ func _evaluate() -> void:
 		passed = false
 		push_error("OriginShiftPhysicsTest: actor escaped local origin")
 	_result = "PASS" if passed else "FAIL"
-	print("OriginShiftPhysicsTest: ", _result, " shifts=", _shifts, " max_actor_error=", _max_error, " max_landmark_error=", _max_landmark_error, " max_speed_error=", _max_speed_error, " max_basis_error=", _max_basis_error)
+	print("OriginShiftPhysicsTest: ", _result, " shifts=", _shifts, " max_actor_rebase_error=", _max_error, " max_landmark_error=", _max_landmark_error, " max_speed_error=", _max_speed_error, " max_basis_error=", _max_basis_error)
 
 func _update_hud() -> void:
-	_label.text = "CharacterBody3D origin-shift gate\nResult: %s | time %.2f / %.2f s\nShifts: %d | threshold %.0f m\nMax actor error: %.9f m\nMax landmark error: %.9f m\nMax speed error: %.9f m/s\nMax basis error: %.9f rad\nAbsolute position: %.3f, %.3f, %.3f m\nLocal position: %s\nVelocity: %.3f m/s\n\nScope: translation-only rebase. No voxel, collision streaming, camera effects, RigidBody3D, or save/load integration." % [
+	var absolute: LkPosition64 = _frame.to_absolute(_body.global_position)
+	_label.text = "CharacterBody3D origin-shift gate\nResult: %s | time %.2f / %.2f s\nShifts: %d | threshold %.0f m\nMax actor rebase error: %.9f m\nMax landmark error: %.9f m\nMax speed error: %.9f m/s\nMax basis error: %.9f rad\nAbsolute position: %.3f, %.3f, %.3f m\nLocal position: %s\nVelocity: %.3f m/s\n\nScope: translation-only rebase. No voxel, collision streaming, camera effects, RigidBody3D, or save/load integration." % [
 		_result,
 		_elapsed,
 		SIMULATION_SECONDS,
@@ -155,9 +161,9 @@ func _update_hud() -> void:
 		_max_landmark_error,
 		_max_speed_error,
 		_max_basis_error,
-		_absolute.x,
-		_absolute.y,
-		_absolute.z,
+		absolute.x,
+		absolute.y,
+		absolute.z,
 		_body.global_position,
 		_body.velocity.length()
 	]
