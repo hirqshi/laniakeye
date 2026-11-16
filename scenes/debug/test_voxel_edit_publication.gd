@@ -24,8 +24,7 @@ func _ready() -> void:
 
 	print(
 		"VoxelPublication: LMB dig stamp, RMB build stamp. "
-		+ "Aim 6-14 m away. Walk while the replacement builds. "
-		+ "Clicks during preparation are ignored."
+		+ "Aim 6-14 m away. Local LOD 0 edits; journal records every click."
 	)
 
 
@@ -123,18 +122,19 @@ func _accept_stamp(build: bool) -> void:
 		_fail_gate("journal rejected stamp")
 		return
 
-	_publication_revision = _edit_journal.get_revision()
-	_publication_samples_checked = false
-	_publishing = true
-
-	# Keep walking on the current revision while the replacement builds.
-	_start_build()
+	if not _apply_local_stamp(
+		_publication_center,
+		STAMP_RADIUS_M,
+		build
+	):
+		_fail_gate("local stamp area is not editable")
+		return
 
 	print(
-		"VoxelPublication: ACCEPT mode=%s revision=%d operations=%d"
+		"VoxelPublication: LOCAL %s revision=%d operations=%d"
 		% [
-			"BUILD" if build else "DIG",
-			_publication_revision,
+			"DIG" if not build else "BUILD",
+			_edit_journal.get_revision(),
 			_edit_journal.get_count(),
 		]
 	)
@@ -159,20 +159,7 @@ func _check_pending() -> bool:
 		_build_reason = "STALE JOURNAL REVISION"
 		return false
 
-	if not _publishing:
-		var active: EditedGenerator = _terrain.generator as EditedGenerator
-
-		if active == null:
-			_build_reason = "INVALID ACTIVE GENERATOR"
-			return false
-
-		if active.get_revision() != generator.get_revision():
-			_build_reason = "ACTIVE/PENDING REVISION MISMATCH"
-			return false
-
-		return super._check_pending()
-
-	return _check_publication(generator)
+	return super._check_pending()
 
 
 func _check_publication(generator: EditedGenerator) -> bool:
@@ -389,6 +376,66 @@ func _commit_patch() -> void:
 		)
 
 
+func _apply_local_stamp(
+	center: LkPosition64,
+	radius: float,
+	build: bool
+) -> bool:
+	var local_center: Vector3 = Vector3(
+		center.x - float(_anchor.x),
+		center.y - float(_anchor.y),
+		center.z - float(_anchor.z)
+	)
+
+	# Match the generator's conservative sphere reach at LOD 0.
+	var reach: float = radius + 4.0
+
+	var min_corner: Vector3i = Vector3i(
+		int(floor(local_center.x - reach)),
+		int(floor(local_center.y - reach)),
+		int(floor(local_center.z - reach))
+	)
+	var max_corner: Vector3i = Vector3i(
+		int(ceil(local_center.x + reach)),
+		int(ceil(local_center.y + reach)),
+		int(ceil(local_center.z + reach))
+	)
+
+	var area: AABB = AABB(
+		Vector3(min_corner),
+		Vector3(max_corner - min_corner + Vector3i.ONE)
+	)
+
+	var tool: VoxelToolLodTerrain = _terrain.get_voxel_tool()
+	tool.channel = VoxelBuffer.CHANNEL_SDF
+
+	if not tool.is_area_editable(area):
+		return false
+
+	for x: int in range(min_corner.x, max_corner.x + 1):
+		for y: int in range(min_corner.y, max_corner.y + 1):
+			for z: int in range(min_corner.z, max_corner.z + 1):
+				var position: Vector3 = Vector3(x, y, z)
+				var distance: float = (
+					position.distance_to(local_center)
+				)
+				var sphere_sdf: float = distance - radius
+				var current: float = tool.get_voxel_f(position)
+
+				var result: float
+				if build:
+					result = minf(current, sphere_sdf)
+				else:
+					result = maxf(current, -sphere_sdf)
+
+				tool.set_voxel_f(
+					position,
+					clampf(result, -4.0, 4.0)
+				)
+
+	return true
+
+
 func _publication_capsule_is_clear() -> bool:
 	# Use a slightly smaller capsule so ordinary floor contact does not
 	# count as the player being embedded in the replacement terrain.
@@ -431,7 +478,7 @@ func _process(delta: float) -> void:
 		+ "\nJournal revision: %d | active revision: %d"
 		+ "\nOperations: %d | publishing: %s"
 		+ "\nLMB DIG / RMB BUILD | aim 6-14 m away"
-		+ "\nBackground publication; movement remains enabled"
+		+ "\nInstant local stamp; journal records every click"
 	) % [
 		_edit_journal.get_revision(),
 		active_revision,
