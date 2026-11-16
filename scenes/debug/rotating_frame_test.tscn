@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://cowqcmm5a1ok3"]
+
+[ext_resource type="Script" uid="uid://bg6gosn4kkbou" path="res://scenes/debug/rotating_frame_test.gd" id="1_utuwv"]
+
+[node name="RotatingFrameTest" type="Node3D" unique_id=1072624065]
+script = ExtResource("1_utuwv")

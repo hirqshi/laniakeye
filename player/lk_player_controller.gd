@@ -39,6 +39,7 @@ var _frame: LkCoordinateFrame
 var _gravity: LkGravityService
 var _has_gravity: bool = false
 var _was_on_floor: bool = false
+var _carrier_id: StringName = &""
 
 
 func setup(frame: LkCoordinateFrame, gravity: LkGravityService) -> void:
@@ -71,6 +72,38 @@ func get_absolute_position() -> LkPosition64:
 
 func set_controllable(value: bool) -> void:
 	is_controllable = value
+
+
+# Spawn / seat exit: the body is already at rest relative to the surface,
+# so no velocity conversion happens here.
+func attach_to_frame(frame: LkRotatingFrame) -> void:
+	_carrier_id = frame.body_id
+
+
+func detach_from_frame() -> void:
+	_carrier_id = &""
+
+
+# Called by the coordinator once per tick, BEFORE this node's own physics
+# step. Velocity is stored relative to the surface while carried.
+func carry_with_frame(frame: LkRotatingFrame, step_angle: float, max_distance_m: float = INF) -> void:
+	if not is_controllable or _frame == null:
+		return
+	var rel: LkPosition64 = frame.relative_position(_frame.get_origin(), global_position)
+	var should_carry: bool = dominant_body_id == frame.body_id and rel.length() <= max_distance_m
+	var carried_now: bool = _carrier_id == frame.body_id
+	if should_carry and not carried_now:
+		velocity = frame.to_relative_velocity(velocity, rel)
+		_carrier_id = frame.body_id
+	elif not should_carry and carried_now:
+		velocity = frame.to_inertial_velocity(velocity, rel)
+		_carrier_id = &""
+	if not should_carry:
+		return
+	global_position += frame.carry_displacement(rel, step_angle)
+	var step: Basis = frame.step_basis(step_angle)
+	global_basis = (step * global_basis).orthonormalized()
+	velocity = step * velocity
 
 
 func _physics_process(delta: float) -> void:
