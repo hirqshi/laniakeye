@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://c3e20likvg237"]
+
+[ext_resource type="Script" uid="uid://b7m61mnsvw8gd" path="res://scenes/debug/lk_player_test.gd" id="1"]
+
+[node name="LkPlayerTest" type="Node3D" unique_id=530332444]
+script = ExtResource("1")
