@@ -439,12 +439,9 @@ func _stream_readiness_reason() -> String:
 		if not _terrain.is_area_meshed(area, 0):
 			return "CURRENT MESH" if i == 0 else "NEXT MESH"
 
-	# In the air, absence of nearby ground is not itself an error.
-	if _player.is_on_floor():
-		if not _has_ground_support(current):
-			_log_ground_probe_failure(current)
-			return "GROUND SUPPORT"
-
+	# Mesh readiness is the actual stream guard. A nearby hole, ledge,
+	# slope, or airborne state must not permanently disable player physics.
+	# The physics controller remains responsible for falling and jumping.
 	return ""
 
 
