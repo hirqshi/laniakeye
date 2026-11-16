@@ -5,6 +5,10 @@ const STAMP_REACH_M: float = 14.0
 const MIN_STAMP_DISTANCE_M: float = 6.0
 const PUBLICATION_SDF_TOLERANCE: float = 0.0001
 const PUBLICATION_COLLIDER_SDF_TOLERANCE: float = 0.1
+const JOURNAL_SAVE_PATH: String = (
+	"user://voxel_edit_publication_journal.json"
+)
+const JOURNAL_FORMAT_VERSION: int = 1
 
 var _request_stamp: bool = false
 var _request_build: bool = false
@@ -21,6 +25,27 @@ func _ready() -> void:
 	# This scene is an interactive publication test, not the automatic
 	# single-edit return-and-compare gate inherited from Gate 2b.
 	_edit_phase = "PASS"
+
+	if _load_journal():
+		print(
+			"VoxelPublication: LOADED journal revision=%d operations=%d"
+			% [
+				_edit_journal.get_revision(),
+				_edit_journal.get_count(),
+			]
+		)
+	else:
+		if not _save_journal():
+			_fail_gate("failed to create initial journal save")
+			return
+
+		print(
+			"VoxelPublication: STARTED journal revision=%d operations=%d"
+			% [
+				_edit_journal.get_revision(),
+				_edit_journal.get_count(),
+			]
+		)
 
 	print(
 		"VoxelPublication: LMB dig stamp, RMB build stamp. "
@@ -128,6 +153,10 @@ func _accept_stamp(build: bool) -> void:
 		build
 	):
 		_fail_gate("local stamp area is not editable")
+		return
+
+	if not _save_journal():
+		_fail_gate("failed to save journal after local stamp")
 		return
 
 	print(
@@ -485,3 +514,123 @@ func _process(delta: float) -> void:
 		_edit_journal.get_count(),
 		_publishing,
 	]
+
+
+func _save_journal() -> bool:
+	var records: PackedFloat64Array = _edit_journal.copy_records()
+
+	if records.size() % 5 != 0:
+		push_error(
+			"VoxelPublication: journal record size is not a multiple of 5"
+		)
+		return false
+
+	var operations: Array = []
+
+	for index: int in range(0, records.size(), 5):
+		operations.append([
+			records[index],
+			records[index + 1],
+			records[index + 2],
+			records[index + 3],
+			records[index + 4] > 0.5,
+		])
+
+	var document: Dictionary = {
+		"version": JOURNAL_FORMAT_VERSION,
+		"revision": _edit_journal.get_revision(),
+		"operations": operations,
+	}
+
+	var file: FileAccess = FileAccess.open(
+		JOURNAL_SAVE_PATH,
+		FileAccess.WRITE
+	)
+
+	if file == null:
+		push_warning(
+			"VoxelPublication: cannot open journal save file: %s"
+			% JOURNAL_SAVE_PATH
+		)
+		return false
+
+	file.store_string(JSON.stringify(document))
+	file.close()
+	return true
+
+
+func _load_journal() -> bool:
+	if not FileAccess.file_exists(JOURNAL_SAVE_PATH):
+		return false
+
+	var file: FileAccess = FileAccess.open(
+		JOURNAL_SAVE_PATH,
+		FileAccess.READ
+	)
+
+	if file == null:
+		push_warning(
+			"VoxelPublication: cannot open journal save file: %s"
+			% JOURNAL_SAVE_PATH
+		)
+		return false
+
+	var text: String = file.get_as_text()
+	file.close()
+
+	var document: Variant = JSON.parse_string(text)
+
+	if typeof(document) != TYPE_DICTIONARY:
+		push_warning("VoxelPublication: journal save file is not valid JSON")
+		return false
+
+	var saved_version: int = int(document.get("version", -1))
+	var saved_revision: int = int(document.get("revision", -1))
+	var entries: Variant = document.get("operations", null)
+
+	if saved_version != JOURNAL_FORMAT_VERSION:
+		push_warning(
+			"VoxelPublication: unsupported journal format version %d"
+			% saved_version
+		)
+		return false
+
+	if typeof(entries) != TYPE_ARRAY:
+		push_warning("VoxelPublication: journal operations are missing")
+		return false
+
+	if saved_revision != entries.size():
+		push_warning(
+			"VoxelPublication: journal revision does not match operation count"
+		)
+		return false
+
+	var journal: LkVoxelEditJournal = LkVoxelEditJournal.new()
+
+	for entry: Variant in entries:
+		if typeof(entry) != TYPE_ARRAY or entry.size() != 5:
+			push_warning(
+				"VoxelPublication: invalid journal operation entry"
+			)
+			return false
+
+		var center: LkPosition64 = LkPosition64.new(
+			float(entry[0]),
+			float(entry[1]),
+			float(entry[2])
+		)
+
+		if not journal.append_sphere(
+			center,
+			float(entry[3]),
+			bool(entry[4])
+		):
+			push_warning(
+				"VoxelPublication: journal rejected a saved operation"
+			)
+			return false
+
+	_edit_journal = journal
+	_terrain.generator = _make_patch_generator(_anchor)
+
+	return true
