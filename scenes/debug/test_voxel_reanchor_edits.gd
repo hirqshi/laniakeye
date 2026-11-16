@@ -25,12 +25,31 @@ class EditedGenerator:
 
 	var surface: PlanetVoxelGenerator
 	var anchor: LkPosition64
-	var edit_center: LkPosition64
-	var edit_radius: float
-	var build: bool
+
+	var _records: PackedFloat64Array = []
+	var _revision: int = 0
+
+
+	# Call once, before assigning the generator to a terrain.
+	func configure(
+		source: PlanetVoxelGenerator,
+		patch_anchor: LkPosition64,
+		records: PackedFloat64Array,
+		revision: int
+	) -> void:
+		surface = source
+		anchor = patch_anchor.copy()
+		_records = records.duplicate()
+		_revision = revision
+
+
+	func get_revision() -> int:
+		return _revision
+
 
 	func _get_used_channels_mask() -> int:
 		return 1 << VoxelBuffer.CHANNEL_SDF
+
 
 	func _generate_block(
 		buffer: VoxelBuffer,
@@ -42,15 +61,27 @@ class EditedGenerator:
 		base.anchor = anchor
 		base._generate_block(buffer, origin, lod)
 
+		# Order matters: build-after-dig is not dig-after-build.
+		for index: int in range(0, _records.size(), 5):
+			_apply_sphere(buffer, origin, lod, index)
+
+
+	func _apply_sphere(
+		buffer: VoxelBuffer,
+		origin: Vector3i,
+		lod: int,
+		index: int
+	) -> void:
 		var size: Vector3i = buffer.get_size()
 		var stride: float = float(1 << lod)
 
-		# Subtract large coordinates as doubles before using local indices.
-		var cx: float = edit_center.x - anchor.x - float(origin.x)
-		var cy: float = edit_center.y - anchor.y - float(origin.y)
-		var cz: float = edit_center.z - anchor.z - float(origin.z)
+		var cx: float = _records[index] - anchor.x - float(origin.x)
+		var cy: float = _records[index + 1] - anchor.y - float(origin.y)
+		var cz: float = _records[index + 2] - anchor.z - float(origin.z)
 
-		var reach: float = edit_radius + 4.0 * stride
+		var radius: float = _records[index + 3]
+		var build: bool = _records[index + 4] > 0.5
+		var reach: float = radius + 4.0 * stride
 
 		var x0: int = maxi(0, int(ceil((cx - reach) / stride)))
 		var y0: int = maxi(0, int(ceil((cy - reach) / stride)))
@@ -81,7 +112,7 @@ class EditedGenerator:
 						continue
 
 					var sphere_sdf: float = (
-						sqrt(distance_squared) - edit_radius
+						sqrt(distance_squared) - radius
 					) / stride
 
 					var current: float = buffer.get_voxel_f(
@@ -118,8 +149,11 @@ var _travelled_far: bool = false
 var _max_edit_distance_m: float = 0.0
 var _changed_samples: int = 0
 
+var _edit_journal: LkVoxelEditJournal = LkVoxelEditJournal.new()
+
 
 func _ready() -> void:
+	_test_journal_snapshot()
 	super._ready()
 	_terrain.lod_distance = 32.0
 	
@@ -142,7 +176,15 @@ func _ready() -> void:
 		int(roundf(_edit_center.y)),
 		int(roundf(_edit_center.z))
 	)
-
+	
+	if not _edit_journal.append_sphere(
+		_edit_center,
+		EDIT_RADIUS_M,
+		build_mode
+	):
+		_edit_failure("failed to create initial journal operation")
+		return
+		
 	# Replace the initial generator before the first physics frame.
 	_terrain.generator = _make_patch_generator(_anchor)
 
@@ -162,13 +204,29 @@ func _configure_pending_patch() -> void:
 	_pending.lod_distance = 32.0
 
 
-func _make_patch_generator(patch_anchor: LkPosition64) -> VoxelGeneratorScript:
+func _make_patch_generator(
+	patch_anchor: LkPosition64
+) -> VoxelGeneratorScript:
 	var generator: EditedGenerator = EditedGenerator.new()
-	generator.surface = _surface
-	generator.anchor = patch_anchor.copy()
-	generator.edit_center = _edit_center.copy()
-	generator.edit_radius = EDIT_RADIUS_M
-	generator.build = build_mode
+
+	generator.configure(
+		_surface,
+		patch_anchor,
+		_edit_journal.copy_records(),
+		_edit_journal.get_revision()
+	)
+
+	print(
+		"VoxelJournal: generator revision=%d operations=%d anchor=(%.0f,%.0f,%.0f)"
+		% [
+			generator.get_revision(),
+			_edit_journal.get_count(),
+			patch_anchor.x,
+			patch_anchor.y,
+			patch_anchor.z,
+		]
+	)
+
 	return generator
 
 
@@ -618,6 +676,57 @@ func _log_ground_probe_failure(point: Vector3) -> void:
 			str(results),
 		]
 	)
+
+
+func _test_journal_snapshot() -> void:
+	var journal: LkVoxelEditJournal = LkVoxelEditJournal.new()
+	var source_center: LkPosition64 = LkPosition64.new(
+		4505204.761,
+		4505204.761,
+		-8.0
+	)
+
+	var added_first: bool = journal.append_sphere(
+		source_center,
+		3.0,
+		true
+	)
+	var first: PackedFloat64Array = journal.copy_records()
+
+	# Mutating the input object must not change a recorded operation.
+	source_center.x = 123.0
+
+	var added_second: bool = journal.append_sphere(
+		LkPosition64.new(4505204.761, 4505204.761, -8.0),
+		1.0,
+		false
+	)
+	var second: PackedFloat64Array = journal.copy_records()
+
+	var passed: bool = (
+		added_first
+		and added_second
+		and first.size() == 5
+		and second.size() == 10
+		and first[0] == 4505204.761
+		and second[0] == 4505204.761
+		and first[4] == 1.0
+		and second[9] == 0.0
+		and journal.get_revision() == 2
+		and journal.get_count() == 2
+	)
+
+	# Mutating a returned array must not change journal storage.
+	second[0] = -999.0
+	var third: PackedFloat64Array = journal.copy_records()
+	passed = passed and third[0] == 4505204.761
+
+	if passed:
+		print(
+			"VoxelJournal: PASS snapshot isolation, input copy, operation order, revision"
+		)
+	else:
+		push_error("VoxelJournal: FAIL snapshot isolation test")
 
 
 func _has_ground_support(point: Vector3) -> bool:
