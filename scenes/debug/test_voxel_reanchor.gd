@@ -31,6 +31,12 @@ var _reported_distance_gate: bool = false
 var _swap_position_error_m: float = 0.0
 var _swap_velocity_error_mps: float = 0.0
 
+var _build_stage_times: Dictionary = {}
+var _build_last_stage: String = ""
+var _build_last_check_usec: int = 0
+var _build_max_check_usec: int = 0
+var _build_profile_log_s: float = 0.0
+
 
 func _ready() -> void:
 	super._ready()
@@ -136,6 +142,11 @@ func _start_build() -> void:
 	_set_patch_transform(_pending, _pending_anchor)
 
 	_pending_time_s = 0.0
+	_build_stage_times.clear()
+	_build_last_stage = ""
+	_build_last_check_usec = 0
+	_build_max_check_usec = 0
+	_build_profile_log_s = 0.0
 	_pending_stable_ticks = 0
 	_last_profile_error_m = INF
 	_build_reason = "WAITING FOR MESH"
@@ -147,6 +158,11 @@ func _start_build() -> void:
 			_pending_anchor.z,
 		]
 	)
+	_configure_pending_patch()
+
+
+func _configure_pending_patch() -> void:
+	pass
 
 
 func _ground_hit(point: Vector3, mask: int) -> Dictionary:
@@ -163,6 +179,52 @@ func _ground_hit(point: Vector3, mask: int) -> Dictionary:
 
 
 func _check_pending() -> bool:
+	var started_usec: int = Time.get_ticks_usec()
+	var ready: bool = _check_pending_impl()
+	var elapsed_usec: int = Time.get_ticks_usec() - started_usec
+
+	_build_last_check_usec = elapsed_usec
+	_build_max_check_usec = maxi(_build_max_check_usec, elapsed_usec)
+
+	var stage: String = _build_reason
+
+	if not _build_stage_times.has(stage):
+		_build_stage_times[stage] = _pending_time_s
+
+	if stage != _build_last_stage:
+		_build_last_stage = stage
+
+		print(
+			"VoxelBuildStage: t=%.2f s stage=%s data_blocks=%d mesh_blocks=%d profile_error=%.3f mm check=%.3f ms"
+			% [
+				_pending_time_s,
+				stage,
+				_pending.debug_get_data_block_count(),
+				_pending.debug_get_mesh_block_count(),
+				_last_profile_error_m * 1000.0,
+				float(elapsed_usec) / 1000.0,
+			]
+		)
+
+	if _pending_time_s - _build_profile_log_s >= 2.0:
+		_build_profile_log_s = _pending_time_s
+
+		print(
+			"VoxelBuildProgress: t=%.2f s stage=%s data_blocks=%d mesh_blocks=%d anchor_distance=%.1f m paused=%s"
+			% [
+				_pending_time_s,
+				stage,
+				_pending.debug_get_data_block_count(),
+				_pending.debug_get_mesh_block_count(),
+				_anchor_distance_m(),
+				_movement_paused,
+			]
+		)
+
+	return ready
+
+
+func _check_pending_impl() -> bool:
 	var local: Vector3 = _pending.to_local(_player.global_position)
 	var area: AABB = AABB(
 		local - Vector3(12.0, 12.0, 12.0),
@@ -238,7 +300,16 @@ func _commit_patch() -> void:
 	var before_velocity: Vector3 = _player.velocity
 
 	var old: VoxelLodTerrain = _terrain
-
+	
+	print(
+		"VoxelBuildSummary: total=%.2f s first_stages=%s max_readiness_check=%.3f ms"
+		% [
+			_pending_time_s,
+			str(_build_stage_times),
+			float(_build_max_check_usec) / 1000.0,
+		]
+	)
+	
 	# Remove the old collider before activating the replacement.
 	# Both operations happen before the player's physics callback.
 	remove_child(old)
@@ -284,7 +355,11 @@ func _commit_patch() -> void:
 
 func _fail_gate(reason: String) -> void:
 	_failed = true
-	_pause_movement()
+
+	if not _movement_paused:
+		_player.set_physics_process(false)
+		_movement_paused = true
+
 	push_error("VoxelReanchor: FAIL " + reason)
 
 

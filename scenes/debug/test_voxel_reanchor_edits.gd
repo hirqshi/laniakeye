@@ -17,6 +17,8 @@ var _stream_hold_reason: String = ""
 var _stream_good_ticks: int = 0
 var _stream_hold_s: float = 0.0
 var _stream_warned: bool = false
+var _ground_probe_log_usec: int = 0
+var _edit_ray_log_usec: int = 0
 
 class EditedGenerator:
 	extends VoxelGeneratorScript
@@ -119,7 +121,8 @@ var _changed_samples: int = 0
 
 func _ready() -> void:
 	super._ready()
-
+	_terrain.lod_distance = 32.0
+	
 	# Place the edit a short distance from spawn, not under the capsule.
 	var nearby: LkPosition64 = _q0.plus_local(Vector3(0.0, 0.0, -8.0))
 	_edit_up = nearby.direction()
@@ -153,6 +156,10 @@ func _ready() -> void:
 
 func _edit_mode() -> String:
 	return "BUILD" if build_mode else "DIG"
+
+
+func _configure_pending_patch() -> void:
+	_pending.lod_distance = 32.0
 
 
 func _make_patch_generator(patch_anchor: LkPosition64) -> VoxelGeneratorScript:
@@ -228,10 +235,17 @@ func _fixed_to_local(q: LkPosition64) -> Vector3:
 
 func _read_edit_heights() -> PackedFloat64Array:
 	var heights: PackedFloat64Array = []
+	var report: PackedStringArray = []
+	var missing: int = 0
 
 	for x: float in [-1.0, 0.0, 1.0]:
 		for z: float in [-1.0, 0.0, 1.0]:
-			var offset: Vector3 = _edit_axes.x * x + _edit_axes.z * z
+			# Fixed millimetre-scale offset avoids deliberately symmetric
+			# probe positions. Identical for snapshot and verification.
+			var offset: Vector3 = (
+				_edit_axes.x * (x + 0.00137)
+				+ _edit_axes.z * (z + 0.00219)
+			)
 			var q: LkPosition64 = _edit_center.plus_local(offset)
 
 			var top: Vector3 = _fixed_to_local(
@@ -253,13 +267,20 @@ func _read_edit_heights() -> PackedFloat64Array:
 			var hit: Dictionary = (
 				get_world_3d().direct_space_state.intersect_ray(query)
 			)
+
 			if hit.is_empty():
-				return []
+				missing += 1
+				report.append(
+					"(%.0f,%.0f)=MISS" % [x, z]
+				)
+				continue
 
 			var point: Vector3 = hit["position"]
-			var hit_relative: LkPosition64 = _rotation.relative_position(
-				_frame.get_origin(),
-				point
+			var hit_relative: LkPosition64 = (
+				_rotation.relative_position(
+					_frame.get_origin(),
+					point
+				)
 			)
 			var fixed: LkPosition64 = _rotation.rotate(
 				hit_relative,
@@ -267,11 +288,55 @@ func _read_edit_heights() -> PackedFloat64Array:
 			)
 			var difference: LkPosition64 = fixed.minus(q)
 
-			heights.append(
+			var height: float = (
 				difference.x * float(_edit_up.x)
 				+ difference.y * float(_edit_up.y)
 				+ difference.z * float(_edit_up.z)
 			)
+
+			heights.append(height)
+			report.append(
+				"(%.0f,%.0f)=%.5f" % [x, z, height]
+			)
+
+	if missing > 0:
+		var now_usec: int = Time.get_ticks_usec()
+
+		if now_usec - _edit_ray_log_usec >= 2000000:
+			_edit_ray_log_usec = now_usec
+
+			var area: AABB = _edit_area()
+			var editable: bool = _voxel_tool.is_area_editable(area)
+			var sdf_error: float = -1.0
+
+			if editable and not _sdf_reference.is_empty():
+				var values: PackedFloat64Array = _read_edit_samples()
+				sdf_error = 0.0
+
+				for i: int in range(values.size()):
+					sdf_error = maxf(
+						sdf_error,
+						absf(values[i] - _sdf_reference[i])
+					)
+
+			print(
+				"VoxelEditRays: phase=%s missing=%d/9 distance=%.2f m anchor=(%.0f,%.0f,%.0f) editable=%s meshed=%s sdf_error=%.8f rays=%s"
+				% [
+					_edit_phase,
+					missing,
+					_fixed_position().minus(_edit_center).length(),
+					_anchor.x,
+					_anchor.y,
+					_anchor.z,
+					editable,
+					_terrain.is_area_meshed(area, 0),
+					sdf_error,
+					str(report),
+				]
+			)
+
+		# Do not compare an incomplete profile against the snapshot.
+		return []
 
 	return heights
 
@@ -318,9 +383,9 @@ func _stream_readiness_reason() -> String:
 
 	# In the air, absence of nearby ground is not itself an error.
 	if _player.is_on_floor():
-		var hit: Dictionary = _ground_hit(current, ACTIVE_LAYER)
-		if hit.is_empty():
-			return "GROUND RAY"
+		if not _has_ground_support(current):
+			_log_ground_probe_failure(current)
+			return "GROUND SUPPORT"
 
 	return ""
 
@@ -505,6 +570,86 @@ func _physics_process(delta: float) -> void:
 				max_height_error,
 			]
 		)
+
+
+func _log_ground_probe_failure(point: Vector3) -> void:
+	var now_usec: int = Time.get_ticks_usec()
+
+	if now_usec - _ground_probe_log_usec < 1000000:
+		return
+
+	_ground_probe_log_usec = now_usec
+
+	var up: Vector3 = _player.up_direction.normalized()
+	var flat: Basis = _basis_for_up(up)
+
+	var offsets: Array[Vector3] = [
+		Vector3.ZERO,
+		flat.x * 0.15,
+		-flat.x * 0.15,
+		flat.z * 0.15,
+		-flat.z * 0.15,
+	]
+
+	var results: PackedStringArray = []
+
+	for offset: Vector3 in offsets:
+		var hit: Dictionary = _ground_hit(
+			point + offset,
+			ACTIVE_LAYER
+		)
+
+		if hit.is_empty():
+			results.append("MISS")
+		else:
+			var hit_point: Vector3 = hit["position"]
+			var height: float = (point - hit_point).dot(up)
+			results.append("%.4f" % height)
+
+	var terrain_local: Vector3 = _terrain.to_local(point)
+
+	print(
+		"GroundProbeDebug: floor=%s layer=%d player_mask=%d terrain_local=%s probes_center_right_left_back_forward=%s"
+		% [
+			_player.is_on_floor(),
+			_terrain.collision_layer,
+			_player.collision_mask,
+			terrain_local,
+			str(results),
+		]
+	)
+
+
+func _has_ground_support(point: Vector3) -> bool:
+	var up: Vector3 = _player.up_direction.normalized()
+	var flat: Basis = _basis_for_up(up)
+
+	var offsets: Array[Vector3] = [
+		Vector3.ZERO,
+		flat.x * 0.15,
+		-flat.x * 0.15,
+		flat.z * 0.15,
+		-flat.z * 0.15,
+	]
+
+	for offset: Vector3 in offsets:
+		var hit: Dictionary = _ground_hit(
+			point + offset,
+			ACTIVE_LAYER
+		)
+
+		if hit.is_empty():
+			continue
+
+		var hit_point: Vector3 = hit["position"]
+		var height: float = (point - hit_point).dot(up)
+
+		# Gate capsule height is 1.8 m.
+		# Count only nearby support, not arbitrary terrain far below.
+		if height >= 0.5 and height <= 1.4:
+			return true
+
+	return false
 
 
 func _process(delta: float) -> void:
