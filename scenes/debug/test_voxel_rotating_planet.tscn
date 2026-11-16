@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bkpkc88igl6y7"]
+
+[ext_resource type="Script" uid="uid://ciyffkn33sxrf" path="res://scenes/debug/test_voxel_rotating_planet.gd" id="1_ecgmk"]
+
+[node name="TestVoxelRotatingPlanet" type="Node3D" unique_id=1376237854]
+script = ExtResource("1_ecgmk")

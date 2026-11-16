@@ -21,7 +21,7 @@ func _init(id: StringName, body_center: LkPosition64, axis: Vector3, angular_spe
 	center = body_center.copy()
 	angular_speed_rad_s = angular_speed
 	angle_rad = initial_angle
-	var length: float = axis.length()
+	var length: float = sqrt(float(axis.x) * float(axis.x) + float(axis.y) * float(axis.y) + float(axis.z) * float(axis.z))
 	if length < 0.000001:
 		push_error("LkRotatingFrame: zero axis, falling back to +Y")
 		_axis = LkPosition64.new(0.0, 1.0, 0.0)
@@ -66,13 +66,18 @@ func rotate(rel: LkPosition64, angle: float) -> LkPosition64:
 
 # Displacement of a surface-fixed point over one step (rotated - original),
 # computed without cancelling two huge numbers.
-func carry_displacement(rel: LkPosition64, step_angle: float) -> Vector3:
+func carry_displacement64(rel: LkPosition64, step_angle: float) -> LkPosition64:
 	var s: float = sin(step_angle)
 	var half_sin: float = sin(step_angle * 0.5)
 	var h: float = 2.0 * half_sin * half_sin
 	var kv: LkPosition64 = _cross_axis(rel)
 	var kkv: LkPosition64 = _cross_axis(kv)
-	return Vector3(kv.x * s + kkv.x * h, kv.y * s + kkv.y * h, kv.z * s + kkv.z * h)
+	return LkPosition64.new(kv.x * s + kkv.x * h, kv.y * s + kkv.y * h, kv.z * s + kkv.z * h)
+
+
+func carry_displacement(rel: LkPosition64, step_angle: float) -> Vector3:
+	var d: LkPosition64 = carry_displacement64(rel, step_angle)
+	return Vector3(d.x, d.y, d.z)
 
 
 # Rotation to apply to a carried body's basis and relative velocity.

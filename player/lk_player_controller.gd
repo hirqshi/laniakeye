@@ -40,6 +40,7 @@ var _gravity: LkGravityService
 var _has_gravity: bool = false
 var _was_on_floor: bool = false
 var _carrier_id: StringName = &""
+var _carry_residual: LkPosition64 = LkPosition64.new()
 
 
 func setup(frame: LkCoordinateFrame, gravity: LkGravityService) -> void:
@@ -78,14 +79,14 @@ func set_controllable(value: bool) -> void:
 # so no velocity conversion happens here.
 func attach_to_frame(frame: LkRotatingFrame) -> void:
 	_carrier_id = frame.body_id
+	_carry_residual = LkPosition64.new()
 
 
 func detach_from_frame() -> void:
 	_carrier_id = &""
+	_carry_residual = LkPosition64.new()
 
 
-# Called by the coordinator once per tick, BEFORE this node's own physics
-# step. Velocity is stored relative to the surface while carried.
 func carry_with_frame(frame: LkRotatingFrame, step_angle: float, max_distance_m: float = INF) -> void:
 	if not is_controllable or _frame == null:
 		return
@@ -95,12 +96,20 @@ func carry_with_frame(frame: LkRotatingFrame, step_angle: float, max_distance_m:
 	if should_carry and not carried_now:
 		velocity = frame.to_relative_velocity(velocity, rel)
 		_carrier_id = frame.body_id
+		_carry_residual = LkPosition64.new()
 	elif not should_carry and carried_now:
 		velocity = frame.to_inertial_velocity(velocity, rel)
 		_carrier_id = &""
 	if not should_carry:
+		_carry_residual = LkPosition64.new()
 		return
-	global_position += frame.carry_displacement(rel, step_angle)
+	# Error feedback: the float32 position cannot represent small per-tick
+	# displacements exactly, so carry what was NOT applied into the next tick.
+	var total: LkPosition64 = frame.carry_displacement64(rel, step_angle).plus(_carry_residual)
+	var before: Vector3 = global_position
+	global_position = before + Vector3(total.x, total.y, total.z)
+	var after: Vector3 = global_position
+	_carry_residual = total.minus(LkPosition64.new(float(after.x) - float(before.x), float(after.y) - float(before.y), float(after.z) - float(before.z)))
 	var step: Basis = frame.step_basis(step_angle)
 	global_basis = (step * global_basis).orthonormalized()
 	velocity = step * velocity

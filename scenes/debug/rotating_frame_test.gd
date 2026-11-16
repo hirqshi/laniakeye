@@ -86,3 +86,14 @@ func _test_basis_matches_rotate() -> void:
 	var by_basis: Vector3 = Basis(frame.get_axis(), angle) * Vector3(rel.x, rel.y, rel.z)
 	var diff: float = Vector3(by_rotate.x, by_rotate.y, by_rotate.z).distance_to(by_basis)
 	_check("basis matches rotate", diff < 0.001, "diff=%.6f m" % diff)
+
+
+func _test_round_trip_at_planet_scale() -> void:
+	var frame: LkRotatingFrame = LkRotatingFrame.new(&"rt", LkPosition64.new(0.0, 0.0, 0.0), Vector3(0.3, 0.9, 0.1), EARTH_OMEGA)
+	var rel: LkPosition64 = LkPosition64.new(4505206.0, 4505206.0, 0.0)
+	var worst_m: float = 0.0
+	for degrees: float in [1.0, 10.0, 45.0, 90.0, 179.0]:
+		var angle: float = deg_to_rad(degrees)
+		var back: LkPosition64 = frame.rotate(frame.rotate(rel, angle), -angle)
+		worst_m = maxf(worst_m, back.minus(rel).length())
+	_check("rotate round trip at planet scale", worst_m < 0.000001, "worst=%.9f m" % worst_m)
