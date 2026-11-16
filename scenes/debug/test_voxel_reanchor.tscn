@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://c0o0d0nitejjm"]
+
+[ext_resource type="Script" uid="uid://bx5xmh8jspw8h" path="res://scenes/debug/test_voxel_reanchor.gd" id="1_621n4"]
+
+[node name="TestVoxelReanchor" type="Node3D" unique_id=1626526626]
+script = ExtResource("1_621n4")
