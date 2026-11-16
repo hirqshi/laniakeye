@@ -79,6 +79,7 @@ var _stand_reports: int = 0
 var _voxel_tool: VoxelToolLodTerrain
 var _mismatch_log_s: float = 0.0
 var _stand_map_ref: Vector3 = Vector3.ZERO
+var _stream: VoxelStream = null
 
 
 func _ready() -> void:
@@ -148,6 +149,10 @@ func _ready() -> void:
 	material.albedo_color = Color(0.35, 0.45, 0.3)
 	material.roughness = 1.0
 	_terrain.material = material
+
+	if _stream != null:
+		_terrain.stream = _stream
+
 	add_child(_terrain)
 	_voxel_tool = _terrain.get_voxel_tool()
 	_voxel_tool.channel = VoxelBuffer.CHANNEL_SDF
