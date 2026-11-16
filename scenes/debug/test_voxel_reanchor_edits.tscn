@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://d2pk55ahyrwcj"]
+
+[ext_resource type="Script" uid="uid://5h8rw2j7cb5f" path="res://scenes/debug/test_voxel_reanchor_edits.gd" id="1_gbqng"]
+
+[node name="TestVoxelReanchorEdits" type="Node3D" unique_id=1655463607]
+script = ExtResource("1_gbqng")
+build_mode = true

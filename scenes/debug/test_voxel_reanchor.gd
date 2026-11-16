@@ -67,6 +67,13 @@ func _choose_anchor(fixed: LkPosition64) -> LkPosition64:
 	)
 
 
+func _make_patch_generator(patch_anchor: LkPosition64) -> VoxelGeneratorScript:
+	var generator: AnchoredGenerator = AnchoredGenerator.new()
+	generator.surface = _surface
+	generator.anchor = patch_anchor.copy()
+	return generator
+
+
 func _set_patch_transform(
 	patch: VoxelLodTerrain,
 	patch_anchor: LkPosition64
@@ -95,9 +102,7 @@ func _update_terrain_transform() -> void:
 func _start_build() -> void:
 	_pending_anchor = _choose_anchor(_fixed_position())
 
-	var generator: AnchoredGenerator = AnchoredGenerator.new()
-	generator.surface = _surface
-	generator.anchor = _pending_anchor.copy()
+	var generator: VoxelGeneratorScript = _make_patch_generator(_pending_anchor)
 
 	_pending = VoxelLodTerrain.new()
 	_pending.name = "StagingTerrain"
