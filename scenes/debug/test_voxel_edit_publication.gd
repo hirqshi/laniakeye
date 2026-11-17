@@ -27,9 +27,9 @@ var _stream_autosave_s: float = 0.0
 
 
 func _ready() -> void:
-	_stream = VoxelStreamSQLite.new()
-	_stream.database_path = STREAM_DATABASE_PATH
-	_stream.set_key_cache_enabled(true)
+	# Until stream coordinates and snapshot revisions are integrated,
+	# reconstruct this scene from the authoritative journal only.
+	_stream = null
 
 	super._ready()
 
@@ -59,8 +59,7 @@ func _ready() -> void:
 		)
 	print(
 		"VoxelPublication: LMB dig stamp, RMB build stamp. "
-		+ "Aim 6-14 m away. Stream is the primary edit store; "
-		+ "journal remains available for recovery."
+		+ "Aim 6-14 m away. Journal-backed reanchor persistence."
 	)
 
 
@@ -173,7 +172,9 @@ func _accept_stamp(build: bool) -> void:
 		_fail_gate("local stamp area is not editable")
 		return
 
-	_save_stream("after local stamp")
+	if not _save_journal():
+		_fail_gate("failed to save journal after local stamp")
+		return
 
 	print(
 		"VoxelPublication: LOCAL %s revision=%d operations=%d"
@@ -408,7 +409,9 @@ func _commit_patch() -> void:
 		
 	var was_publication: bool = _publishing
 	super._commit_patch()
-
+	
+	_print_snapshot_cache_stats("SWAP", generator)
+	
 	if was_publication:
 		_publishing = false
 
@@ -523,13 +526,66 @@ func _process(delta: float) -> void:
 		+ "\nJournal revision: %d | active revision: %d"
 		+ "\nOperations: %d | publishing: %s"
 		+ "\nLMB DIG / RMB BUILD | aim 6-14 m away"
-		+ "\nInstant local stamp; stream is the primary store"
+		+ "\nInstant local stamp; journal-backed persistence"
 	) % [
 		_edit_journal.get_revision(),
 		active_revision,
 		_edit_journal.get_count(),
 		_publishing,
 	]
+	if active != null:
+		var cache_stats: Dictionary = active.get_cache_stats()
+
+		if not cache_stats.is_empty():
+			_label.text += (
+				"\nSnapshot cache: hits=%d | misses=%d | errors=%d"
+			) % [
+				int(cache_stats["hits"]),
+				int(cache_stats["misses"]),
+				int(cache_stats["errors"]),
+			]
+
+
+func _print_snapshot_cache_stats(
+	context: String,
+	generator: EditedGenerator
+) -> void:
+	if generator == null:
+		print(
+			"VoxelCacheStats: context=%s generator=null"
+			% context
+		)
+		return
+
+	var stats: Dictionary = generator.get_cache_stats()
+
+	if stats.is_empty():
+		print(
+			"VoxelCacheStats: context=%s revision=%d stats=unavailable"
+			% [
+				context,
+				generator.get_revision(),
+			]
+		)
+		return
+
+	print(
+		"VoxelCacheStats: context=%s revision=%d hits=%d misses=%d errors=%d"
+		% [
+			context,
+			generator.get_revision(),
+			int(stats["hits"]),
+			int(stats["misses"]),
+			int(stats["errors"]),
+		]
+	)
+	print(
+		"VoxelCacheStats: unsupported=%d examples=%s"
+		% [
+			int(stats.get("unsupported", 0)),
+			str(stats.get("unsupported_examples", [])),
+		]
+	)
 
 
 func _save_journal() -> bool:
@@ -656,12 +712,27 @@ func _save_stream(reason: String) -> void:
 	if not is_instance_valid(_terrain):
 		return
 
+	if _terrain.stream == null:
+		return
+
 	_terrain.save_modified_blocks()
 
 	print(
 		"VoxelPublication: STREAM SAVE REQUESTED reason=%s"
 		% reason
 	)
+
+
+func _try_spawn(delta: float) -> void:
+	var was_waiting: bool = _waiting
+
+	super._try_spawn(delta)
+
+	if was_waiting and not _waiting:
+		_print_snapshot_cache_stats(
+			"SPAWN",
+			_terrain.generator as EditedGenerator
+		)
 
 
 func _notification(what: int) -> void:

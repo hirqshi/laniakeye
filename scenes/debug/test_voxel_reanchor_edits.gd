@@ -22,7 +22,15 @@ var _edit_ray_log_usec: int = 0
 
 class EditedGenerator:
 	extends VoxelGeneratorScript
+	const SnapshotCache = preload(
+		"res://scenes/debug/lk_voxel_snapshot_cache.gd"
+	)
 
+	# Increment when generation semantics change outside the files
+	# included in the cache identity below.
+	const CACHE_SEMANTICS_VERSION: int = 2
+
+	var _snapshot_cache: SnapshotCache
 	var surface: PlanetVoxelGenerator
 	var anchor: LkPosition64
 
@@ -41,6 +49,50 @@ class EditedGenerator:
 		anchor = patch_anchor.copy()
 		_records = records.duplicate()
 		_revision = revision
+		var surface_script: Script = source.get_script() as Script
+		var surface_code_hash: String = ""
+
+		if surface_script != null:
+			surface_code_hash = FileAccess.get_sha256(
+				surface_script.resource_path
+			)
+
+		var identity: PackedByteArray = var_to_bytes([
+			CACHE_SEMANTICS_VERSION,
+			anchor.x,
+			anchor.y,
+			anchor.z,
+			source.planet_radius_m,
+			source.terrain_height_m,
+			source.noise_seed,
+			_revision,
+			_records,
+			surface_code_hash,
+			FileAccess.get_sha256(
+				"res://scenes/debug/test_voxel_rotating_planet.gd"
+			),
+			FileAccess.get_sha256(
+				"res://scenes/debug/test_voxel_reanchor_edits.gd"
+			),
+			FileAccess.get_sha256(
+				"res://scenes/debug/lk_voxel_snapshot_cache.gd"
+			),
+		])
+
+		var cache: SnapshotCache = SnapshotCache.new()
+
+		if cache.configure(identity):
+			_snapshot_cache = cache
+
+			print(
+				"VoxelSnapshotCache: OPEN revision=%d path=%s"
+				% [_revision, cache.database_path]
+			)
+		else:
+			_snapshot_cache = null
+			push_warning(
+				"VoxelSnapshotCache: disabled; using generator fallback"
+			)
 
 
 	func get_revision() -> int:
@@ -56,14 +108,151 @@ class EditedGenerator:
 		origin: Vector3i,
 		lod: int
 	) -> void:
+		if _snapshot_cache == null or lod < 0 or lod > 20:
+			_generate_uncached(buffer, origin, lod)
+			return
+
+		var stride: int = 1 << lod
+
+		# Canonical tiles use the same sample lattice as the request.
+		# An incompatible request must be generated directly.
+		if (
+			origin.x % stride != 0
+			or origin.y % stride != 0
+			or origin.z % stride != 0
+		):
+			_generate_uncached(buffer, origin, lod)
+			return
+
+		var size: Vector3i = buffer.get_size()
+
+		if size.x <= 0 or size.y <= 0 or size.z <= 0:
+			return
+
+		# Coordinates in the sample grid of this LOD.
+		var request_min: Vector3i = Vector3i(
+			origin.x >> lod,
+			origin.y >> lod,
+			origin.z >> lod
+		)
+		var request_max: Vector3i = request_min + size
+
+		# Arithmetic shifts implement floor division for negatives.
+		var first_tile: Vector3i = Vector3i(
+			request_min.x >> 4,
+			request_min.y >> 4,
+			request_min.z >> 4
+		)
+		var last_sample: Vector3i = request_max - Vector3i.ONE
+		var last_tile: Vector3i = Vector3i(
+			last_sample.x >> 4,
+			last_sample.y >> 4,
+			last_sample.z >> 4
+		)
+
+		var depth: int = buffer.get_channel_depth(
+			VoxelBuffer.CHANNEL_SDF
+		)
+
+		for tx: int in range(first_tile.x, last_tile.x + 1):
+			for ty: int in range(first_tile.y, last_tile.y + 1):
+				for tz: int in range(first_tile.z, last_tile.z + 1):
+					var tile_min: Vector3i = Vector3i(
+						tx * 16,
+						ty * 16,
+						tz * 16
+					)
+					var tile_origin: Vector3i = (
+						tile_min * stride
+					)
+
+					var tile: VoxelBuffer = VoxelBuffer.new()
+					tile.create(16, 16, 16)
+					tile.set_channel_depth(
+						VoxelBuffer.CHANNEL_SDF,
+						depth
+					)
+
+					if not _snapshot_cache.load_block(
+						tile,
+						tile_origin,
+						lod
+					):
+						_generate_uncached(
+							tile,
+							tile_origin,
+							lod
+						)
+						_snapshot_cache.store_block(
+							tile,
+							tile_origin,
+							lod
+						)
+
+					_copy_tile_intersection(
+						tile,
+						tile_min,
+						buffer,
+						request_min,
+						request_max
+					)
+
+
+	func _generate_uncached(
+		buffer: VoxelBuffer,
+		origin: Vector3i,
+		lod: int
+	) -> void:
 		var base: AnchoredGenerator = AnchoredGenerator.new()
 		base.surface = surface
 		base.anchor = anchor
 		base._generate_block(buffer, origin, lod)
 
-		# Order matters: build-after-dig is not dig-after-build.
 		for index: int in range(0, _records.size(), 5):
 			_apply_sphere(buffer, origin, lod, index)
+
+
+	func _copy_tile_intersection(
+		tile: VoxelBuffer,
+		tile_min: Vector3i,
+		output: VoxelBuffer,
+		request_min: Vector3i,
+		request_max: Vector3i
+	) -> void:
+		var tile_max: Vector3i = tile_min + Vector3i(16, 16, 16)
+
+		var overlap_min: Vector3i = Vector3i(
+			maxi(tile_min.x, request_min.x),
+			maxi(tile_min.y, request_min.y),
+			maxi(tile_min.z, request_min.z)
+		)
+		var overlap_max: Vector3i = Vector3i(
+			mini(tile_max.x, request_max.x),
+			mini(tile_max.y, request_max.y),
+			mini(tile_max.z, request_max.z)
+		)
+
+		if (
+			overlap_min.x >= overlap_max.x
+			or overlap_min.y >= overlap_max.y
+			or overlap_min.z >= overlap_max.z
+		):
+			return
+
+		output.copy_channel_from_area(
+			tile,
+			overlap_min - tile_min,
+			overlap_max - tile_min,
+			overlap_min - request_min,
+			VoxelBuffer.CHANNEL_SDF
+		)
+
+
+	func get_cache_stats() -> Dictionary:
+		if _snapshot_cache == null:
+			return {}
+
+		return _snapshot_cache.try_get_stats()
 
 
 	func _apply_sphere(
