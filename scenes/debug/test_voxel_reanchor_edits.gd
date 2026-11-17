@@ -30,6 +30,11 @@ class EditedGenerator:
 	# included in the cache identity below.
 	const CACHE_SEMANTICS_VERSION: int = 2
 
+	const INDEX_LOD_COUNT: int = 5
+	const INDEX_CELL_SAMPLES: int = 64
+
+	var _operation_index: Array[Dictionary] = []
+	
 	var _snapshot_cache: SnapshotCache
 	var surface: PlanetVoxelGenerator
 	var anchor: LkPosition64
@@ -49,6 +54,7 @@ class EditedGenerator:
 		anchor = patch_anchor.copy()
 		_records = records.duplicate()
 		_revision = revision
+		_build_operation_index()
 		var surface_script: Script = source.get_script() as Script
 		var surface_code_hash: String = ""
 
@@ -97,6 +103,127 @@ class EditedGenerator:
 
 	func get_revision() -> int:
 		return _revision
+
+
+	func _index_cell(
+		x: float,
+		y: float,
+		z: float,
+		cell_size: float
+	) -> Vector3i:
+		return Vector3i(
+			int(floor(x / cell_size)),
+			int(floor(y / cell_size)),
+			int(floor(z / cell_size))
+		)
+
+
+	func _build_operation_index() -> void:
+		_operation_index.clear()
+
+		for lod: int in range(INDEX_LOD_COUNT):
+			var cells: Dictionary = {}
+			var stride: float = float(1 << lod)
+			var cell_size: float = (
+				float(INDEX_CELL_SAMPLES) * stride
+			)
+
+			for index: int in range(0, _records.size(), 5):
+				var cx: float = _records[index] - anchor.x
+				var cy: float = _records[index + 1] - anchor.y
+				var cz: float = _records[index + 2] - anchor.z
+				var reach: float = (
+					_records[index + 3] + 4.0 * stride
+				)
+
+				var first: Vector3i = _index_cell(
+					cx - reach,
+					cy - reach,
+					cz - reach,
+					cell_size
+				)
+				var last: Vector3i = _index_cell(
+					cx + reach,
+					cy + reach,
+					cz + reach,
+					cell_size
+				)
+
+				for x: int in range(first.x, last.x + 1):
+					for y: int in range(first.y, last.y + 1):
+						for z: int in range(first.z, last.z + 1):
+							var key: Vector3i = Vector3i(x, y, z)
+							var offsets: PackedInt32Array = (
+								cells.get(
+									key,
+									PackedInt32Array()
+								)
+							)
+
+							offsets.append(index)
+							cells[key] = offsets
+
+			_operation_index.append(cells)
+
+
+	func _candidate_operations(
+		origin: Vector3i,
+		size: Vector3i,
+		lod: int
+	) -> PackedInt32Array:
+		var result: PackedInt32Array = []
+
+		# Safe fallback for requests outside the indexed LOD range.
+		if lod < 0 or lod >= _operation_index.size():
+			for index: int in range(0, _records.size(), 5):
+				result.append(index)
+
+			return result
+
+		if size.x <= 0 or size.y <= 0 or size.z <= 0:
+			return result
+
+		var stride: float = float(1 << lod)
+		var cell_size: float = (
+			float(INDEX_CELL_SAMPLES) * stride
+		)
+
+		var first: Vector3i = _index_cell(
+			float(origin.x),
+			float(origin.y),
+			float(origin.z),
+			cell_size
+		)
+		var last: Vector3i = _index_cell(
+			float(origin.x) + float(size.x - 1) * stride,
+			float(origin.y) + float(size.y - 1) * stride,
+			float(origin.z) + float(size.z - 1) * stride,
+			cell_size
+		)
+
+		var cells: Dictionary = _operation_index[lod]
+		var seen: Dictionary = {}
+
+		for x: int in range(first.x, last.x + 1):
+			for y: int in range(first.y, last.y + 1):
+				for z: int in range(first.z, last.z + 1):
+					var key: Vector3i = Vector3i(x, y, z)
+
+					if not cells.has(key):
+						continue
+
+					var offsets: PackedInt32Array = cells[key]
+
+					for index: int in offsets:
+						if seen.has(index):
+							continue
+
+						seen[index] = true
+						result.append(index)
+
+		# Bucket traversal must not change journal operation order.
+		result.sort()
+		return result
 
 
 	func _get_used_channels_mask() -> int:
@@ -208,7 +335,13 @@ class EditedGenerator:
 		base.anchor = anchor
 		base._generate_block(buffer, origin, lod)
 
-		for index: int in range(0, _records.size(), 5):
+		var candidates: PackedInt32Array = _candidate_operations(
+			origin,
+			buffer.get_size(),
+			lod
+		)
+
+		for index: int in candidates:
 			_apply_sphere(buffer, origin, lod, index)
 
 
@@ -319,6 +452,43 @@ class EditedGenerator:
 						x, y, z,
 						VoxelBuffer.CHANNEL_SDF
 					)
+	func validate_operation_index(
+		origin: Vector3i,
+		lod: int
+	) -> float:
+		var indexed: VoxelBuffer = VoxelBuffer.new()
+		indexed.create(19, 19, 19)
+		_generate_uncached(indexed, origin, lod)
+
+		var reference: VoxelBuffer = VoxelBuffer.new()
+		reference.create(19, 19, 19)
+
+		var base: AnchoredGenerator = AnchoredGenerator.new()
+		base.surface = surface
+		base.anchor = anchor
+		base._generate_block(reference, origin, lod)
+
+		for index: int in range(0, _records.size(), 5):
+			_apply_sphere(reference, origin, lod, index)
+
+		var worst: float = 0.0
+
+		for x: int in range(19):
+			for y: int in range(19):
+				for z: int in range(19):
+					worst = maxf(
+						worst,
+						absf(
+							indexed.get_voxel_f(
+								x, y, z, VoxelBuffer.CHANNEL_SDF
+							)
+							- reference.get_voxel_f(
+								x, y, z, VoxelBuffer.CHANNEL_SDF
+							)
+						)
+					)
+
+		return worst
 
 
 var _edit_center: LkPosition64
