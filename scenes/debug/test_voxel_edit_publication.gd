@@ -9,6 +9,12 @@ const JOURNAL_SAVE_PATH: String = (
 	"user://voxel_edit_publication_journal.json"
 )
 const JOURNAL_FORMAT_VERSION: int = 1
+const STREAM_DATABASE_PATH: String = (
+	"user://voxel_edit_publication_stream.sqlite"
+)
+
+const STREAM_AUTOSAVE_INTERVAL_S: float = 10.0
+const ENABLE_JOURNAL: bool = true
 
 var _request_stamp: bool = false
 var _request_build: bool = false
@@ -17,9 +23,14 @@ var _publishing: bool = false
 var _publication_center: LkPosition64
 var _publication_revision: int = 0
 var _publication_samples_checked: bool = false
+var _stream_autosave_s: float = 0.0
 
 
 func _ready() -> void:
+	_stream = VoxelStreamSQLite.new()
+	_stream.database_path = STREAM_DATABASE_PATH
+	_stream.set_key_cache_enabled(true)
+
 	super._ready()
 
 	# This scene is an interactive publication test, not the automatic
@@ -46,10 +57,10 @@ func _ready() -> void:
 				_edit_journal.get_count(),
 			]
 		)
-
 	print(
 		"VoxelPublication: LMB dig stamp, RMB build stamp. "
-		+ "Aim 6-14 m away. Local LOD 0 edits; journal records every click."
+		+ "Aim 6-14 m away. Stream is the primary edit store; "
+		+ "journal remains available for recovery."
 	)
 
 
@@ -100,6 +111,12 @@ func _physics_process(delta: float) -> void:
 			_accept_stamp(_request_build)
 		else:
 			print("VoxelPublication: BUSY at physics boundary; click ignored")
+			
+	_stream_autosave_s += delta
+
+	if _stream_autosave_s >= STREAM_AUTOSAVE_INTERVAL_S:
+		_stream_autosave_s = 0.0
+		_save_stream("autosave")
 
 
 func _accept_stamp(build: bool) -> void:
@@ -139,13 +156,14 @@ func _accept_stamp(build: bool) -> void:
 		-_rotation.angle_rad
 	)
 
-	if not _edit_journal.append_sphere(
-		_publication_center,
-		STAMP_RADIUS_M,
-		build
-	):
-		_fail_gate("journal rejected stamp")
-		return
+	if ENABLE_JOURNAL:
+		if not _edit_journal.append_sphere(
+			_publication_center,
+			STAMP_RADIUS_M,
+			build
+		):
+			_fail_gate("journal rejected stamp")
+			return
 
 	if not _apply_local_stamp(
 		_publication_center,
@@ -155,9 +173,7 @@ func _accept_stamp(build: bool) -> void:
 		_fail_gate("local stamp area is not editable")
 		return
 
-	if not _save_journal():
-		_fail_gate("failed to save journal after local stamp")
-		return
+	_save_stream("after local stamp")
 
 	print(
 		"VoxelPublication: LOCAL %s revision=%d operations=%d"
@@ -507,7 +523,7 @@ func _process(delta: float) -> void:
 		+ "\nJournal revision: %d | active revision: %d"
 		+ "\nOperations: %d | publishing: %s"
 		+ "\nLMB DIG / RMB BUILD | aim 6-14 m away"
-		+ "\nInstant local stamp; journal records every click"
+		+ "\nInstant local stamp; stream is the primary store"
 	) % [
 		_edit_journal.get_revision(),
 		active_revision,
@@ -634,3 +650,20 @@ func _load_journal() -> bool:
 	_terrain.generator = _make_patch_generator(_anchor)
 
 	return true
+
+
+func _save_stream(reason: String) -> void:
+	if not is_instance_valid(_terrain):
+		return
+
+	_terrain.save_modified_blocks()
+
+	print(
+		"VoxelPublication: STREAM SAVE REQUESTED reason=%s"
+		% reason
+	)
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST:
+		_save_stream("window close")

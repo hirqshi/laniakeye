@@ -405,6 +405,9 @@ func _edit_failure(reason: String) -> void:
 
 
 func _stream_readiness_reason() -> String:
+	if not is_instance_valid(_terrain):
+		return "NO ACTIVE TERRAIN"
+
 	var current: Vector3 = _player.global_position
 
 	var input_dir: Vector2 = Input.get_vector(
@@ -429,6 +432,9 @@ func _stream_readiness_reason() -> String:
 		current + direction * STREAM_LOOKAHEAD_M,
 	]
 
+	var tool: VoxelToolLodTerrain = _terrain.get_voxel_tool()
+	tool.channel = VoxelBuffer.CHANNEL_SDF
+
 	for i: int in range(points.size()):
 		var local: Vector3 = _terrain.to_local(points[i])
 		var area: AABB = AABB(
@@ -436,12 +442,9 @@ func _stream_readiness_reason() -> String:
 			Vector3(6.0, 8.0, 6.0)
 		)
 
-		if not _terrain.is_area_meshed(area, 0):
-			return "CURRENT MESH" if i == 0 else "NEXT MESH"
+		if not tool.is_area_editable(area):
+			return "CURRENT DATA" if i == 0 else "NEXT DATA"
 
-	# Mesh readiness is the actual stream guard. A nearby hole, ledge,
-	# slope, or airborne state must not permanently disable player physics.
-	# The physics controller remains responsible for falling and jumping.
 	return ""
 
 
@@ -464,6 +467,17 @@ func _update_stream_guard(delta: float) -> bool:
 
 		_stream_hold = true
 		_stream_hold_reason = reason
+
+		if _player.is_physics_processing():
+			print(
+				"StreamGuardTrace: PAUSE reason=%s airborne=%s pending=%s"
+				% [
+					reason,
+					not _player.is_on_floor(),
+					is_instance_valid(_pending),
+				]
+			)
+
 		_player.set_physics_process(false)
 
 		if _stream_hold_s >= 15.0 and not _stream_warned:
@@ -724,38 +738,6 @@ func _test_journal_snapshot() -> void:
 		)
 	else:
 		push_error("VoxelJournal: FAIL snapshot isolation test")
-
-
-func _has_ground_support(point: Vector3) -> bool:
-	var up: Vector3 = _player.up_direction.normalized()
-	var flat: Basis = _basis_for_up(up)
-
-	var offsets: Array[Vector3] = [
-		Vector3.ZERO,
-		flat.x * 0.15,
-		-flat.x * 0.15,
-		flat.z * 0.15,
-		-flat.z * 0.15,
-	]
-
-	for offset: Vector3 in offsets:
-		var hit: Dictionary = _ground_hit(
-			point + offset,
-			ACTIVE_LAYER
-		)
-
-		if hit.is_empty():
-			continue
-
-		var hit_point: Vector3 = hit["position"]
-		var height: float = (point - hit_point).dot(up)
-
-		# Gate capsule height is 1.8 m.
-		# Count only nearby support, not arbitrary terrain far below.
-		if height >= 0.5 and height <= 1.4:
-			return true
-
-	return false
 
 
 func _process(delta: float) -> void:
