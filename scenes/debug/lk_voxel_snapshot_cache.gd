@@ -2,6 +2,7 @@ extends RefCounted
 
 const CACHE_DIRECTORY: String = "user://voxel_snapshot_cache_v1"
 const BLOCK_SIZE: int = 16
+const RAM_BLOCK_LIMIT: int = 4096
 
 var _database: VoxelStreamSQLite
 var _mutex: Mutex = Mutex.new()
@@ -11,6 +12,15 @@ var _misses: int = 0
 var _errors: int = 0
 var _unsupported: int = 0
 var _unsupported_examples: Dictionary = {}
+
+var _ram_blocks: Dictionary = {}
+var _ram_order: Array[Vector4i] = []
+var _ram_replace_index: int = 0
+
+var _ram_hits: int = 0
+var _sqlite_hits: int = 0
+var _sqlite_reads: int = 0
+var _ram_evictions: int = 0
 
 var database_path: String = ""
 
@@ -100,8 +110,22 @@ func load_block(
 		return false
 
 	var position: Vector3i = _block_position(origin, lod)
+	var key: Vector4i = _ram_key(position, lod)
 
 	_mutex.lock()
+
+	if _ram_blocks.has(key):
+		var cached: VoxelBuffer = _ram_blocks[key]
+
+		_copy_sdf(cached, buffer)
+
+		_ram_hits += 1
+		_hits += 1
+
+		_mutex.unlock()
+		return true
+
+	_sqlite_reads += 1
 
 	var result: int = _database.load_voxel_block(
 		buffer,
@@ -110,7 +134,14 @@ func load_block(
 	)
 
 	if result == VoxelStream.RESULT_BLOCK_FOUND:
+		_sqlite_hits += 1
 		_hits += 1
+
+		_remember_locked(
+			key,
+			_make_snapshot(buffer)
+		)
+
 	elif result == VoxelStream.RESULT_BLOCK_NOT_FOUND:
 		_misses += 1
 	else:
@@ -129,21 +160,26 @@ func store_block(
 	if not supports(buffer, origin, lod):
 		return
 
-	# Never hand the terrain's mutable buffer to persistent storage.
-	var snapshot: VoxelBuffer = VoxelBuffer.new()
-	var size: Vector3i = buffer.get_size()
-
-	snapshot.create(size.x, size.y, size.z)
-	snapshot.set_channel_depth(
-		VoxelBuffer.CHANNEL_SDF,
-		buffer.get_channel_depth(VoxelBuffer.CHANNEL_SDF)
-	)
-	snapshot.copy_channel_from(buffer, VoxelBuffer.CHANNEL_SDF)
-
+	var snapshot: VoxelBuffer = _make_snapshot(buffer)
 	var position: Vector3i = _block_position(origin, lod)
+	var key: Vector4i = _ram_key(position, lod)
 
 	_mutex.lock()
-	_database.save_voxel_block(snapshot, position, lod)
+
+	# Another worker may have generated or loaded this tile
+	# while this worker was computing it.
+	if _ram_blocks.has(key):
+		_mutex.unlock()
+		return
+
+	_database.save_voxel_block(
+		snapshot,
+		position,
+		lod
+	)
+
+	_remember_locked(key, snapshot)
+
 	_mutex.unlock()
 
 
@@ -191,7 +227,65 @@ func try_get_stats() -> Dictionary:
 		"errors": _errors,
 		"unsupported": _unsupported,
 		"unsupported_examples": _unsupported_examples.values(),
+		"ram_hits": _ram_hits,
+		"sqlite_hits": _sqlite_hits,
+		"sqlite_reads": _sqlite_reads,
+		"ram_blocks": _ram_blocks.size(),
+		"ram_evictions": _ram_evictions,
 	}
 
 	_mutex.unlock()
 	return result
+
+
+func _ram_key(position: Vector3i, lod: int) -> Vector4i:
+	return Vector4i(
+		position.x,
+		position.y,
+		position.z,
+		lod
+	)
+
+
+func _copy_sdf(source: VoxelBuffer, destination: VoxelBuffer) -> void:
+	destination.set_channel_depth(
+		VoxelBuffer.CHANNEL_SDF,
+		source.get_channel_depth(VoxelBuffer.CHANNEL_SDF)
+	)
+	destination.copy_channel_from(
+		source,
+		VoxelBuffer.CHANNEL_SDF
+	)
+
+
+func _make_snapshot(source: VoxelBuffer) -> VoxelBuffer:
+	var snapshot: VoxelBuffer = VoxelBuffer.new()
+	var size: Vector3i = source.get_size()
+
+	snapshot.create(size.x, size.y, size.z)
+	_copy_sdf(source, snapshot)
+
+	return snapshot
+
+
+# The caller must hold _mutex.
+# Stored buffers remain private and immutable.
+func _remember_locked(
+	key: Vector4i,
+	snapshot: VoxelBuffer
+) -> void:
+	if _ram_blocks.has(key):
+		return
+
+	if _ram_order.size() < RAM_BLOCK_LIMIT:
+		_ram_order.append(key)
+	else:
+		var oldest: Vector4i = _ram_order[_ram_replace_index]
+		_ram_blocks.erase(oldest)
+		_ram_order[_ram_replace_index] = key
+		_ram_replace_index = (
+			(_ram_replace_index + 1) % RAM_BLOCK_LIMIT
+		)
+		_ram_evictions += 1
+
+	_ram_blocks[key] = snapshot

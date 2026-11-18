@@ -32,7 +32,11 @@ class EditedGenerator:
 
 	const INDEX_LOD_COUNT: int = 5
 	const INDEX_CELL_SAMPLES: int = 64
+	
+	const TILE_LOCK_COUNT: int = 256
 
+	var _tile_locks: Array[Mutex] = []
+	
 	var _operation_index: Array[Dictionary] = []
 	
 	var _snapshot_cache: SnapshotCache
@@ -54,6 +58,12 @@ class EditedGenerator:
 		anchor = patch_anchor.copy()
 		_records = records.duplicate()
 		_revision = revision
+		
+		_tile_locks.clear()
+
+		for i: int in range(TILE_LOCK_COUNT):
+			_tile_locks.append(Mutex.new())
+			
 		_build_operation_index()
 		var surface_script: Script = source.get_script() as Script
 		var surface_code_hash: String = ""
@@ -116,6 +126,47 @@ class EditedGenerator:
 			int(floor(y / cell_size)),
 			int(floor(z / cell_size))
 		)
+
+
+	func _load_or_generate_tile(
+		tile: VoxelBuffer,
+		tile_origin: Vector3i,
+		lod: int
+	) -> void:
+		var shift: int = 4 + lod
+
+		var key: Vector4i = Vector4i(
+			tile_origin.x >> shift,
+			tile_origin.y >> shift,
+			tile_origin.z >> shift,
+			lod
+		)
+
+		var lock_index: int = (
+			hash(key) & (TILE_LOCK_COUNT - 1)
+		)
+		var tile_lock: Mutex = _tile_locks[lock_index]
+
+		tile_lock.lock()
+
+		if not _snapshot_cache.load_block(
+			tile,
+			tile_origin,
+			lod
+		):
+			_generate_uncached(
+				tile,
+				tile_origin,
+				lod
+			)
+
+			_snapshot_cache.store_block(
+				tile,
+				tile_origin,
+				lod
+			)
+
+		tile_lock.unlock()
 
 
 	func _build_operation_index() -> void:
@@ -300,21 +351,11 @@ class EditedGenerator:
 						depth
 					)
 
-					if not _snapshot_cache.load_block(
+					_load_or_generate_tile(
 						tile,
 						tile_origin,
 						lod
-					):
-						_generate_uncached(
-							tile,
-							tile_origin,
-							lod
-						)
-						_snapshot_cache.store_block(
-							tile,
-							tile_origin,
-							lod
-						)
+					)
 
 					_copy_tile_intersection(
 						tile,

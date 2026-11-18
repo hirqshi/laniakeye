@@ -586,6 +586,16 @@ func _print_snapshot_cache_stats(
 			str(stats.get("unsupported_examples", [])),
 		]
 	)
+	print(
+		"VoxelCacheRAM: hits=%d blocks=%d evictions=%d sqlite_hits=%d sqlite_reads=%d"
+		% [
+			int(stats.get("ram_hits", 0)),
+			int(stats.get("ram_blocks", 0)),
+			int(stats.get("ram_evictions", 0)),
+			int(stats.get("sqlite_hits", 0)),
+			int(stats.get("sqlite_reads", 0)),
+		]
+	)
 
 
 func _save_journal() -> bool:
