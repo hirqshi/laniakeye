@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://bv0m0yhacnn65"
+
+[deps]
+
+files=["res://verification/python_clock_accumulation.ticks.translation", "res://verification/python_clock_accumulation.hz.translation", "res://verification/python_clock_accumulation.epoch.translation", "res://verification/python_clock_accumulation.expected.translation", "res://verification/python_clock_accumulation.error.translation"]
+
+source_file="res://verification/python_clock_accumulation.csv"
+dest_files=["res://verification/python_clock_accumulation.ticks.translation", "res://verification/python_clock_accumulation.hz.translation", "res://verification/python_clock_accumulation.epoch.translation", "res://verification/python_clock_accumulation.expected.translation", "res://verification/python_clock_accumulation.error.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

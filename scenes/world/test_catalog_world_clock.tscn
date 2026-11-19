@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://fq2nqd5jg4mk"]
+
+[ext_resource type="Script" uid="uid://dqljy82xkmcia" path="res://scenes/world/test_catalog_world_clock.gd" id="1"]
+
+[node name="CatalogSharedWorldClock" type="Node3D" unique_id=1612883011]
+script = ExtResource("1")
