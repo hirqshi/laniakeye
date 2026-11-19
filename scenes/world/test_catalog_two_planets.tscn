@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://cl0a14xwum0t"]
+
+[ext_resource type="Script" uid="uid://dqc3lknww603t" path="res://scenes/world/test_catalog_two_planets.gd" id="1"]
+
+[node name="CatalogTwoPlanetsIntegration" type="Node3D" unique_id=1020788977]
+script = ExtResource("1")

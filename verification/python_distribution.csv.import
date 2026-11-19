@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://jrye2uef6xgc"
+
+[deps]
+
+files=["res://verification/python_distribution.count.translation", "res://verification/python_distribution.fraction.translation"]
+
+source_file="res://verification/python_distribution.csv"
+dest_files=["res://verification/python_distribution.count.translation", "res://verification/python_distribution.fraction.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

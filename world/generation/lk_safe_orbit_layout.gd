@@ -3,6 +3,7 @@ extends RefCounted
 
 const Samples = preload("res://world/generation/lk_world_samples.gd")
 const Motion = preload("res://world/generation/lk_kepler_motion.gd")
+const Rotation = preload("res://world/generation/lk_rotation_periods.gd")
 const VERSION: int = 1
 const HILL_FRACTION: float = 0.25
 const ROCHE_FACTOR: float = 2.44
@@ -34,7 +35,8 @@ static func _spin(id: String) -> Dictionary:
 	if _u(id, "retrograde_spin") < 0.15:
 		direction = -1.0
 	return {
-		"period_s": 21600.0 + 410400.0 * _u(id, "spin_period"),
+		"rotation_version": Rotation.VERSION,
+		"period_s": Rotation.period_s(id),
 		"direction": direction,
 		"axis_tilt_to_system_y_rad": PI * 0.5 * _u(id, "spin_tilt"),
 		"pole_azimuth_rad": TAU * _u(id, "spin_pole"),
