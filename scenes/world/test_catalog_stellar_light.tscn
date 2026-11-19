@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://b4wt1f4qjn8qr"]
+
+[ext_resource type="Script" uid="uid://c7ip058jb2ppk" path="res://scenes/world/test_catalog_stellar_light.gd" id="1"]
+
+[node name="CatalogStellarLightingIntegration" type="Node3D" unique_id=1390174322]
+script = ExtResource("1")

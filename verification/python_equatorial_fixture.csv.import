@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://bldne4tv4jro4"
+
+[deps]
+
+files=["res://verification/python_equatorial_fixture.altitude.translation", "res://verification/python_equatorial_fixture.sin.translation", "res://verification/python_equatorial_fixture.distance.translation"]
+
+source_file="res://verification/python_equatorial_fixture.csv"
+dest_files=["res://verification/python_equatorial_fixture.altitude.translation", "res://verification/python_equatorial_fixture.sin.translation", "res://verification/python_equatorial_fixture.distance.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true
