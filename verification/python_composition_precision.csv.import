@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://ou11d1msrlqi"
+
+[deps]
+
+files=["res://verification/python_composition_precision.hierarchical.translation", "res://verification/python_composition_precision.naive.translation"]
+
+source_file="res://verification/python_composition_precision.csv"
+dest_files=["res://verification/python_composition_precision.hierarchical.translation", "res://verification/python_composition_precision.naive.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

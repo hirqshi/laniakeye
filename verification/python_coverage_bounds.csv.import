@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://bqtgkirhri4q8"
+
+[deps]
+
+files=["res://verification/python_coverage_bounds.aabb.translation", "res://verification/python_coverage_bounds.raw.translation", "res://verification/python_coverage_bounds.candidate.translation", "res://verification/python_coverage_bounds.candidate.translation", "res://verification/python_coverage_bounds.magnitude6.translation", "res://verification/python_coverage_bounds.magnitude6.translation"]
+
+source_file="res://verification/python_coverage_bounds.csv"
+dest_files=["res://verification/python_coverage_bounds.aabb.translation", "res://verification/python_coverage_bounds.raw.translation", "res://verification/python_coverage_bounds.candidate.translation", "res://verification/python_coverage_bounds.candidate.translation", "res://verification/python_coverage_bounds.magnitude6.translation", "res://verification/python_coverage_bounds.magnitude6.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

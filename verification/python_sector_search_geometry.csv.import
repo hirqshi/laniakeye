@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://6p276sfk6rcv"
+
+[deps]
+
+files=["res://verification/python_sector_search_geometry.radius.translation", "res://verification/python_sector_search_geometry.observer.translation", "res://verification/python_sector_search_geometry.observer.translation", "res://verification/python_sector_search_geometry.observer.translation", "res://verification/python_sector_search_geometry.bounding.translation", "res://verification/python_sector_search_geometry.intersecting.translation", "res://verification/python_sector_search_geometry.random.translation"]
+
+source_file="res://verification/python_sector_search_geometry.csv"
+dest_files=["res://verification/python_sector_search_geometry.radius.translation", "res://verification/python_sector_search_geometry.observer.translation", "res://verification/python_sector_search_geometry.observer.translation", "res://verification/python_sector_search_geometry.observer.translation", "res://verification/python_sector_search_geometry.bounding.translation", "res://verification/python_sector_search_geometry.intersecting.translation", "res://verification/python_sector_search_geometry.random.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true
