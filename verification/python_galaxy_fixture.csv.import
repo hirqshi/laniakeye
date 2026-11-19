@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://c1kps4wjkai2g"
+
+[deps]
+
+files=["res://verification/python_galaxy_fixture.galaxy.translation", "res://verification/python_galaxy_fixture.cell.translation", "res://verification/python_galaxy_fixture.cell.translation", "res://verification/python_galaxy_fixture.cell.translation", "res://verification/python_galaxy_fixture.offset.translation", "res://verification/python_galaxy_fixture.offset.translation", "res://verification/python_galaxy_fixture.offset.translation", "res://verification/python_galaxy_fixture.envelope.translation"]
+
+source_file="res://verification/python_galaxy_fixture.csv"
+dest_files=["res://verification/python_galaxy_fixture.galaxy.translation", "res://verification/python_galaxy_fixture.cell.translation", "res://verification/python_galaxy_fixture.cell.translation", "res://verification/python_galaxy_fixture.cell.translation", "res://verification/python_galaxy_fixture.offset.translation", "res://verification/python_galaxy_fixture.offset.translation", "res://verification/python_galaxy_fixture.offset.translation", "res://verification/python_galaxy_fixture.envelope.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true
