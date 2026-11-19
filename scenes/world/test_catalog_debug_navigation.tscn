@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://ndik27toeqok"]
+
+[ext_resource type="Script" uid="uid://610d7cg832u2" path="res://scenes/world/test_catalog_debug_navigation.gd" id="1"]
+
+[node name="CatalogDebugNavigation" type="Node3D" unique_id=1140263615]
+script = ExtResource("1")
