@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bambwny6br60m"]
+
+[ext_resource type="Script" uid="uid://cqt8slq50g606" path="res://scenes/world/test_catalog_far_mesh.gd" id="1"]
+
+[node name="CatalogFarMeshIntegration" type="Node3D" unique_id=1321896490]
+script = ExtResource("1")

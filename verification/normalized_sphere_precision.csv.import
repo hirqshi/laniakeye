@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://dyt8w7nwyt718"
+
+[deps]
+
+files=["res://verification/normalized_sphere_precision.height.translation", "res://verification/normalized_sphere_precision.cpu.translation", "res://verification/normalized_sphere_precision.float32.translation", "res://verification/normalized_sphere_precision.float32.translation"]
+
+source_file="res://verification/normalized_sphere_precision.csv"
+dest_files=["res://verification/normalized_sphere_precision.height.translation", "res://verification/normalized_sphere_precision.cpu.translation", "res://verification/normalized_sphere_precision.float32.translation", "res://verification/normalized_sphere_precision.float32.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

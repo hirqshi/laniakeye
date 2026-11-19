@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://dwhdje8pa8gfn"
+
+[deps]
+
+files=["res://verification/linear_palette.r.translation", "res://verification/linear_palette.g.translation", "res://verification/linear_palette.b.translation", "res://verification/linear_palette.r.translation", "res://verification/linear_palette.g.translation", "res://verification/linear_palette.b.translation"]
+
+source_file="res://verification/linear_palette.csv"
+dest_files=["res://verification/linear_palette.r.translation", "res://verification/linear_palette.g.translation", "res://verification/linear_palette.b.translation", "res://verification/linear_palette.r.translation", "res://verification/linear_palette.g.translation", "res://verification/linear_palette.b.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true
