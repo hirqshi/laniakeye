@@ -1,0 +1,5 @@
+radius_ly,aabb_sectors,raw_systems_in_aabb,candidate_lower,candidate_upper,magnitude6_proxy_lower,magnitude6_proxy_upper
+16,27,47,0,21,0,21
+32,125,237,22,125,18,102
+64,729,1425,343,758,190,443
+128,4913,9777,3572,5141,649,1127

@@ -1,0 +1,9 @@
+quantity,value
+home_galaxy_radius_ly,153002.2386315774
+expected_home_systems,7325748630175.841
+expected_home_planets,32233293972773.703
+expected_mean_galaxy_planets,10411897050255.549
+galaxy_capacity_exact,9223372036854775808
+expected_addressable_universe_planets,9.603280010393775e+31
+expected_min_radius_galaxy_planets,71994831644.7661
+expected_max_radius_galaxy_planets,71994831644766.1
