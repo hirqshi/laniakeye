@@ -1,9 +1,15 @@
 extends "res://scenes/world/test_catalog_debug_navigation.gd"
 
 const FlightMath = preload("res://world/debug/lk_debug_flight_math.gd")
+const FlightCarry = preload("res://world/debug/lk_debug_flight_carry.gd")
 
 @export var debug_flight_mouse_sensitivity: float = 0.003
-@export var debug_flight_carry_height_m: float = 1000.0
+# Earth-reference midpoint; adaptive sizing enabled by default.
+@export var debug_flight_carry_height_m: float = 250000.0
+@export var debug_flight_adaptive_carry: bool = true
+@export var debug_flight_carry_override_m: float = 0.0
+var _flight_carry_band: Dictionary = {}
+var _flight_carry_weight: float = 0.0
 var _flight_active: bool = false
 var _flight_toggle_requested: bool = false
 var _flight_multiplier: float = 1.0
@@ -133,16 +139,18 @@ func _flight_local_terrain_ready() -> bool:
 	return _terrain.is_area_meshed(area, 0) and _voxel_tool.is_area_editable(area)
 
 func _tick_flight(delta: float) -> void:
-	var carry: bool = _flight_absolute.length() - float(_context["body"]["radius_m"]) < debug_flight_carry_height_m
-	var fixed: LkPosition64 = _catalog_frame.inertial_to_body(_flight_absolute)
-	var old_axes: Basis = _catalog_frame.planet_basis()
+	# FLIGHT_ADAPTIVE_CARRY_V1
+	var body: Dictionary = _context["body"]
+	_flight_carry_band = FlightCarry.band(float(body["radius_m"]), float(body["surface_gravity_m_s2"]), debug_flight_carry_height_m, debug_flight_adaptive_carry, debug_flight_carry_override_m)
+	_flight_carry_weight = FlightCarry.weight(_flight_absolute.length() - float(body["radius_m"]), _flight_carry_band)
 	if not _universe_clock.advance(delta):
 		_fail_gate("flight clock rejected delta")
 		return
 	_catalog_frame.advance(0.0)
-	if carry:
-		_flight_absolute = _catalog_frame.body_to_inertial(fixed)
-		_flight_basis = (_catalog_frame.planet_basis() * old_axes.inverse() * _flight_basis).orthonormalized()
+	if _flight_carry_weight > 0.0:
+		var carry_angle: float = _catalog_frame.angular_speed_rad_s * delta * _flight_carry_weight
+		_flight_absolute = _flight_absolute.plus(_catalog_frame.carry_displacement64(_flight_absolute, carry_angle))
+		_flight_basis = (_catalog_frame.step_basis(carry_angle) * _flight_basis).orthonormalized()
 	if not _place_flight_absolute(_flight_absolute):
 		_fail_gate("flight relocation failed")
 		return
@@ -307,4 +315,6 @@ func _process(delta: float) -> void:
 		if _flight_active:
 			_label.text += "\nSpeed %s/s | target %s/s | multiplier x%.3f" % [NavData.distance_text(_flight_actual_speed), NavData.distance_text(_flight_requested_speed), _flight_multiplier]
 			_label.text += "\nNearest surface %s | reference %s | local frame, not orbital physics" % [NavData.distance_text(maxf(0.0, _flight_height)), _flight_reference]
+		if _flight_active and _flight_carry_band.get("ok", false):
+			_label.text += "\nSurface carry %.1f%% | transition %.2f..%.2f km | active body" % [_flight_carry_weight * 100.0, float(_flight_carry_band["inner_m"]) / 1000.0, float(_flight_carry_band["outer_m"]) / 1000.0]
 		_label.text += "\n" + _flight_status
