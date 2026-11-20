@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://duteyikb4sbbs"]
+
+[ext_resource type="Script" uid="uid://baml50cmit1tf" path="res://scenes/world/test_catalog_flight_visuals.gd" id="1"]
+
+[node name="CatalogFlightVisuals" type="Node3D" unique_id=455336142]
+script = ExtResource("1")
