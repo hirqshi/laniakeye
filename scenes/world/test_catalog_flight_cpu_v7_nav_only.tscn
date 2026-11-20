@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/world/test_catalog_flight_cpu_v7.gd" id="1"]
+
+[node name="CatalogFlightCpu7" type="Node3D"]
+script = ExtResource("1")
+cpu7_fused_spheres_enabled = false

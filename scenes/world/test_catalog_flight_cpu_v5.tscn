@@ -1,6 +1,6 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://dfxhso8vgti08"]
 
-[ext_resource type="Script" path="res://scenes/world/test_catalog_flight_cpu_v5.gd" id="1"]
+[ext_resource type="Script" uid="uid://dktmlyx7817g" path="res://scenes/world/test_catalog_flight_cpu_v5.gd" id="1"]
 
-[node name="CatalogFlightCpu5" type="Node3D"]
+[node name="CatalogFlightCpu5" type="Node3D" unique_id=111738101]
 script = ExtResource("1")

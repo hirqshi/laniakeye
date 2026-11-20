@@ -145,7 +145,7 @@ func _tick_flight(delta: float) -> void:
 		_fail_gate("flight relocation failed")
 		return
 	_cpu_us = _flight_cpu_boundary("place_before", _cpu_us)
-	var spheres: Array = _flight_spheres()
+	var spheres: Variant = _flight_spheres()
 	if _failed:
 		return # Fail closed before any movement if sphere data was rejected.
 	_cpu_us = _flight_cpu_boundary("spheres", _cpu_us)
@@ -158,7 +158,7 @@ func _tick_flight(delta: float) -> void:
 		input_vector.z = float(Input.is_physical_key_pressed(KEY_S)) - float(Input.is_physical_key_pressed(KEY_W))
 	var direction: Vector3 = (_flight_basis * input_vector).normalized()
 	var requested: float = _flight_requested_speed * delta if input_vector.length_squared() > 0.0 else 0.0
-	var allowed: float = FlightMath.safe_step(direction, requested, spheres)
+	var allowed: float = _flight_safe_step(direction, requested, spheres)
 	var direction64: Array = FlightMath.unit_direction(direction)
 	if allowed > 0.0:
 		var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(_player.player_camera.global_position, _player.player_camera.global_position + direction * minf(allowed, 4096.0), ACTIVE_LAYER, [_player.get_rid()])
@@ -367,3 +367,7 @@ func _flight_sphere_boundary(section: String, started: int) -> int:
 
 func _flight_sphere_section(_section: String, _elapsed_us: int) -> void:
 	pass
+
+# FLIGHT_CPU6_HOOKS_V1: default movement guard remains original FlightMath.safe_step.
+func _flight_safe_step(direction: Vector3, requested: float, spheres: Variant) -> float:
+	return FlightMath.safe_step(direction, requested, spheres)
