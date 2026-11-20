@@ -60,7 +60,9 @@ func _initialize() -> void:
 				var error: float = absf(_dot(axes[axis], rotated) - float(point[axis]))
 				_worst_roundtrip = maxf(_worst_roundtrip, error)
 				_check(error < TOLERANCE * 13.0, "transpose inverse roundtrip")
-	print("GalaxyOrientation: samples=%d quaternion_error=%.3e orthogonality_error=%.3e determinant_error=%.3e roundtrip_error=%.3e" % [indices.size(), _worst_norm, _worst_dot, _worst_det, _worst_roundtrip])
+	print("GalaxyOrientation: samples=", indices.size(), " quaternion_error=", _worst_norm,
+		" orthogonality_error=", _worst_dot, " determinant_error=", _worst_det,
+		" roundtrip_error=", _worst_roundtrip)
 	if _failures == 0:
 		print("GalaxyOrientation: PASS unit quaternion, orthonormality, handedness, length, inverse, determinism")
 	quit(0 if _failures == 0 else 1)
