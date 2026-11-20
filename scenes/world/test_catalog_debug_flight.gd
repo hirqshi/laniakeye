@@ -150,7 +150,7 @@ func _tick_flight(delta: float) -> void:
 		return # Fail closed before any movement if sphere data was rejected.
 	_cpu_us = _flight_cpu_boundary("spheres", _cpu_us)
 	var boost: float = 4.0 if Input.is_physical_key_pressed(KEY_SHIFT) else 1.0
-	_flight_requested_speed = FlightMath.speed_at_height(_flight_height, _flight_multiplier * boost)
+	_flight_requested_speed = _flight_speed_at_height(_flight_height, _flight_multiplier * boost)
 	var input_vector: Vector3 = Vector3.ZERO
 	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and not _flight_landing_requested:
 		input_vector.x = float(Input.is_physical_key_pressed(KEY_D)) - float(Input.is_physical_key_pressed(KEY_A))
@@ -371,3 +371,7 @@ func _flight_sphere_section(_section: String, _elapsed_us: int) -> void:
 # FLIGHT_CPU6_HOOKS_V1: default movement guard remains original FlightMath.safe_step.
 func _flight_safe_step(direction: Vector3, requested: float, spheres: Variant) -> float:
 	return FlightMath.safe_step(direction, requested, spheres)
+
+# SURFACE_CONTROL5_SPEED_HOOK_V1: legacy scenes keep exact original speed.
+func _flight_speed_at_height(height: float, multiplier: float) -> float:
+	return FlightMath.speed_at_height(height, multiplier)
