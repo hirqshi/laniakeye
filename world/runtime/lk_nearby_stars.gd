@@ -25,6 +25,9 @@ var _cursor: int = 0
 var _sector_budget: int = 0
 var _result_limit: int = 0
 var _stars: Dictionary = {}
+var _ordered: Array[Dictionary] = []
+var _order_dirty: bool = true
+var _order_builds: int = 0
 var _finished: bool = true
 var _cancelled: bool = false
 var _error: String = "not_started"
@@ -40,6 +43,11 @@ func _init(definition, cache_limit_sectors: int = 256) -> void:
 func cache_stats() -> Dictionary:
 	return {"hits": _cache_hits, "misses": _cache_misses, "sector_builds": _sector_builds,
 		"evictions": _cache_evictions, "resident_sectors": _cache.size()}
+
+
+# Diagnostics are separate to preserve the sector-cache report schema.
+func result_cache_stats() -> Dictionary:
+	return {"order_builds": _order_builds, "dirty": _order_dirty, "ordered_stars": _ordered.size()}
 
 
 func _get_sector(galaxy_index: int, x: int, y: int, z: int) -> Dictionary:
@@ -74,6 +82,8 @@ func begin(observer: Dictionary, radius_ly: float, observer_point_m: Array = [0.
 	_point = []
 	_plan.clear()
 	_stars.clear()
+	_ordered.clear()
+	_order_dirty = true
 	_cursor = 0
 	_radius = 0.0
 	_sector_budget = 0
@@ -168,6 +178,7 @@ func step(sectors_this_step: int = 1) -> Dictionary:
 				return progress()
 			if float(relative["distance_ly"]) <= _radius:
 				var star_id: String = Identity.child_id(system_id, "star", "0")
+				_order_dirty = true
 				_stars[star_id] = {"star_id": star_id, "system_id": system_id,
 					"location": location, "distance_ly": relative["distance_ly"],
 					"direction_galaxy": relative["direction_observer_galaxy"],
@@ -194,17 +205,20 @@ func progress() -> Dictionary:
 		"matched_stars": _stars.size()}
 
 
-# Copy prevents callers from mutating cached placement records. Sorting cost and
-# deep copies are intentional; don't call every frame merely to update a counter.
+# Reuse ordering, but detach exported records on every call. Progress and sector
+# statistics remain live; use progress() when only counters are needed.
 func result() -> Dictionary:
 	var report: Dictionary = progress()
-	var ordered: Array[Dictionary] = []
-	for star: Dictionary in _stars.values():
-		ordered.append(star)
-	ordered.sort_custom(_star_before)
+	if _order_dirty:
+		_ordered.clear()
+		for star: Dictionary in _stars.values():
+			_ordered.append(star)
+		_ordered.sort_custom(_star_before)
+		_order_dirty = false
+		_order_builds += 1
 	var stars: Array[Dictionary] = []
-	for i: int in range(mini(ordered.size(), _result_limit)):
-		stars.append(ordered[i].duplicate(true))
+	for i: int in range(mini(_ordered.size(), _result_limit)):
+		stars.append(_ordered[i].duplicate(true))
 	report["stars"] = stars
 	report["query_radius_ly"] = _radius
 	report["cache"] = cache_stats()
