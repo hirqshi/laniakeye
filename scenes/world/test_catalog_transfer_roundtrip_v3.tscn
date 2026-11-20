@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://dd5sryv3vh0vx"]
+
+[ext_resource type="Script" uid="uid://btkopw8jddwd8" path="res://scenes/world/test_catalog_transfer_roundtrip_v3.gd" id="1"]
+
+[node name="CatalogTransferRoundtrip3" type="Node3D" unique_id=869019932]
+script = ExtResource("1")
