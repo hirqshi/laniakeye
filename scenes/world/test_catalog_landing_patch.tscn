@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://wbkdu36uwgvn"]
+
+[ext_resource type="Script" uid="uid://fj3uahi16ej0" path="res://scenes/world/test_catalog_landing_patch.gd" id="1"]
+
+[node name="CatalogLandingPatch" type="Node3D" unique_id=88303796]
+script = ExtResource("1")

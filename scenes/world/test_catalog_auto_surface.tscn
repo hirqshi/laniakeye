@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://s2upe3sutag8"]
+
+[ext_resource type="Script" uid="uid://baqj0aj6w1gni" path="res://scenes/world/test_catalog_auto_surface.gd" id="1"]
+
+[node name="CatalogAutoSurface" type="Node3D" unique_id=742563962]
+script = ExtResource("1")
