@@ -10,6 +10,8 @@ const FlightCarry = preload("res://world/debug/lk_debug_flight_carry.gd")
 @export var debug_flight_carry_override_m: float = 0.0
 var _flight_carry_band: Dictionary = {}
 var _flight_carry_weight: float = 0.0
+var flight_cpu_sections_enabled: bool = false
+var flight_sphere_sections_enabled: bool = false
 var _flight_active: bool = false
 var _flight_toggle_requested: bool = false
 var _flight_multiplier: float = 1.0
@@ -96,31 +98,17 @@ func _update_terrain_transform() -> void:
 	super._update_terrain_transform()
 
 func _flight_spheres() -> Array:
-	var states: Dictionary = Layout.evaluate(_nav_layout, _universe_clock.now_s())
-	var active_position: Array = []
-	for state: Dictionary in states["bodies"]:
-		if state["id"] == _context["body"]["id"]:
-			active_position = state["position_m"]
-			break
-	var spheres: Array = []
+	var sphere_us: int = Time.get_ticks_usec() if flight_sphere_sections_enabled else 0
+	var states: Dictionary = _flight_system_states()
+	sphere_us = _flight_sphere_boundary("states", sphere_us)
+	if states.is_empty():
+		_fail_gate("empty flight system states")
+		return []
 	var local_ready: bool = _flight_local_terrain_ready()
-	_flight_height = INF
-	for state: Dictionary in states["bodies"]:
-		var center: Array = [-_flight_absolute.x, -_flight_absolute.y, -_flight_absolute.z]
-		if state["id"] != _context["body"]["id"]:
-			for axis: int in range(3):
-				center[axis] += float(state["position_m"][axis]) - float(active_position[axis])
-		var radius: float = _flight_descriptors[state["id"]]["radius_m"]
-		var distance: float = sqrt(float(center[0]) * float(center[0]) + float(center[1]) * float(center[1]) + float(center[2]) * float(center[2]))
-		var height: float = distance - radius
-		if height < _flight_height:
-			_flight_height = height
-			_flight_reference = String(state["id"]).left(8)
-		var guard_radius: float = radius
-		if state["id"] != _context["body"]["id"] or not local_ready:
-			guard_radius += 32.0
-		spheres.append({"center": center, "radius": guard_radius})
-	return spheres
+	sphere_us = _flight_sphere_boundary("terrain_readiness", sphere_us)
+	var result: Array = _build_flight_body_spheres(states, local_ready)
+	sphere_us = _flight_sphere_boundary("relative_build", sphere_us)
+	return result
 
 func _flight_local_terrain_ready() -> bool:
 	if not _terrain.visible or _terrain.collision_layer != ACTIVE_LAYER:
@@ -139,6 +127,7 @@ func _flight_local_terrain_ready() -> bool:
 	return _terrain.is_area_meshed(area, 0) and _voxel_tool.is_area_editable(area)
 
 func _tick_flight(delta: float) -> void:
+	var _cpu_us: int = Time.get_ticks_usec() if flight_cpu_sections_enabled else 0
 	# FLIGHT_ADAPTIVE_CARRY_V1
 	var body: Dictionary = _context["body"]
 	_flight_carry_band = FlightCarry.band(float(body["radius_m"]), float(body["surface_gravity_m_s2"]), debug_flight_carry_height_m, debug_flight_adaptive_carry, debug_flight_carry_override_m)
@@ -151,10 +140,15 @@ func _tick_flight(delta: float) -> void:
 		var carry_angle: float = _catalog_frame.angular_speed_rad_s * delta * _flight_carry_weight
 		_flight_absolute = _flight_absolute.plus(_catalog_frame.carry_displacement64(_flight_absolute, carry_angle))
 		_flight_basis = (_catalog_frame.step_basis(carry_angle) * _flight_basis).orthonormalized()
+	_cpu_us = _flight_cpu_boundary("clock_carry", _cpu_us)
 	if not _place_flight_absolute(_flight_absolute):
 		_fail_gate("flight relocation failed")
 		return
+	_cpu_us = _flight_cpu_boundary("place_before", _cpu_us)
 	var spheres: Array = _flight_spheres()
+	if _failed:
+		return # Fail closed before any movement if sphere data was rejected.
+	_cpu_us = _flight_cpu_boundary("spheres", _cpu_us)
 	var boost: float = 4.0 if Input.is_physical_key_pressed(KEY_SHIFT) else 1.0
 	_flight_requested_speed = FlightMath.speed_at_height(_flight_height, _flight_multiplier * boost)
 	var input_vector: Vector3 = Vector3.ZERO
@@ -173,11 +167,15 @@ func _tick_flight(delta: float) -> void:
 			allowed = minf(allowed, maxf(0.0, Vector3(hit["position"]).distance_to(_player.player_camera.global_position) - 1.0))
 	_flight_absolute = LkPosition64.new(_flight_absolute.x + float(direction64[0]) * allowed, _flight_absolute.y + float(direction64[1]) * allowed, _flight_absolute.z + float(direction64[2]) * allowed)
 	_flight_actual_speed = allowed / delta
+	_cpu_us = _flight_cpu_boundary("movement_guard", _cpu_us)
 	if not _place_flight_absolute(_flight_absolute):
 		_fail_gate("flight relocation failed after movement")
 		return
+	_cpu_us = _flight_cpu_boundary("place_after", _cpu_us)
 	_update_stellar_lighting()
+	_cpu_us = _flight_cpu_boundary("lighting", _cpu_us)
 	_update_navigation_tick(delta)
+	_cpu_us = _flight_cpu_boundary("navigation", _cpu_us)
 	_clock_autosave_s += delta
 	if _clock_autosave_s >= 30.0:
 		_clock_autosave_s = 0.0
@@ -185,6 +183,7 @@ func _tick_flight(delta: float) -> void:
 			_fail_gate("flight clock autosave failed")
 	if _flight_landing_requested:
 		_try_flight_landing()
+	_cpu_us = _flight_cpu_boundary("tail", _cpu_us)
 
 func _refuse_flight_landing(reason: String) -> void:
 	_flight_status = "Walk refused: " + reason
@@ -318,3 +317,53 @@ func _process(delta: float) -> void:
 		if _flight_active and _flight_carry_band.get("ok", false):
 			_label.text += "\nSurface carry %.1f%% | transition %.2f..%.2f km | active body" % [_flight_carry_weight * 100.0, float(_flight_carry_band["inner_m"]) / 1000.0, float(_flight_carry_band["outer_m"]) / 1000.0]
 		_label.text += "\n" + _flight_status
+
+# FLIGHT_CPU3_HOOKS_V1
+func _flight_system_states() -> Dictionary:
+	return Layout.evaluate(_nav_layout, _universe_clock.now_s())
+
+func _flight_cpu_boundary(section: String, started: int) -> int:
+	if not flight_cpu_sections_enabled:
+		return 0
+	var now: int = Time.get_ticks_usec()
+	_flight_cpu_section(section, now - started)
+	return now
+
+func _flight_cpu_section(_section: String, _elapsed_us: int) -> void:
+	pass
+
+# FLIGHT_SPHERE_CPU4_HOOKS_V1: original builder retained as default.
+func _build_flight_body_spheres(states: Dictionary, local_ready: bool) -> Array:
+	var active_position: Array = []
+	for state: Dictionary in states["bodies"]:
+		if state["id"] == _context["body"]["id"]:
+			active_position = state["position_m"]
+			break
+	var spheres: Array = []
+	_flight_height = INF
+	for state: Dictionary in states["bodies"]:
+		var center: Array = [-_flight_absolute.x, -_flight_absolute.y, -_flight_absolute.z]
+		if state["id"] != _context["body"]["id"]:
+			for axis: int in range(3):
+				center[axis] += float(state["position_m"][axis]) - float(active_position[axis])
+		var radius: float = _flight_descriptors[state["id"]]["radius_m"]
+		var distance: float = sqrt(float(center[0]) * float(center[0]) + float(center[1]) * float(center[1]) + float(center[2]) * float(center[2]))
+		var height: float = distance - radius
+		if height < _flight_height:
+			_flight_height = height
+			_flight_reference = String(state["id"]).left(8)
+		var guard_radius: float = radius
+		if state["id"] != _context["body"]["id"] or not local_ready:
+			guard_radius += 32.0
+		spheres.append({"center": center, "radius": guard_radius})
+	return spheres
+
+func _flight_sphere_boundary(section: String, started: int) -> int:
+	if not flight_sphere_sections_enabled:
+		return 0
+	var now: int = Time.get_ticks_usec()
+	_flight_sphere_section(section, now - started)
+	return now
+
+func _flight_sphere_section(_section: String, _elapsed_us: int) -> void:
+	pass

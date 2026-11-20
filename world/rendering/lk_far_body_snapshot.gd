@@ -4,9 +4,14 @@ extends RefCounted
 const SafeLayout = preload("res://world/generation/lk_safe_orbit_layout.gd")
 
 
-static func build(layout: Dictionary, active_id: String, observer: LkPosition64, epoch_s: float) -> Array[Dictionary]:
+static func build(layout: Dictionary, active_id: String, observer: LkPosition64, epoch_s: float, provided_states: Dictionary = {}) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
-	var states: Dictionary = SafeLayout.evaluate(layout, epoch_s)
+	var states: Dictionary = provided_states
+	if not states.is_empty() and (states.get("system_id", "") != layout.get("system_id", "") or states.get("time_s", NAN) != epoch_s):
+		push_error("FarSnapshot: provided state scope/time mismatch")
+		return result
+	if states.is_empty():
+		states = SafeLayout.evaluate(layout, epoch_s)
 	if states.is_empty():
 		return result
 	var descriptors: Dictionary = {layout["star"]["id"]: layout["star"]}
@@ -104,3 +109,5 @@ static func ray_distance(record: Dictionary, ray: Array) -> float:
 	if hit <= 0.0:
 		hit = along + root
 	return hit * float(record["distance_m"]) if hit > 0.0 else -1.0
+
+# SNAPSHOT_CPU3_OPTIONAL_STATES_V1: callers without fifth argument unchanged.

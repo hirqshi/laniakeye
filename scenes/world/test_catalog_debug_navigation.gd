@@ -4,6 +4,7 @@ const NavData = preload("res://world/debug/lk_debug_navigation_data.gd")
 const NavOverlay = preload("res://world/debug/lk_debug_navigation_overlay.gd")
 const NavSnapshot = preload("res://world/rendering/lk_far_body_snapshot.gd")
 
+var cpu_nav_state_provider: RefCounted
 var _nav_marks: Array = []
 var _nav_next_id: int = 1
 var _nav_scope: String = ""
@@ -149,7 +150,7 @@ func _update_navigation_tick(delta: float) -> void:
 	_nav_refresh += delta
 	if _nav_refresh >= 0.2:
 		_nav_refresh = 0.0
-		_nav_records = NavSnapshot.build(_nav_layout, String(_context["body"]["id"]), observer, _universe_clock.now_s())
+		_nav_records = NavSnapshot.build(_nav_layout, String(_context["body"]["id"]), observer, _universe_clock.now_s(), _navigation_system_states())
 	# Active-body centre must follow observer EVERY tick, not the 5Hz orbit sample.
 	# Otherwise spin/carriage can make nearby marker occlusion flicker.
 	for record: Dictionary in _nav_records:
@@ -206,3 +207,9 @@ func _process(delta: float) -> void:
 		_label.text += "\n\nDEBUG NAV | M mark aim | Shift+M mark here | Ctrl+Backspace remove last"
 		_label.text += "\nAlt+M marks %s | Alt+P planets %s | Alt+H nav help | saved=%d/64" % [_nav_show_marks, _nav_show_planets, _nav_marks.size()]
 		_label.text += "\n" + _nav_status
+
+# NAV_CPU3_PROVIDER_V1
+func _navigation_system_states() -> Dictionary:
+	if cpu_nav_state_provider != null:
+		return cpu_nav_state_provider.call("get_states", _universe_clock.now_s())
+	return {}

@@ -5,6 +5,7 @@ const FarSnapshot = preload("res://world/rendering/lk_far_body_snapshot.gd")
 const BatchShader = preload("res://world/rendering/lk_far_system.gdshader")
 const MAX_BODIES: int = 64
 
+var cpu_state_provider: RefCounted
 var _far_layout: Dictionary = {}
 var _far_active_id: String = ""
 var _far_camera: Camera3D
@@ -94,7 +95,11 @@ func _sync_camera() -> void:
 		visible = false
 		return
 	var observer: LkPosition64 = _far_coordinate_frame.to_absolute(_far_camera.global_position)
-	var records: Array[Dictionary] = FarSnapshot.build(_far_layout, _far_active_id, observer, _far_clock.now_s())
+	var snapshot_epoch: float = _far_clock.now_s()
+	var shared_states: Dictionary = {}
+	if cpu_state_provider != null:
+		shared_states = cpu_state_provider.call("get_states", snapshot_epoch)
+	var records: Array[Dictionary] = FarSnapshot.build(_far_layout, _far_active_id, observer, snapshot_epoch, shared_states)
 	var pixels: float = maxf(float(get_viewport().get_visible_rect().size.y), 1.0)
 	var min_angle: float = deg_to_rad(_far_camera.fov) / pixels * 0.25
 	last_stats = FarSnapshot.select(records, -_far_camera.global_basis.z, MAX_BODIES, min_angle)
@@ -133,3 +138,5 @@ func _sync_camera() -> void:
 	global_transform = _far_camera.global_transform
 	global_position -= _far_camera.global_basis.z * maxf(_far_camera.near * 2.0, 2.0)
 	visible = true
+
+# FARMESH_CPU3_PROVIDER_V1: optional exact-epoch provider, null by default.
