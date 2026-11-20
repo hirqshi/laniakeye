@@ -3,6 +3,53 @@ extends RefCounted
 
 const SafeLayout = preload("res://world/generation/lk_safe_orbit_layout.gd")
 
+static var _fallback_layout: Dictionary = {}
+static var _fallback_epoch: float = NAN
+static var _fallback_value: Dictionary = {}
+static var _fallback_evaluations: int = 0
+static var _fallback_hits: int = 0
+static var _fallback_mutex: Mutex = Mutex.new()
+
+
+static func clear_fallback_cache() -> void:
+	_fallback_mutex.lock()
+	_fallback_layout = {}
+	_fallback_epoch = NAN
+	_fallback_value = {}
+	_fallback_evaluations = 0
+	_fallback_hits = 0
+	_fallback_mutex.unlock()
+
+
+static func fallback_cache_stats() -> Dictionary:
+	_fallback_mutex.lock()
+	var report: Dictionary = {"resident": 0 if _fallback_value.is_empty() else 1,
+		"evaluations": _fallback_evaluations, "hits": _fallback_hits}
+	_fallback_mutex.unlock()
+	return report
+
+
+# Private read-only states: build() never exports references into this value.
+# One entry only, exact time and complete layout equality, no time quantization.
+static func _fallback_states(layout: Dictionary, epoch_s: float) -> Dictionary:
+	_fallback_mutex.lock()
+	if not _fallback_value.is_empty() and _fallback_epoch == epoch_s and _fallback_layout == layout:
+		_fallback_hits += 1
+		var cached: Dictionary = _fallback_value
+		_fallback_mutex.unlock()
+		return cached
+	_fallback_evaluations += 1
+	_fallback_mutex.unlock()
+	var states: Dictionary = SafeLayout.evaluate(layout, epoch_s)
+	if states.is_empty():
+		return states
+	_fallback_mutex.lock()
+	_fallback_layout = layout.duplicate(true)
+	_fallback_epoch = epoch_s
+	_fallback_value = states
+	_fallback_mutex.unlock()
+	return states
+
 
 static func build(layout: Dictionary, active_id: String, observer: LkPosition64, epoch_s: float, provided_states: Dictionary = {}) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
@@ -11,7 +58,7 @@ static func build(layout: Dictionary, active_id: String, observer: LkPosition64,
 		push_error("FarSnapshot: provided state scope/time mismatch")
 		return result
 	if states.is_empty():
-		states = SafeLayout.evaluate(layout, epoch_s)
+		states = _fallback_states(layout, epoch_s)
 	if states.is_empty():
 		return result
 	var descriptors: Dictionary = {layout["star"]["id"]: layout["star"]}
