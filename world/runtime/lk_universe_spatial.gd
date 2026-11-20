@@ -12,6 +12,58 @@ const OrbitValidator = preload("res://world/generation/lk_orbit_layout_validator
 const VERSION: int = 1
 const LY_M: float = Systems.LIGHT_YEAR_M
 const BOUNDARY_PAD_LY: float = 1.0e-8
+const LAYOUT_CACHE_CAPACITY: int = 16
+static var _layouts: Dictionary = {}
+static var _layout_keys: Array[String] = []
+static var _layout_cursor: int = 0
+static var _layout_builds: int = 0
+static var _layout_hits: int = 0
+static var _layout_mutex: Mutex = Mutex.new()
+
+
+static func clear_layout_cache() -> void:
+	_layout_mutex.lock()
+	_layouts.clear()
+	_layout_keys.clear()
+	_layout_cursor = 0
+	_layout_builds = 0
+	_layout_hits = 0
+	_layout_mutex.unlock()
+
+
+static func layout_cache_stats() -> Dictionary:
+	_layout_mutex.lock()
+	var report: Dictionary = {"resident": _layouts.size(), "builds": _layout_builds, "hits": _layout_hits}
+	_layout_mutex.unlock()
+	return report
+
+
+# Cache only generation, not address validation or galaxy containment.
+# Compare complete descriptors; ID equality alone must not hide changed inputs.
+static func _layout_for(source: Dictionary) -> Dictionary:
+	var key: String = String(source.get("id", ""))
+	_layout_mutex.lock()
+	if _layouts.has(key) and _layouts[key]["source"] == source:
+		_layout_hits += 1
+		var cached: Dictionary = _layouts[key]["layout"].duplicate(true)
+		_layout_mutex.unlock()
+		return cached
+	_layout_builds += 1
+	_layout_mutex.unlock()
+	var layout: Dictionary = Orbits.build(Bodies.build(source))
+	if layout.is_empty() or not OrbitValidator.validate(layout).is_empty():
+		return {}
+	_layout_mutex.lock()
+	if not _layouts.has(key):
+		if _layout_keys.size() < LAYOUT_CACHE_CAPACITY:
+			_layout_keys.append(key)
+		else:
+			_layouts.erase(_layout_keys[_layout_cursor])
+			_layout_keys[_layout_cursor] = key
+			_layout_cursor = (_layout_cursor + 1) % LAYOUT_CACHE_CAPACITY
+	_layouts[key] = {"source": source.duplicate(true), "layout": layout.duplicate(true)}
+	_layout_mutex.unlock()
+	return layout
 
 
 static func _failure(code: String) -> Dictionary:
@@ -44,8 +96,8 @@ static func _system_center_ly(placement: Dictionary) -> Array[float]:
 
 
 static func _locate(source: Dictionary, galaxy: Dictionary, universe_id: String, x: int, y: int, z: int) -> Dictionary:
-	var layout: Dictionary = Orbits.build(Bodies.build(source))
-	if layout.is_empty() or not OrbitValidator.validate(layout).is_empty():
+	var layout: Dictionary = _layout_for(source)
+	if layout.is_empty():
 		return _failure("invalid_orbit_layout")
 	var placement: Dictionary = Systems.place(source, layout, galaxy["galaxy_id"], x, y, z)
 	if placement.is_empty() or not Systems.validate(placement, source, layout, galaxy["galaxy_id"], x, y, z).is_empty():
