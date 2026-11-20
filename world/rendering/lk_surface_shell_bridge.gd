@@ -12,8 +12,15 @@ var _old_far: Shader
 var _old_stars: Shader
 var _bound: bool = false
 var signed_height_m: float = 0.0
+var _shell_cached: bool = false
+var _shell_distance: float = NAN
+var _shell_radius: float = NAN
+var _shell_state: Dictionary = {}
+var _shell_evaluations: int = 0
 
 func configure(root: Node3D, camera: Camera3D, far: MeshInstance3D, stars: MultiMeshInstance3D) -> bool:
+	_shell_cached = false
+	_shell_state = {}
 	_far_material = far.material_override as ShaderMaterial
 	_stars_material = stars.material_override as ShaderMaterial
 	if _far_material == null or _stars_material == null:
@@ -29,6 +36,24 @@ func configure(root: Node3D, camera: Camera3D, far: MeshInstance3D, stars: Multi
 	_process(0.0)
 	return true
 
+func coefficient_cache_stats() -> Dictionary:
+	return {"evaluations": _shell_evaluations, "cached": _shell_cached}
+
+# Only coefficient calculation is cached. Upload on every call so material
+# synchronization remains unchanged. Exact inputs: no altitude quantization.
+func _update_shell(distance: float, radius: float) -> void:
+	if not _shell_cached or distance != _shell_distance or radius != _shell_radius:
+		_shell_state = Shell.coefficients(distance, radius)
+		_shell_distance = distance
+		_shell_radius = radius
+		_shell_cached = true
+		_shell_evaluations += 1
+	signed_height_m = _shell_state["height_m"]
+	for material: ShaderMaterial in [_far_material, _stars_material]:
+		material.set_shader_parameter("active_shell_valid", _shell_state["valid"])
+		material.set_shader_parameter("active_shell_stable", _shell_state["stable"])
+		material.set_shader_parameter("active_shell_c", _shell_state["c"])
+
 func _process(_delta: float) -> void:
 	if not _bound or not is_instance_valid(_camera):
 		return
@@ -37,14 +62,11 @@ func _process(_delta: float) -> void:
 	if frame == null or context.is_empty():
 		return
 	var observer: LkPosition64 = frame.to_absolute(_camera.global_position)
-	var state: Dictionary = Shell.coefficients(observer.length(), float(context["body"]["radius_m"]))
-	signed_height_m = state["height_m"]
-	for material: ShaderMaterial in [_far_material, _stars_material]:
-		material.set_shader_parameter("active_shell_valid", state["valid"])
-		material.set_shader_parameter("active_shell_stable", state["stable"])
-		material.set_shader_parameter("active_shell_c", state["c"])
+	_update_shell(observer.length(), float(context["body"]["radius_m"]))
 
 func _exit_tree() -> void:
+	_shell_cached = false
+	_shell_state = {}
 	if not _bound:
 		return
 	if is_instance_valid(_far_material):
