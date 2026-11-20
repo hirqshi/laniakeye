@@ -61,8 +61,7 @@ func _update_terrain_transform() -> void:
 		else:
 			# Hidden collision-layer4 staging sandbox in body-fixed axes near zero.
 			# Avoid astronomical float transforms while camera is far above ground.
-			_pending.global_transform = Transform3D.IDENTITY
-			_pending.force_update_transform()
+			_set_prefetch_sandbox_transform()
 		if is_instance_valid(_flight_viewer):
 			_flight_viewer.requires_visuals = false
 			_flight_viewer.requires_collisions = false
@@ -267,10 +266,10 @@ func _promote_landing_patch() -> void:
 		_auto_busy = false
 		_auto_warm = false
 		_auto_aligning = false
-		_terrain.view_distance = 192
+		_terrain.view_distance = _prefetch_promoted_view_distance()
 		_terrain.lod_distance = 32.0
 		if is_instance_valid(_auto_viewer):
-			_auto_viewer.view_distance = 192
+			_auto_viewer.view_distance = _prefetch_promoted_view_distance()
 		_update_terrain_transform()
 		_flight_status = "AUTO terrain active. Descend to1..4m, G only to walk"
 		print("AutoSurface: ACTIVE total_seconds=%.2f; no G required for preparation" % _auto_elapsed)
@@ -345,3 +344,12 @@ func _prefetch_should_start(height: float, closing: float) -> bool:
 
 func _prefetch_activation_height() -> float:
 	return 512.0
+
+# FRAME_PACING_VIEW_HOOK_V1: legacy scenes keep their original view.
+func _prefetch_promoted_view_distance() -> int:
+	return 192
+
+# PACING_SANDBOX_HOOK_V2: preserve legacy default behavior.
+func _set_prefetch_sandbox_transform() -> void:
+	_pending.global_transform = Transform3D.IDENTITY
+	_pending.force_update_transform()
