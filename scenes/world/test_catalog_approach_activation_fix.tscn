@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://c7og8dnnyytow"]
+
+[ext_resource type="Script" uid="uid://c34i5dhg6c1gi" path="res://scenes/world/test_catalog_approach_activation_fix.gd" id="1"]
+
+[node name="CatalogApproachActivationFix" type="Node3D" unique_id=535474127]
+script = ExtResource("1")

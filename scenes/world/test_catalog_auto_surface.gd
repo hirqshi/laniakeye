@@ -105,12 +105,12 @@ func _tick_flight(delta: float) -> void:
 	if is_finite(_auto_last_height):
 		closing = (_auto_last_height - height) / delta
 	_auto_last_height = height
-	var target_result: Dictionary = AutoPolicy.surface_target(_catalog_frame.inertial_to_body(_flight_absolute), radius)
+	var target_result: Dictionary = _prefetch_surface_target(radius)
 	if not target_result["ok"]:
 		return
 	var target: LkPosition64 = target_result["point"]
 	if _auto_busy:
-		if not AutoPolicy.in_target(target, _auto_target, 96.0) or height > _auto_limit() * 1.2:
+		if _prefetch_target_invalid(target, height):
 			_cancel_landing_patch("left target region")
 			return
 		_poll_auto_surface(delta)
@@ -121,7 +121,7 @@ func _tick_flight(delta: float) -> void:
 		return
 	if AutoPolicy.in_target(target, _anchor, 64.0) and _flight_local_terrain_ready():
 		return
-	if _auto_retry_s > 0.0 or not AutoPolicy.should_start(height, closing, _auto_limit(), maxf(1.0, auto_surface_horizon_s), maxf(1.0, auto_surface_hover_height_m)):
+	if _auto_retry_s > 0.0 or not _prefetch_should_start(height, closing):
 		_auto_candidate_s = 0.0
 		_auto_candidate = null
 		return
@@ -252,7 +252,7 @@ func _promote_landing_patch() -> void:
 		print("AutoSurface: WARM seconds=%.2f data=%d mesh=%d" % [_auto_elapsed, _pending.debug_get_data_block_count(), _pending.debug_get_mesh_block_count()])
 	var height: float = _flight_absolute.length() - float(_context["body"]["radius_m"])
 	var point: LkPosition64 = AutoPolicy.surface_target(_catalog_frame.inertial_to_body(_flight_absolute), float(_context["body"]["radius_m"]))["point"]
-	if height > 512.0 or not AutoPolicy.in_target(point, _auto_target, 48.0):
+	if height > _prefetch_activation_height() or not AutoPolicy.in_target(point, _auto_target, 48.0):
 		return
 	if not _auto_aligning:
 		_auto_aligning = true
@@ -332,3 +332,16 @@ func _process(delta: float) -> void:
 		if auto_surface_enabled:
 			_label.text = _label.text.replace("\nLAND ANYWHERE: G at <=64m prepares patch; descend, G walks | same body only", "")
 		_label.text += "\nAUTO SURFACE %s | Alt+L | preparation needs NO G; G only walks" % auto_surface_enabled
+
+# PREFETCH_HOOKS_V1: defaults preserve original scene behavior.
+func _prefetch_surface_target(radius: float) -> Dictionary:
+	return AutoPolicy.surface_target(_catalog_frame.inertial_to_body(_flight_absolute), radius)
+
+func _prefetch_target_invalid(target: LkPosition64, height: float) -> bool:
+	return not AutoPolicy.in_target(target, _auto_target, 96.0) or height > _auto_limit() * 1.2
+
+func _prefetch_should_start(height: float, closing: float) -> bool:
+	return AutoPolicy.should_start(height, closing, _auto_limit(), maxf(1.0, auto_surface_horizon_s), maxf(1.0, auto_surface_hover_height_m))
+
+func _prefetch_activation_height() -> float:
+	return 512.0

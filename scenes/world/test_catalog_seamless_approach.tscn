@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://cc7qxlukg5gq6"]
+
+[ext_resource type="Script" uid="uid://48d7n81eevl7" path="res://scenes/world/test_catalog_seamless_approach.gd" id="1"]
+
+[node name="CatalogSeamlessApproach" type="Node3D" unique_id=316927271]
+script = ExtResource("1")

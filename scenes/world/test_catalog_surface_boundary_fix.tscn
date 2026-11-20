@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://dyq0x41wcl3hv"]
+
+[ext_resource type="Script" uid="uid://cuv1gdqri3463" path="res://scenes/world/test_catalog_surface_boundary_fix.gd" id="1"]
+
+[node name="CatalogSurfaceBoundaryFix" type="Node3D" unique_id=1173044373]
+script = ExtResource("1")
