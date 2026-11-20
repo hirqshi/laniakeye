@@ -1,7 +1,7 @@
 extends "res://scenes/world/test_catalog_approach_activation_fix.gd"
 
 const ShellBridge = preload("res://world/rendering/lk_surface_shell_bridge.gd")
-const ShellMath = preload("res://world/debug/lk_surface_shell_math.gd")
+const ShellMath = preload("res://world/rendering/lk_surface_shell_math.gd")
 var _surface_shell_bridge: ShellBridge
 var _publish_max_slope_deg: float = 0.0
 

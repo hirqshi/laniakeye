@@ -1,6 +1,6 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://bwxtia7dtvb21"]
 
-[ext_resource type="Script" path="res://scenes/world/test_catalog_surface_contact_v6.gd" id="1"]
+[ext_resource type="Script" uid="uid://d2c6yil8kuuti" path="res://scenes/world/test_catalog_surface_contact_v6.gd" id="1"]
 
-[node name="CatalogSurfaceContact6" type="Node3D"]
+[node name="CatalogSurfaceContact6" type="Node3D" unique_id=2063804649]
 script = ExtResource("1")
