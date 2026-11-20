@@ -1,7 +1,7 @@
 class_name LkSurfaceShellBridge
 extends Node3D
 
-const Shell = preload("res://world/debug/lk_surface_shell_math.gd")
+const Shell = preload("res://world/rendering/lk_surface_shell_math.gd")
 const FarShader = preload("res://world/rendering/lk_far_system_surface_shell.gdshader")
 const StarsShader = preload("res://world/rendering/lk_star_sprites_surface_shell.gdshader")
 var _root: Node3D
