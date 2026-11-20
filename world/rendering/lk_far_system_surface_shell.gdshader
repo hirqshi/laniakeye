@@ -78,7 +78,11 @@ void fragment() {
 		}
 	}
 	if (winner < 0) { discard; }
-	vec3 normal_system = normalize(ray * nearest_relative - body_spheres[winner].xyz);
+	// NORMALIZE_GUARD_SURFACE_V1: cancellation can erase a tiny disc normal.
+	// Do not use an arbitrary epsilon that would remove valid small discs.
+	vec3 normal_delta = ray * nearest_relative - body_spheres[winner].xyz;
+	if (!(dot(normal_delta, normal_delta) > 0.0)) { discard; }
+	vec3 normal_system = normalize(normal_delta);
 	NORMAL = normalize(mat3(VIEW_MATRIX) * normal_system);
 	ALBEDO = vec3(0.0);
 	EMISSION = vec3(0.0);
@@ -92,7 +96,11 @@ void fragment() {
 		ROUGHNESS = surface_roughness;
 		METALLIC = surface_metallic;
 		SPECULAR = surface_specular;
-		float solar_altitude = dot(normal_system, normalize(body_suns[0]));
+		// Missing sun direction is not an arbitrary horizon/daylight direction.
+		float solar_altitude = -1.0;
+		if (dot(body_suns[0], body_suns[0]) > 0.0) {
+			solar_altitude = dot(normal_system, normalize(body_suns[0]));
+		}
 		float visibility = smoothstep(0.0, max(active_horizon_fade_sine, 0.00001), solar_altitude);
 		float ambient_energy = mix(active_night_ambient, active_day_ambient, visibility);
 		IRRADIANCE = vec4(active_ambient_linear * ambient_energy, 1.0);
@@ -100,7 +108,10 @@ void fragment() {
 	} else if (winner == 0 || body_colors[winner].a > 0.5) {
 		EMISSION = body_colors[winner].rgb;
 	} else {
-		float diffuse = max(dot(normal_system, normalize(body_suns[winner])), 0.0);
+		float diffuse = 0.0;
+		if (dot(body_suns[winner], body_suns[winner]) > 0.0) {
+			diffuse = max(dot(normal_system, normalize(body_suns[winner])), 0.0);
+		}
 		EMISSION = body_colors[winner].rgb * (vec3(distant_ambient) + vec3(sun_energy * diffuse));
 	}
 	ALPHA = 1.0;
