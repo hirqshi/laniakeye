@@ -36,8 +36,6 @@ func _enter_flight() -> void:
 		return
 	# Debug Flight must always be available, even after a terrain/reanchor failure.
 	_failed = false
-	if is_instance_valid(_pending) and has_method("_cancel_landing_patch"):
-		_cancel_landing_patch("entering debug flight")
 	var camera: Camera3D = _player.player_camera
 	var absolute: LkPosition64 = _frame.to_absolute(camera.global_position)
 	if absolute.length() - float(_context["body"]["radius_m"]) < 0.5:
