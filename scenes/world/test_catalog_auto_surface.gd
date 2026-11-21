@@ -16,6 +16,7 @@ var _auto_target: LkPosition64
 var _auto_candidate: LkPosition64
 var _auto_candidate_s: float = 0.0
 var _auto_retry_s: float = 0.0
+var _auto_retarget_s: float = 0.0
 var _auto_viewer: VoxelViewer
 var _auto_elapsed: float = 0.0
 var _auto_align_s: float = 0.0
@@ -46,6 +47,12 @@ func _flight_spheres() -> Array:
 		if height > limit + 2.0:
 			# At enormous debug speeds don't skip the approach-entry zone entirely.
 			spheres.append({"center": [-_flight_absolute.x, -_flight_absolute.y, -_flight_absolute.z], "radius": float(_context["body"]["radius_m"]) + limit - 1.0})
+		# Unmissable activation window: while preparation is running, block descent
+		# below activation height - 1. safe_step adds a 0.25 m margin, so the player
+		# can hover at ~activation height + 0.25 but cannot reach the surface before
+		# the terrain activates. Prevents outrunning the window and falling through.
+		if _auto_busy:
+			spheres.append({"center": [-_flight_absolute.x, -_flight_absolute.y, -_flight_absolute.z], "radius": float(_context["body"]["radius_m"]) + _prefetch_activation_height() - 1.0})
 	return spheres
 
 func _choose_anchor(fixed: LkPosition64) -> LkPosition64:
@@ -98,6 +105,7 @@ func _tick_flight(delta: float) -> void:
 	if not auto_surface_enabled:
 		return
 	_auto_retry_s = maxf(0.0, _auto_retry_s - delta)
+	_auto_retarget_s = maxf(0.0, _auto_retarget_s - delta)
 	var radius: float = _context["body"]["radius_m"]
 	var height: float = _flight_absolute.length() - radius
 	var closing: float = 0.0
@@ -110,6 +118,16 @@ func _tick_flight(delta: float) -> void:
 	var target: LkPosition64 = target_result["point"]
 	if _auto_busy:
 		if _prefetch_target_invalid(target, height):
+			# Player drifted off the prepared point but is still inside the auto
+			# band and descending: re-target immediately instead of leaving them
+			# without preparation (which caused eternal loading / fall-through).
+			if height <= _auto_limit() and closing > 0.0 and _auto_retarget_s <= 0.0:
+				_cancel_landing_patch("retarget for new approach point")
+				_auto_retarget_s = 0.5
+				_auto_candidate = target
+				_auto_candidate_s = auto_surface_stable_target_s
+				_start_auto_surface(target, height, closing)
+				return
 			_cancel_landing_patch("left target region")
 			return
 		_poll_auto_surface(delta)
