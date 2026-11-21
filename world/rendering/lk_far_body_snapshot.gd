@@ -104,7 +104,9 @@ static func build(layout: Dictionary, active_id: String, observer: LkPosition64,
 			"radius_relative": radius / distance,
 			"angular_radius_rad": asin(clampf(radius / distance, 0.0, 1.0)),
 			"sun_direction": sun,
-			"inside": distance < radius - 0.5,
+			# The fallback must stop at the physical surface envelope, not the
+			# smooth base sphere: terrain relief can extend above radius_m.
+			"inside": distance < float(body["physical_bound_radius_m"]) - 0.5,
 		})
 	return result
 
