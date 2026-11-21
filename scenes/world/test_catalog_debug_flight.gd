@@ -24,7 +24,7 @@ var _flight_actual_speed: float = 0.0
 var _flight_requested_speed: float = 0.0
 var _flight_reference: String = ""
 var _flight_height: float = 0.0
-var _flight_status: String = "G: debug flight"
+var _flight_status: String = "G: toggle debug flight / exit to walk-EVA"
 var _flight_descriptors: Dictionary = {}
 var _flight_viewer: VoxelViewer
 var _flight_exit_ticks: int = 0
@@ -67,7 +67,7 @@ func _enter_flight() -> void:
 			_flight_descriptors[moon["body"]["id"]] = moon["body"]
 	_flight_active = true
 	_request_stamp = false
-	_flight_status = "FLIGHT: return to original terrain patch to walk"
+	_flight_status = "FLIGHT: G exits to walk/EVA by local gravity"
 	if not _place_flight_absolute(_flight_absolute):
 		_fail_gate("flight absolute-position adapter failed")
 	print("DebugFlight: ENTER body=%s" % _context["body"]["id"])
@@ -193,10 +193,6 @@ func _refuse_flight_landing(reason: String) -> void:
 	_flight_landing_requested = false
 
 func _try_flight_landing() -> void:
-	var fixed: LkPosition64 = _catalog_frame.inertial_to_body(_flight_absolute)
-	if fixed.minus(_anchor).length() > 128.0:
-		_refuse_flight_landing("return within 128 m of departure terrain anchor")
-		return
 	if is_instance_valid(_pending):
 		_refuse_flight_landing("terrain publication pending")
 		return
@@ -205,7 +201,7 @@ func _try_flight_landing() -> void:
 	var ray: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(point + up * 0.1, point - up * 8.0, ACTIVE_LAYER, [_player.get_rid()])
 	var hit: Dictionary = get_world_3d().direct_space_state.intersect_ray(ray)
 	if hit.is_empty():
-		_flight_status = "Landing waits for terrain collision; G cancels"
+		_flight_status = "Landing waits for terrain collision; G exits to walk/EVA"
 		_flight_exit_ticks = 0
 		return
 	var ground: Vector3 = hit["position"]
@@ -216,7 +212,7 @@ func _try_flight_landing() -> void:
 	var local: Vector3 = _terrain.to_local(ground)
 	var area: AABB = AABB(local - Vector3.ONE * 4.0, Vector3.ONE * 8.0)
 	if not _terrain.is_area_meshed(area, 0) or not _voxel_tool.is_area_editable(area):
-		_flight_status = "Landing waits for terrain data/mesh; G cancels"
+		_flight_status = "Landing waits for terrain data/mesh; G exits to walk/EVA"
 		_flight_exit_ticks = 0
 		return
 	var basis: Basis = _player._basis_from_up(up, _flight_basis)
@@ -254,12 +250,34 @@ func _try_flight_landing() -> void:
 	_flight_status = "WALK restored after five collision-ready ticks"
 	print("DebugFlight: LANDED body=%s revision=%d" % [_context["body"]["id"], _edit_journal.get_revision()])
 
+# G exits Debug Flight anywhere: player is restored with normal collision and
+# attached to the catalog frame. LkPlayerController then decides walk vs EVA
+# from sampled gravity (g > eva_gravity_threshold -> walk, else EVA with
+# LkEvaDrive applying gravity). No departure-anchor distance restriction.
+func _exit_flight_direct() -> void:
+	var up: Vector3 = _flight_absolute.direction()
+	_player.camera_pivot.transform = _flight_saved_pivot
+	_player.player_camera.transform = _flight_saved_camera
+	_player.velocity = Vector3.ZERO
+	_player.up_direction = up
+	_player.dominant_body_id = StringName(_context["body"]["id"])
+	_player.collision_layer = 2
+	_player.collision_mask = ACTIVE_LAYER
+	_player.attach_to_frame(_catalog_frame)
+	_player.set_controllable(true)
+	_player.set_physics_process(true)
+	_player.reset_physics_interpolation()
+	_flight_active = false
+	_flight_landing_requested = false
+	_flight_exit_ticks = 0
+	_flight_status = "EXIT: walk/EVA by local gravity"
+	print("DebugFlight: EXIT_DIRECT body=%s" % _context["body"]["id"])
+
 func _physics_process(delta: float) -> void:
 	if _flight_toggle_requested:
 		_flight_toggle_requested = false
 		if _flight_active:
-			_flight_landing_requested = not _flight_landing_requested
-			_flight_exit_ticks = 0
+			_exit_flight_direct()
 		else:
 			_enter_flight()
 	if _flight_active:
@@ -311,7 +329,7 @@ func _close_local_world() -> void:
 func _process(delta: float) -> void:
 	super._process(delta)
 	if _initialised and _flight_show_telemetry:
-		_label.text += "\n\nDEBUG FLIGHT %s | G toggle/request walk | Alt+V telemetry" % _flight_active
+		_label.text += "\n\nDEBUG FLIGHT %s | G toggle / exit walk-EVA | Alt+V telemetry" % _flight_active
 		_label.text += "\nWASD + mouse | Space up / C down | wheel x2 / x0.5 | Shift x4 | Backslash reset"
 		if _flight_active:
 			_label.text += "\nSpeed %s/s | target %s/s | multiplier x%.3f" % [NavData.distance_text(_flight_actual_speed), NavData.distance_text(_flight_requested_speed), _flight_multiplier]

@@ -9,6 +9,7 @@ var _auto4_request_in_progress: bool = false
 var _auto4_prepare_pending: bool = false
 var _auto4_retry: float = 0.0
 var _auto4_cooldown: float = 0.0
+var _auto4_select_timer: float = 0.0
 var _auto4_selected: String = ""
 var _auto4_active: String = ""
 var _auto4_reason: String = ""
@@ -31,7 +32,7 @@ func _load_target(index: int) -> void:
 	_auto4_active = String(_context["body"]["id"])
 	_auto4_parent_slot = int(_context["address"]["planet_slot"])
 	_auto4_create_ui()
-	print("AutoTransfer4: BIND selected-target-only=true full_step_entry_guard=true auto=%s" % auto_transfer_enabled)
+	print("AutoTransfer4: BIND auto-nearest=true full_step_entry_guard=true auto=%s" % auto_transfer_enabled)
 
 func _transfer_log_target() -> void:
 	super._transfer_log_target()
@@ -71,8 +72,42 @@ func _auto4_geometry() -> Dictionary:
 		"height": distance - radius, "source_height": observer.length() - float(_context["body"]["radius_m"]),
 		"radius": radius, "switch": limits["switch_m"], "prepare": limits["prepare_m"]}
 
+# Automatic nearest non-active destination, re-evaluated periodically.
+func _auto4_select_nearest() -> void:
+	var active_id: String = String(_context["body"]["id"])
+	var observer: LkPosition64 = _flight_absolute if _flight_active else _frame.to_absolute(_player.player_camera.global_position)
+	var states: Dictionary = _flight_system_states()
+	if states.get("system_id", "") != _nav_layout["system_id"]:
+		return
+	var best_index: int = -1
+	var best_distance: float = INF
+	var epoch: float = _universe_clock.now_s()
+	for index: int in range(_transfer_model.entries.size()):
+		var entry: Dictionary = _transfer_model.entries[index]
+		if entry["id"] == active_id:
+			continue
+		var result: Dictionary = TransferFrameMath2.rebase(states, active_id, entry["id"], observer, epoch)
+		if not result["ok"]:
+			continue
+		var distance: float = result["observer"].length()
+		if not is_finite(distance) or distance <= 0.0:
+			continue
+		if distance < best_distance:
+			best_distance = distance
+			best_index = index
+	if best_index < 0:
+		return
+	var current: Dictionary = _transfer_model.current()
+	if not current.is_empty() and current["id"] == _transfer_model.entries[best_index]["id"]:
+		return
+	_transfer_cancel("auto nearest destination", false)
+	_transfer_model.selected = best_index
+	_transfer_hud_s = 1.0
+	_transfer_log_target()
+
 # Preserve ALL ancestor spheres (including current-body approach guard), then
 # append one selected-target entry guard. Original safe_step consumes full array.
+# Flight-only: in EVA the player moves via physics, no bounded-step guard.
 func _flight_spheres() -> Array:
 	_auto4_guard_epoch = NAN
 	_auto4_guard_target = ""
@@ -87,13 +122,13 @@ func _flight_spheres() -> Array:
 	_auto4_guard_target = geometry["entry"]["id"]
 	return spheres
 
-# Automatic moving handover is valid only after THIS epoch's bounded full step.
-# Parent still checks heights, errors, journal, busy/publication and save gates.
+# Automatic handover is valid after THIS epoch's guard (flight sphere guard or
+# EVA direct guard set in _physics_process). Parent checks heights/errors/etc.
 func _handover_motion_allowed() -> bool:
 	if not _auto4_request_in_progress:
 		return super._handover_motion_allowed()
 	var geometry: Dictionary = _auto4_geometry()
-	return geometry["ok"] and _flight_active and _auto4_guard_epoch == _universe_clock.now_s() and _auto4_guard_target == geometry["entry"]["id"] and geometry["source_height"] >= HANDOVER_MIN_HEIGHT_M and geometry["height"] >= HANDOVER_MIN_HEIGHT_M and geometry["height"] <= HANDOVER_MAX_HEIGHT_M
+	return geometry["ok"] and _auto4_guard_epoch == _universe_clock.now_s() and _auto4_guard_target == geometry["entry"]["id"] and geometry["source_height"] >= HANDOVER_MIN_HEIGHT_M and geometry["height"] >= HANDOVER_MIN_HEIGHT_M and geometry["height"] <= HANDOVER_MAX_HEIGHT_M
 
 func _auto4_wait(reason: String) -> void:
 	if reason != _auto4_reason:
@@ -112,10 +147,14 @@ func _physics_process(delta: float) -> void:
 		_auto4_ui_age = 1.0
 	_auto4_cooldown = maxf(0.0, _auto4_cooldown - delta)
 	_auto4_retry = maxf(0.0, _auto4_retry - delta)
-	if not auto_transfer_enabled or not _flight_active or _auto4_cooldown > 0.0:
+	if not auto_transfer_enabled or _auto4_cooldown > 0.0:
 		return
 	if is_instance_valid(_auto4_panel) and _auto4_panel.visible:
 		return
+	_auto4_select_timer -= delta
+	if _auto4_select_timer <= 0.0:
+		_auto4_select_timer = 0.5
+		_auto4_select_nearest()
 	var geometry: Dictionary = _auto4_geometry()
 	if not geometry["ok"]:
 		return
@@ -151,9 +190,11 @@ func _physics_process(delta: float) -> void:
 		return
 	if _auto4_retry > 0.0:
 		return
+	# EVA has no flight sphere guard; set the guard for this tick directly.
+	_auto4_guard_epoch = geometry["epoch"]
+	_auto4_guard_target = target_id
 	_auto4_request_in_progress = true
 	var from_id: String = active
-	# Route3 audit wrapper retained; V2 implementation remains authoritative.
 	super._handover()
 	_auto4_request_in_progress = false
 	_auto4_retry = 1.0
@@ -312,7 +353,7 @@ func _process(delta: float) -> void:
 	else:
 		_auto4_pointer.projection = {}
 	_auto4_pointer.queue_redraw()
-	_label.text += "\nAUTO TRANSFER4 %s | Tab destinations | automatic F/handovers, G still walks" % auto_transfer_enabled
+	_label.text += "\nAUTO TRANSFER4 %s | auto nearest target, flight+EVA handovers" % auto_transfer_enabled
 	_label.text += "\n" + _auto4_reason
 
 # Tab must be handled before Control focus navigation consumes it.

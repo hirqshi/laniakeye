@@ -14,8 +14,8 @@ func _handover_refuse(reason: String) -> void:
 	print("Transfer2: REFUSED " + reason + "; active world retained")
 
 func _handover() -> void:
-	if not _flight_active or _waiting or _failed:
-		_handover_refuse("enter stable Debug Flight first")
+	if _waiting or _failed:
+		_handover_refuse("world is not ready for reference handover")
 		return
 	if not _handover_motion_allowed():
 		_handover_refuse("release movement keys and stop first")
@@ -42,13 +42,15 @@ func _handover() -> void:
 	if states.get("system_id", "") != _nav_layout["system_id"]:
 		_handover_refuse("system snapshot mismatch")
 		return
-	var translated: Dictionary = TransferFrameMath2.rebase(states, old_id, entry["id"], _flight_absolute, epoch)
+	# Observer: flight absolute in Debug Flight, live frame absolute in EVA.
+	var observer: LkPosition64 = _flight_absolute if _flight_active else _frame.to_absolute(_player.player_camera.global_position)
+	var translated: Dictionary = TransferFrameMath2.rebase(states, old_id, entry["id"], observer, epoch)
 	if not translated["ok"]:
 		_handover_refuse(str(translated["error"]))
 		return
-	var observer: LkPosition64 = translated["observer"]
-	var old_height: float = _flight_absolute.length() - float(_context["body"]["radius_m"])
-	var new_height: float = observer.length() - float(entry["body"]["radius_m"])
+	var new_observer: LkPosition64 = translated["observer"]
+	var old_height: float = observer.length() - float(_context["body"]["radius_m"])
+	var new_height: float = new_observer.length() - float(entry["body"]["radius_m"])
 	if old_height < HANDOVER_MIN_HEIGHT_M or new_height < HANDOVER_MIN_HEIGHT_M or new_height > HANDOVER_MAX_HEIGHT_M:
 		_handover_refuse("need >=10km above departure and10..2000km above destination; target height=%.1fkm" % (new_height / 1000.0))
 		return
@@ -69,7 +71,7 @@ func _handover() -> void:
 		return
 	var target_frame = SharedBodyFrame.new(StringName(entry["id"]), target_context["spin"], _universe_clock)
 	var radius: float = float(entry["body"]["radius_m"])
-	var fixed_observer: LkPosition64 = target_frame.inertial_to_body(observer)
+	var fixed_observer: LkPosition64 = target_frame.inertial_to_body(new_observer)
 	var q: LkPosition64 = LkPosition64.new(fixed_observer.x / fixed_observer.length() * radius, fixed_observer.y / fixed_observer.length() * radius, fixed_observer.z / fixed_observer.length() * radius)
 	# Keep the deterministic lattice used by the old per-body spawn harness.
 	var diagonal: float = 1.0 / sqrt(2.0)
@@ -107,7 +109,7 @@ func _handover() -> void:
 		"body_frame": _catalog_frame, "surface": _surface, "gravity": _gravity,
 		"terrain": _terrain, "anchor": _anchor, "lattice": _anchor_lattice_origin,
 		"q0": _q0, "fixed": _start_fixed, "u0": _u0, "center": _center,
-		"pool": _cpu4_pool, "absolute": _flight_absolute.copy()}
+		"pool": _cpu4_pool, "absolute": observer.copy()}
 	var camera_id: int = _player.player_camera.get_instance_id()
 	var basis_before: Basis = _player.player_camera.global_basis
 	_context = target_context
@@ -125,13 +127,13 @@ func _handover() -> void:
 	_start_fixed = q.copy()
 	_u0 = q.relative_to(anchor)
 	_cpu4_pool = pool
-	_flight_absolute = observer
+	_flight_absolute = new_observer
 	add_child(terrain)
 	_voxel_tool = terrain.get_voxel_tool()
 	_voxel_tool.channel = VoxelBuffer.CHANNEL_SDF
 	_voxel_tool.set_raycast_binary_search_iterations(8)
 	_player.setup(_frame, gravity)
-	if not _place_flight_absolute(observer):
+	if not _place_flight_absolute(new_observer):
 		_handover_rollback(saved, terrain)
 		_handover_refuse("coordinate-frame adapter failed; restored departure")
 		return
@@ -150,7 +152,10 @@ func _handover() -> void:
 	_handover_is_moon = int(entry["moon_slot"]) >= 0
 	_player.dominant_body_id = StringName(entry["id"])
 	_player.velocity = Vector3.ZERO
-	_player.detach_from_frame()
+	if _flight_active:
+		_player.detach_from_frame()
+	else:
+		_player.attach_to_frame(_catalog_frame)
 	_flight_landing_requested = false
 	_flight_exit_ticks = 0
 	_flight_height = new_height
@@ -192,7 +197,7 @@ func _handover() -> void:
 	_transfer_cancel("reference handover completed", false)
 	_handover_status = "ACTIVE BODY CHANGED; descend; AUTO prepares live terrain; G walks only after checks"
 	_flight_status = _handover_status
-	print("Transfer2: ACTIVE from=%s to=%s epoch=%.6f height_m=%.3f roundtrip_error_m=%.9f system_error_m=%.9f camera_same=%s basis_preserved=%s journal_revision=%d" % [old_id, entry["id"], epoch, new_height, translated["roundtrip_error_m"], translated["system_error_m"], camera_id == _player.player_camera.get_instance_id(), basis_before.is_equal_approx(_player.player_camera.global_basis), journal.get_revision()])
+	print("Transfer2: ACTIVE from=%s to=%s epoch=%.6f height_m=%.3f roundtrip_error_m=%.9f system_error_m=%.9f camera_same=%s basis_preserved=%s journal_revision=%d eva=%s" % [old_id, entry["id"], epoch, new_height, translated["roundtrip_error_m"], translated["system_error_m"], camera_id == _player.player_camera.get_instance_id(), basis_before.is_equal_approx(_player.player_camera.global_basis), journal.get_revision(), not _flight_active])
 	print("Transfer2: live_surface_ready=false; original AUTO/collision/G gates remain authoritative; sandbox used for validation/cache warmup only")
 
 func _handover_make_terrain(generator: VoxelGeneratorScript, body: Dictionary) -> VoxelLodTerrain:
@@ -202,7 +207,6 @@ func _handover_make_terrain(generator: VoxelGeneratorScript, body: Dictionary) -
 	terrain.mesher = VoxelMesherTransvoxel.new()
 	terrain.lod_count = 5
 	terrain.lod_distance = 32.0
-	terrain.mesh_block_size = 16
 	terrain.view_distance = 64
 	terrain.voxel_bounds = AABB(Vector3(-256.0, -256.0, -256.0), Vector3(512.0, 512.0, 512.0))
 	terrain.generate_collisions = true
@@ -302,7 +306,9 @@ func _process(delta: float) -> void:
 		_label.text += "\n" + _handover_status
 
 # TRANSFER4_MOTION_HOOK_V1: manual/default path still requires stop.
+# Flight uses _flight_actual_speed; EVA uses live player velocity.
 func _handover_motion_allowed() -> bool:
-	return absf(_flight_actual_speed) <= 0.01
+	var speed: float = _flight_actual_speed if _flight_active else _player.velocity.length()
+	return speed <= 0.01
 
 # TRANSFER_TOOL_REBIND_FIX_V1: voxel tool follows terrain on commit AND rollback.
