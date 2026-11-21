@@ -1,21 +1,8 @@
 shader_type spatial;
 render_mode skip_vertex_transform, diffuse_burley, specular_schlick_ggx, fog_disabled, cull_disabled, depth_draw_never, depth_test_disabled;
 
-uniform sampler2D scene_depth : hint_depth_texture, repeat_disable, filter_nearest;
-uniform int body_count = 0;
-uniform vec4 body_spheres[64];
-uniform float body_scales[64];
-uniform vec4 body_colors[64];
-uniform vec3 body_suns[64];
-uniform bool active_inside = false; // legacy parameter, NOT a global sky kill switch
-uniform float active_cutoff_m = 128.0; // compatibility only, no distance cutout
-uniform float active_fade_m = 32.0;
-uniform float distant_ambient = 0.025;
-uniform float sun_energy = 1.0;
-uniform float surface_roughness = 1.0;
-uniform float surface_metallic = 0.0;
-uniform float surface_specular = 0.5;
-uniform bool debug_active_albedo = false;
+#include "res://world/rendering/lk_far_system_common.gdshaderinc"
+
 uniform vec3 active_ambient_linear = vec3(0.38, 0.45, 0.60);
 uniform float active_day_ambient = 0.18;
 uniform float active_night_ambient = 0.035;
@@ -24,13 +11,6 @@ uniform float active_horizon_fade_sine = 0.02;
 uniform bool active_shell_valid = false;
 uniform bool active_shell_stable = false;
 uniform float active_shell_c = 0.0;
-
-void vertex() {
-	vec4 clip = vec4(VERTEX.xy, 1.0, 1.0);
-	vec4 near_view = INV_PROJECTION_MATRIX * clip;
-	VERTEX = near_view.xyz / near_view.w;
-	POSITION = clip;
-}
 
 void fragment() {
 	if (texture(scene_depth, SCREEN_UV).r > 0.0) { discard; }
