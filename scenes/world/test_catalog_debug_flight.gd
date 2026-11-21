@@ -254,6 +254,8 @@ func _try_flight_landing() -> void:
 # attached to the catalog frame. LkPlayerController then decides walk vs EVA
 # from sampled gravity (g > eva_gravity_threshold -> walk, else EVA with
 # LkEvaDrive applying gravity). No departure-anchor distance restriction.
+# Viewer requires flags must be restored: a distant flight patch may have left
+# them false, which would starve the next staging terrain of block requests.
 func _exit_flight_direct() -> void:
 	var up: Vector3 = _flight_absolute.direction()
 	_player.camera_pivot.transform = _flight_saved_pivot
@@ -267,6 +269,9 @@ func _exit_flight_direct() -> void:
 	_player.set_controllable(true)
 	_player.set_physics_process(true)
 	_player.reset_physics_interpolation()
+	if is_instance_valid(_flight_viewer):
+		_flight_viewer.requires_visuals = true
+		_flight_viewer.requires_collisions = true
 	_flight_active = false
 	_flight_landing_requested = false
 	_flight_exit_ticks = 0
