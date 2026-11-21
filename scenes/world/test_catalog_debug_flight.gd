@@ -250,14 +250,22 @@ func _try_flight_landing() -> void:
 	_flight_status = "WALK restored after five collision-ready ticks"
 	print("DebugFlight: LANDED body=%s revision=%d" % [_context["body"]["id"], _edit_journal.get_revision()])
 
-# G exits Debug Flight anywhere: player is restored with normal collision and
-# attached to the catalog frame. LkPlayerController then decides walk vs EVA
-# from sampled gravity (g > eva_gravity_threshold -> walk, else EVA with
-# LkEvaDrive applying gravity). No departure-anchor distance restriction.
-# Viewer requires flags must be restored: a distant flight patch may have left
-# them false, which would starve the next staging terrain of block requests.
+# G exits Debug Flight anywhere ONLY when the active terrain is actually meshed
+# below the player. After auto-handover the live terrain may still be inactive
+# (collision_layer=0, visible=false) if AutoSurface cancelled; exiting then
+# leaves the player with no collision and they fall through the planet.
+# A downward raycast against ACTIVE_LAYER gates the exit; if no mesh is found,
+# Debug Flight stays active with a clear status instead of dropping the player
+# into a void.
 func _exit_flight_direct() -> void:
 	var up: Vector3 = _flight_absolute.direction()
+	var point: Vector3 = _player.global_position
+	var ray: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(point + up * 0.1, point - up * 64.0, ACTIVE_LAYER, [_player.get_rid()])
+	var hit: Dictionary = get_world_3d().direct_space_state.intersect_ray(ray)
+	if hit.is_empty():
+		_flight_status = "EXIT refused: no active terrain mesh below; keep flying or wait for surface"
+		print("DebugFlight: EXIT_REFUSED body=%s no terrain below" % _context["body"]["id"])
+		return
 	_player.camera_pivot.transform = _flight_saved_pivot
 	_player.player_camera.transform = _flight_saved_camera
 	_player.velocity = Vector3.ZERO
