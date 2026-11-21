@@ -203,7 +203,7 @@ func _fly(delta: float) -> void:
 	)
 	is_running = Input.is_action_pressed("run") and input_dir.length() > 0.1
 	var braking: bool = Input.is_action_pressed("eva_brake")
-	velocity = _eva.step(velocity, global_basis, input_dir, braking, delta)
+	velocity = _eva.step(velocity, global_basis, input_dir, braking, delta, Vector3.ZERO, gravity_acceleration)
 	move_and_slide()
 	_was_on_floor = false
 	moved.emit(input_dir.length() > 0.1, is_running)
