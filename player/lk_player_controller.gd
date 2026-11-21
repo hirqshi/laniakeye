@@ -28,6 +28,7 @@ signal gravity_mode_changed(is_zero_g: bool)
 @export var floor_snap_m: float = 0.35
 @export var gravity_switch_ratio: float = 1.1
 @export var rebase_after_move: bool = true
+@export var eva_gravity_threshold: float = 0.05
 
 var is_controllable: bool = true
 var is_running: bool = false
@@ -41,6 +42,7 @@ var _has_gravity: bool = false
 var _was_on_floor: bool = false
 var _carrier_id: StringName = &""
 var _carry_residual: LkPosition64 = LkPosition64.new()
+var _eva: LkEvaDrive = LkEvaDrive.new()
 
 
 func setup(frame: LkCoordinateFrame, gravity: LkGravityService) -> void:
@@ -127,7 +129,10 @@ func _physics_process(delta: float) -> void:
 	if has_up:
 		gravity_acceleration = sample["acceleration"]
 		up_direction = sample["up"]
-		_walk(delta)
+		if gravity_acceleration.length() > eva_gravity_threshold:
+			_walk(delta)
+		else:
+			_fly(delta)
 	else:
 		gravity_acceleration = Vector3.ZERO
 		_fly(delta)
@@ -197,9 +202,8 @@ func _fly(delta: float) -> void:
 		Input.get_axis("move_forward", "move_back")
 	)
 	is_running = Input.is_action_pressed("run") and input_dir.length() > 0.1
-	var speed: float = zero_g_speed * (1.5 if is_running else 1.0)
-	var move_dir: Vector3 = (global_basis * input_dir).normalized() if input_dir.length() > 0.01 else Vector3.ZERO
-	velocity = velocity.lerp(move_dir * speed, 8.0 * delta)
+	var braking: bool = Input.is_action_pressed("eva_brake")
+	velocity = _eva.step(velocity, global_basis, input_dir, braking, delta)
 	move_and_slide()
 	_was_on_floor = false
 	moved.emit(input_dir.length() > 0.1, is_running)
