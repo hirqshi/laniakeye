@@ -121,7 +121,7 @@ func _flight_local_terrain_ready() -> bool:
 	var point: Vector3 = _player.global_position
 	var up: Vector3 = _flight_absolute.direction()
 	var ray: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(point + up * 0.1, point - up * 64.0, ACTIVE_LAYER, [_player.get_rid()])
-	var hit: Dictionary = get_world_3d().direct_space_state.intersect_ray(query)
+	var hit: Dictionary = get_world_3d().direct_space_state.intersect_ray(ray)
 	if hit.is_empty():
 		return false
 	var local: Vector3 = _terrain.to_local(hit["position"])
@@ -203,7 +203,7 @@ func _try_flight_landing() -> void:
 	var up: Vector3 = _flight_absolute.direction()
 	var point: Vector3 = _player.global_position
 	var ray: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(point + up * 0.1, point - up * 8.0, ACTIVE_LAYER, [_player.get_rid()])
-	var hit: Dictionary = get_world_3d().direct_space_state.intersect_ray(query)
+	var hit: Dictionary = get_world_3d().direct_space_state.intersect_ray(ray)
 	if hit.is_empty():
 		_flight_status = "Landing waits for terrain collision; G cancels"
 		_flight_exit_ticks = 0
