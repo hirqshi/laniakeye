@@ -58,7 +58,11 @@ void fragment() {
 		}
 	}
 	if (winner < 0) { discard; }
-	vec3 normal_system = normalize(ray * nearest_relative - body_spheres[winner].xyz);
+	// Float32 cancellation can erase the hit normal of a tiny disc.
+	// Reject only a non-positive squared length, not an arbitrary epsilon.
+	vec3 normal_delta = ray * nearest_relative - body_spheres[winner].xyz;
+	if (!(dot(normal_delta, normal_delta) > 0.0)) { discard; }
+	vec3 normal_system = normalize(normal_delta);
 	NORMAL = normalize(mat3(VIEW_MATRIX) * normal_system);
 	ALBEDO = vec3(0.0);
 	EMISSION = vec3(0.0);
