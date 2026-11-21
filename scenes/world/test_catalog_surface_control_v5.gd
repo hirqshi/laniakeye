@@ -41,7 +41,7 @@ func _control5_gravity_sample() -> Dictionary:
 	var sample: Dictionary = _gravity.sample(point, StringName(_context["body"]["id"]), _player.gravity_switch_ratio)
 	var acceleration: Vector3 = sample["acceleration"]
 	var magnitude: float = acceleration.length()
-	return {"valid": acceleration.is_finite() and is_finite(magnitude), "g": magnitude, "has_up": sample["has_up"], "dominant": sample["dominant_id"]}
+	return {"valid": acceleration.is_finite() and is_finite(magnitude), "g": magnitude, "has_up": sample["has_up"], "up": sample["up"], "dominant": sample["dominant_id"]}
 
 func _try_flight_landing() -> void:
 	if _control5_assisted:
@@ -62,23 +62,38 @@ func _try_flight_landing() -> void:
 	if mode == "NORMAL":
 		super._try_flight_landing()
 		return
-	# Weak gravity: never invoke physical walking or announce LANDED.
-	# Keep the existing full flight/AUTO/collision/clock path, only reduce speed.
+	# Weak gravity: exit Debug Flight into physical EVA with LkEvaDrive.
+	# No hover check, no 5-tick wait, no Assist. Restore player control and physics.
 	if _auto_busy or _landing_preparing or is_instance_valid(_pending):
-		_refuse_flight_landing("weak gravity: wait for live AUTO terrain; then G enters assisted EVA, not walking")
+		_refuse_flight_landing("weak gravity: wait for live AUTO terrain; then G enters physical EVA")
 		return
 	if not _flight_local_terrain_ready():
 		_refuse_flight_landing("weak gravity: live nearby terrain not ready; remain in protected flight")
 		return
-	_control5_assisted = true
+	var up: Vector3 = sample["up"]
+	var basis: Basis = _player._basis_from_up(up, _flight_basis)
+	_player.global_transform = Transform3D(basis, _player.global_position)
+	_player.camera_pivot.transform = _flight_saved_pivot
+	_player.player_camera.transform = _flight_saved_camera
+	_player.velocity = Vector3.ZERO
+	_player.up_direction = up
+	_player.dominant_body_id = StringName(_context["body"]["id"])
+	_player.collision_layer = 2
+	_player.collision_mask = ACTIVE_LAYER
+	_player.attach_to_frame(_catalog_frame)
+	_player.set_controllable(true)
+	_player.set_physics_process(true)
+	_player.reset_physics_interpolation()
+	_flight_active = false
 	_flight_landing_requested = false
 	_flight_exit_ticks = 0
-	_flight_status = "EVA ASSIST: WASD / Space / C; wheel slows; G returns to debug cruise; NOT physical walking"
-	print("SurfaceControl5: EVA_ASSIST_ENTER body=%s g=%.9f has_up=%s debug_flight_retained=true walking_reanchor=false" % [_context["body"]["id"], sample["g"], sample["has_up"]])
+	_terrain.visible = true
+	_terrain.collision_layer = ACTIVE_LAYER
+	_flight_status = "EVA: inertial thrust active; WASD / Space / C; brake decelerates"
+	print("SurfaceControl5: EVA_ENTER body=%s g=%.9f has_up=%s physical_flight=true walking_reanchor=false" % [_context["body"]["id"], sample["g"], sample["has_up"]])
 
 func _flight_speed_at_height(height: float, multiplier: float) -> float:
-	var original: float = super._flight_speed_at_height(height, multiplier)
-	return SurfacePolicy5.speed(original, _control5_assisted, assisted_eva_max_speed_mps)
+	return super._flight_speed_at_height(height, multiplier)
 
 func _physics_process(delta: float) -> void:
 	super._physics_process(delta)
