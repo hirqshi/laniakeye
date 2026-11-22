@@ -9,6 +9,11 @@ const BodyStore = preload("res://world/runtime/lk_body_journal_store.gd")
 const Identity = preload("res://world/generation/lk_world_identity.gd")
 const OrbitMotion = preload("res://world/generation/lk_kepler_motion.gd")
 
+# A walk reanchor builds a +-256 m patch around the player. It can only mesh
+# when the surface lies inside that patch, so airborne players must be low.
+const REANCHOR_START_HEIGHT_M: float = 96.0
+const REANCHOR_CANCEL_HEIGHT_M: float = 192.0
+
 @export var galaxy_index: int = 0
 @export var sector_x: int = 0
 @export var sector_y: int = 0
@@ -290,18 +295,28 @@ func _cancel_pending_patch(reason: String) -> void:
 	_build_reason = ""
 
 	# A cancelled walk reanchor must not retain the movement pause.
-	# The player remains airborne and must be able to resume EVA control.
 	if _movement_paused:
 		_resume_movement()
 
 	print("CatalogPlanet: PATCH CANCELLED reason=%s; flight available" % reason)
 
 
-func _grounded_for_reanchor() -> bool:
-	# Walk reanchor is a surface-support operation. It must not start while
-	# the player is airborne after Debug Flight/EVA, because the old collider
-	# may already be far below and the staging patch cannot be validated.
-	return _player.is_on_floor()
+func _reanchor_height_m() -> float:
+	var absolute: LkPosition64 = _frame.to_absolute(_player.global_position)
+	return absolute.length() - float(_context["body"]["radius_m"])
+
+
+func _reanchor_supported() -> bool:
+	# Standing players always may reanchor (validated walking path). An airborne
+	# player may only start one if the surface is inside the new +-256 m patch;
+	# high above the surface the patch is empty air and can never mesh.
+	return _player.is_on_floor() or _reanchor_height_m() <= REANCHOR_START_HEIGHT_M
+
+
+# Descendants that own the pending patch themselves (AutoSurface staging) return
+# true so this walking loop does not pause, time out or commit their sandbox.
+func _walk_reanchor_blocked() -> bool:
+	return false
 
 
 func _physics_process(delta: float) -> void:
@@ -315,30 +330,33 @@ func _physics_process(delta: float) -> void:
 	_player.carry_with_frame(_rotation, step, float(_context["body"]["physical_bound_radius_m"]) + 1000.0)
 	var distance: float = _anchor_distance_m()
 	if not is_instance_valid(_pending):
-		if distance >= REANCHOR_DISTANCE_M and _grounded_for_reanchor():
+		if distance >= REANCHOR_DISTANCE_M and _reanchor_supported():
 			_start_build()
-	else:
+	elif not _walk_reanchor_blocked():
 		_pending_time_s += delta
-		if distance >= BUILD_GUARD_DISTANCE_M:
-			_pause_movement()
-		if _check_pending():
-			_pending_stable_ticks += 1
+		if (
+			_reanchor_height_m() > REANCHOR_CANCEL_HEIGHT_M
+			and not _player.is_on_floor()
+			and _build_reason in ["WAITING FOR MESH", "OLD COLLIDER RAY MISSED"]
+		):
+			# The player left the surface; the staging patch is empty air.
+			_cancel_pending_patch("player above walk-reanchor support height")
 		else:
-			_pending_stable_ticks = 0
-		if _pending_stable_ticks >= REQUIRED_STABLE_TICKS:
-			_commit_patch()
-		elif _pending_time_s > BUILD_TIMEOUT_S:
-			if _build_reason == "OLD COLLIDER RAY MISSED":
-				# Player flew away in EVA; old patch no longer under player.
-				# Cancel staging instead of failing; Debug Flight remains available.
-				_cancel_pending_patch("old collider ray missed")
-			elif _build_reason == "WAITING FOR MESH" and not _grounded_for_reanchor():
-				# The player left the surface after a walk reanchor began.
-				# Keep the old terrain and release EVA rather than waiting for
-				# a staging patch that is no longer the relevant support patch.
-				_cancel_pending_patch("player airborne during walk reanchor")
+			if distance >= BUILD_GUARD_DISTANCE_M:
+				_pause_movement()
+			if _check_pending():
+				_pending_stable_ticks += 1
 			else:
-				_fail_gate("catalog patch timeout: " + _build_reason)
+				_pending_stable_ticks = 0
+			if _pending_stable_ticks >= REQUIRED_STABLE_TICKS:
+				_commit_patch()
+			elif _pending_time_s > BUILD_TIMEOUT_S:
+				if _build_reason == "OLD COLLIDER RAY MISSED":
+					_cancel_pending_patch("old collider ray missed")
+				elif _build_reason == "WAITING FOR MESH" and not _reanchor_supported():
+					_cancel_pending_patch("surface outside walk-reanchor patch")
+				else:
+					_fail_gate("catalog patch timeout: " + _build_reason)
 	if _failed or not _update_stream_guard(delta):
 		return
 	if _request_stamp:
