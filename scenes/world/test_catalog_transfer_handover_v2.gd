@@ -42,8 +42,16 @@ func _handover() -> void:
 	if states.get("system_id", "") != _nav_layout["system_id"]:
 		_handover_refuse("system snapshot mismatch")
 		return
-	# Observer: flight absolute in Debug Flight, live frame absolute in EVA.
-	var observer: LkPosition64 = _flight_absolute if _flight_active else _frame.to_absolute(_player.player_camera.global_position)
+	# EVA transfers the player root, not its offset camera.
+	var observer: LkPosition64 = _flight_absolute if _flight_active else _player.get_absolute_position()
+	# Existing body-relative model: remove old rotational carry, not orbital motion.
+	var transfer_velocity: Vector3 = _player.velocity
+	if not _flight_active and _player._carrier_id == _catalog_frame.body_id:
+		var rel: LkPosition64 = _catalog_frame.relative_position(_frame.get_origin(), _player.global_position)
+		transfer_velocity = _catalog_frame.to_inertial_velocity(transfer_velocity, rel)
+	if not _flight_active and not transfer_velocity.is_finite():
+		_handover_refuse("nonfinite transfer velocity")
+		return
 	var translated: Dictionary = TransferFrameMath2.rebase(states, old_id, entry["id"], observer, epoch)
 	if not translated["ok"]:
 		_handover_refuse(str(translated["error"]))
@@ -109,7 +117,10 @@ func _handover() -> void:
 		"body_frame": _catalog_frame, "surface": _surface, "gravity": _gravity,
 		"terrain": _terrain, "anchor": _anchor, "lattice": _anchor_lattice_origin,
 		"q0": _q0, "fixed": _start_fixed, "u0": _u0, "center": _center,
-		"pool": _cpu4_pool, "absolute": observer.copy()}
+		"pool": _cpu4_pool, "absolute": observer.copy(),
+		"velocity": _player.velocity, "carrier": _player._carrier_id,
+		"residual": _player._carry_residual.copy(), "basis": _player.global_basis,
+		"flight_basis": _flight_basis}
 	var camera_id: int = _player.player_camera.get_instance_id()
 	var basis_before: Basis = _player.player_camera.global_basis
 	_context = target_context
@@ -133,6 +144,8 @@ func _handover() -> void:
 	_voxel_tool.channel = VoxelBuffer.CHANNEL_SDF
 	_voxel_tool.set_raycast_binary_search_iterations(8)
 	_player.setup(_frame, gravity)
+	if not _flight_active:
+		_flight_basis = saved["basis"]
 	if not _place_flight_absolute(new_observer):
 		_handover_rollback(saved, terrain)
 		_handover_refuse("coordinate-frame adapter failed; restored departure")
@@ -151,11 +164,10 @@ func _handover() -> void:
 	_active_index = index
 	_handover_is_moon = int(entry["moon_slot"]) >= 0
 	_player.dominant_body_id = StringName(entry["id"])
-	_player.velocity = Vector3.ZERO
-	if _flight_active:
-		_player.detach_from_frame()
-	else:
-		_player.attach_to_frame(_catalog_frame)
+	_player.detach_from_frame()
+	_player.velocity = Vector3.ZERO if _flight_active else transfer_velocity
+	if not _flight_active:
+		print("Transfer2: VELOCITY before=%s after=%s error_mps=%.9f" % [transfer_velocity, _player.velocity, transfer_velocity.distance_to(_player.velocity)])
 	_flight_landing_requested = false
 	_flight_exit_ticks = 0
 	_flight_height = new_height
@@ -245,9 +257,15 @@ func _handover_rollback(saved: Dictionary, terrain: VoxelLodTerrain) -> void:
 	_u0 = saved["u0"]
 	_cpu4_pool = saved["pool"]
 	_flight_absolute = saved["absolute"]
+	_flight_basis = saved["flight_basis"] if _flight_active else saved["basis"]
 	_player.setup(_frame, _gravity)
 	if not _place_flight_absolute(_flight_absolute):
 		_fail_gate("Transfer2 rollback adapter failed; movement stopped")
+	_player.velocity = saved["velocity"]
+	_player._carrier_id = saved["carrier"]
+	_player._carry_residual = saved["residual"].copy()
+	_player.global_basis = saved["basis"]
+	_flight_basis = saved["flight_basis"]
 	remove_child(terrain)
 	terrain.queue_free()
 
