@@ -1,6 +1,6 @@
 extends "res://scenes/world/test_catalog_transfer_handover_v2.gd"
 
-const TransferRouteBook3 = preload("res://world/debug/lk_transfer_route_book.gd")
+const TransferRouteBook3 = preload("res://game/debug/lk_transfer_route_book.gd")
 var _route_book = TransferRouteBook3.new()
 var _route_status: String = "R selects previous departure; 1/2 disabled"
 var _route_bearing: String = ""

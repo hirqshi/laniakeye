@@ -1,7 +1,7 @@
 extends "res://scenes/world/test_catalog_flight_cpu_v5.gd"
 
-const Cpu7SpherePool = preload("res://world/debug/lk_flight_sphere_pool_fused.gd")
-const Cpu7Occlusion = preload("res://world/debug/lk_navigation_occlusion_scalar.gd")
+const Cpu7SpherePool = preload("res://game/debug/lk_flight_sphere_pool_fused.gd")
+const Cpu7Occlusion = preload("res://game/debug/lk_navigation_occlusion_scalar.gd")
 @export var cpu7_fused_spheres_enabled: bool = true
 @export var cpu7_scalar_occlusion_enabled: bool = true
 @export var cpu7_runtime_parity_checks: int = 32

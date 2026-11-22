@@ -1,7 +1,7 @@
 extends SceneTree
 
-const Samples = preload("res://world/generation/lk_world_samples.gd")
-const Identity = preload("res://world/generation/lk_world_identity.gd")
+const Samples = preload("res://game/world/generation/lk_world_samples.gd")
+const Identity = preload("res://game/world/generation/lk_world_identity.gd")
 const REFERENCE_ID: String = "5820d532ed6d16e5ecafa04938ae7b85"
 var _failures: int = 0
 

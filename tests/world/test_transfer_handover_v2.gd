@@ -1,8 +1,8 @@
 extends SceneTree
 
-const TransferMath2 = preload("res://world/debug/lk_transfer_frame_math.gd")
-const OriginalLight2 = preload("res://world/runtime/lk_stellar_lighting.gd")
-const Motion2 = preload("res://world/generation/lk_kepler_motion.gd")
+const TransferMath2 = preload("res://game/debug/lk_transfer_frame_math.gd")
+const OriginalLight2 = preload("res://game/world/runtime/lk_stellar_lighting.gd")
+const Motion2 = preload("res://game/world/generation/lk_kepler_motion.gd")
 const Scene2 = preload("res://scenes/world/test_catalog_transfer_handover_v2.gd")
 var _failures: int = 0
 

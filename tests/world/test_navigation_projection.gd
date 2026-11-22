@@ -1,6 +1,6 @@
 extends SceneTree
 
-const Safe = preload("res://world/debug/lk_debug_navigation_projection.gd")
+const Safe = preload("res://game/debug/lk_debug_navigation_projection.gd")
 var _failures: int = 0
 var _cases: int = 0
 
@@ -47,7 +47,7 @@ func _initialize() -> void:
 	offaxis.z.y = -0.1
 	_verify(Vector3.FORWARD, offaxis, size)
 	_verify(Vector3.RIGHT, projection, Vector2(32.0, 20.0))
-	var source: String = FileAccess.get_file_as_string("res://world/debug/lk_debug_navigation_data.gd")
+	var source: String = FileAccess.get_file_as_string("res://game/debug/lk_debug_navigation_data.gd")
 	_check(source.contains("NAV_PROJECTION_SAFE_V1") and not source.contains("camera.unproject_position("), "hotfix installed in actual data helper")
 	if _failures == 0:
 		print("NavProjection: PASS cases=%d finite bounds, camera-plane sweep, back, zero, off-axis, installed wrapper" % _cases)

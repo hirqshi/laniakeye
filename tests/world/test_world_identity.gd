@@ -1,7 +1,7 @@
 extends SceneTree
 
-const Identity = preload("res://world/generation/lk_world_identity.gd")
-const Definition = preload("res://world/generation/lk_universe_definition.gd")
+const Identity = preload("res://game/world/generation/lk_world_identity.gd")
+const Definition = preload("res://game/world/generation/lk_universe_definition.gd")
 
 var _failures: int = 0
 

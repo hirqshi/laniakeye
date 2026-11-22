@@ -1,6 +1,6 @@
 extends SceneTree
 
-const Policy = preload("res://world/debug/lk_landing_patch_policy.gd")
+const Policy = preload("res://game/debug/lk_landing_patch_policy.gd")
 const LandingScene = preload("res://scenes/world/test_catalog_landing_patch.gd")
 var _failures: int = 0
 

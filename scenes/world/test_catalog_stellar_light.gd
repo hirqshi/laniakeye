@@ -1,7 +1,7 @@
 extends "res://scenes/world/test_catalog_two_planets.gd"
 
 # Additional scene only; no changes to the validated single-/two-body harness.
-const StellarLighting = preload("res://world/runtime/lk_stellar_lighting.gd")
+const StellarLighting = preload("res://game/world/runtime/lk_stellar_lighting.gd")
 
 @export var stellar_light_energy: float = 1.0
 @export var day_ambient_energy: float = 0.18

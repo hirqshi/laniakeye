@@ -1,7 +1,7 @@
 extends SceneTree
 
-const Cache = preload("res://world/runtime/lk_star_candidate_cache.gd")
-const Definition = preload("res://world/generation/lk_universe_definition.gd")
+const Cache = preload("res://game/world/runtime/lk_star_candidate_cache.gd")
+const Definition = preload("res://game/world/generation/lk_universe_definition.gd")
 const SpriteScene = preload("res://scenes/world/test_catalog_star_sprites.gd")
 var _failures: int = 0
 

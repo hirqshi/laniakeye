@@ -1,10 +1,10 @@
 extends SceneTree
 
-const Snapshot = preload("res://world/rendering/lk_far_body_snapshot.gd")
-const Layout = preload("res://world/generation/lk_safe_orbit_layout.gd")
-const Bodies = preload("res://world/generation/lk_body_catalog.gd")
-const Catalog = preload("res://world/generation/lk_world_catalog.gd")
-const Definition = preload("res://world/generation/lk_universe_definition.gd")
+const Snapshot = preload("res://game/world/rendering/lk_far_body_snapshot.gd")
+const Layout = preload("res://game/world/generation/lk_safe_orbit_layout.gd")
+const Bodies = preload("res://game/world/generation/lk_body_catalog.gd")
+const Catalog = preload("res://game/world/generation/lk_world_catalog.gd")
+const Definition = preload("res://game/world/generation/lk_universe_definition.gd")
 var _failures: int = 0
 
 

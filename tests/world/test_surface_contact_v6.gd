@@ -1,6 +1,6 @@
 extends SceneTree
 
-const Policy6 = preload("res://world/debug/lk_surface_contact_policy.gd")
+const Policy6 = preload("res://game/debug/lk_surface_contact_policy.gd")
 const Scene6 = preload("res://scenes/world/test_catalog_surface_contact_v6.gd")
 var _failures: int = 0
 

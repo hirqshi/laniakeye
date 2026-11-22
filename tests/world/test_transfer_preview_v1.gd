@@ -1,7 +1,7 @@
 extends SceneTree
 
-const TargetModel1 = preload("res://world/debug/lk_transfer_target_model.gd")
-const Store1 = preload("res://world/runtime/lk_body_journal_store.gd")
+const TargetModel1 = preload("res://game/debug/lk_transfer_target_model.gd")
+const Store1 = preload("res://game/world/runtime/lk_body_journal_store.gd")
 const PreviewScene1 = preload("res://scenes/world/test_catalog_transfer_preview_v1.gd")
 var _failures: int = 0
 

@@ -1,13 +1,13 @@
 extends SceneTree
 
-const Definition = preload("res://world/generation/lk_universe_definition.gd")
-const Context = preload("res://world/runtime/lk_body_context.gd")
-const Store = preload("res://world/runtime/lk_body_journal_store.gd")
-const Identity = preload("res://world/generation/lk_world_identity.gd")
+const Definition = preload("res://game/world/generation/lk_universe_definition.gd")
+const Context = preload("res://game/world/runtime/lk_body_context.gd")
+const Store = preload("res://game/world/runtime/lk_body_journal_store.gd")
+const Identity = preload("res://game/world/generation/lk_world_identity.gd")
 
-const Catalog = preload("res://world/generation/lk_world_catalog.gd")
-const Bodies = preload("res://world/generation/lk_body_catalog.gd")
-const Layout = preload("res://world/generation/lk_safe_orbit_layout.gd")
+const Catalog = preload("res://game/world/generation/lk_world_catalog.gd")
+const Bodies = preload("res://game/world/generation/lk_body_catalog.gd")
+const Layout = preload("res://game/world/generation/lk_safe_orbit_layout.gd")
 
 const TwoPlanets = preload("res://scenes/world/test_catalog_two_planets.gd")
 

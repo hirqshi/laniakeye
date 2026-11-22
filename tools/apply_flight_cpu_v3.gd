@@ -60,7 +60,7 @@ const EDITS: Array = [
     "append": "\n# NAV_CPU3_PROVIDER_V1\nfunc _navigation_system_states() -> Dictionary:\n\tif cpu_nav_state_provider != null:\n\t\treturn cpu_nav_state_provider.call(\"get_states\", _universe_clock.now_s())\n\treturn {}\n"
   },
   {
-    "path": "res://world/rendering/lk_far_body_snapshot.gd",
+    "path": "res://game/world/rendering/lk_far_body_snapshot.gd",
     "marker": "SNAPSHOT_CPU3_OPTIONAL_STATES_V1",
     "pairs": [
       [
@@ -75,7 +75,7 @@ const EDITS: Array = [
     "append": "\n# SNAPSHOT_CPU3_OPTIONAL_STATES_V1: callers without fifth argument unchanged.\n"
   },
   {
-    "path": "res://world/rendering/lk_catalog_far_mesh.gd",
+    "path": "res://game/world/rendering/lk_catalog_far_mesh.gd",
     "marker": "FARMESH_CPU3_PROVIDER_V1",
     "pairs": [
       [

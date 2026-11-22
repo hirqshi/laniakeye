@@ -1,6 +1,6 @@
 extends "res://scenes/world/test_catalog_auto_transfer_v4.gd"
 
-const SurfacePolicy5 = preload("res://world/debug/lk_surface_control_policy.gd")
+const SurfacePolicy5 = preload("res://game/debug/lk_surface_control_policy.gd")
 @export var low_gravity_assist_threshold: float = 0.001
 @export var assisted_eva_max_speed_mps: float = 5.0
 var _control5_assisted: bool = false

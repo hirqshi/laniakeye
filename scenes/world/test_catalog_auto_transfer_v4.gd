@@ -1,7 +1,7 @@
 extends "res://scenes/world/test_catalog_transfer_roundtrip_v3.gd"
 
-const AutoTransferPolicy4 = preload("res://world/debug/lk_auto_transfer_policy.gd")
-const TargetPointer4 = preload("res://world/debug/lk_transfer_target_pointer.gd")
+const AutoTransferPolicy4 = preload("res://game/debug/lk_auto_transfer_policy.gd")
+const TargetPointer4 = preload("res://game/debug/lk_transfer_target_pointer.gd")
 @export var auto_transfer_enabled: bool = true
 var _auto4_guard_epoch: float = NAN
 var _auto4_guard_target: String = ""

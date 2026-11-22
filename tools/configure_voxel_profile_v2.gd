@@ -1,6 +1,6 @@
 extends SceneTree
 
-const Schema = preload("res://world/debug/lk_voxel_thread_schema_v2.gd")
+const Schema = preload("res://game/debug/lk_voxel_thread_schema_v2.gd")
 const BACKUP: String = "user://frame_pacing_v2/native_profile_backup.cfg"
 
 func _initialize() -> void:

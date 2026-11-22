@@ -1,8 +1,8 @@
 extends "res://scenes/world/test_catalog_star_sprites.gd"
 
-const NavData = preload("res://world/debug/lk_debug_navigation_data.gd")
-const NavOverlay = preload("res://world/debug/lk_debug_navigation_overlay.gd")
-const NavSnapshot = preload("res://world/rendering/lk_far_body_snapshot.gd")
+const NavData = preload("res://game/debug/lk_debug_navigation_data.gd")
+const NavOverlay = preload("res://game/debug/lk_debug_navigation_overlay.gd")
+const NavSnapshot = preload("res://game/world/rendering/lk_far_body_snapshot.gd")
 
 var cpu_nav_state_provider: RefCounted
 var _nav_marks: Array = []

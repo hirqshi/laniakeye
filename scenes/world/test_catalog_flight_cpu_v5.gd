@@ -1,7 +1,7 @@
 extends "res://scenes/world/test_catalog_flight_cpu_v4.gd"
 
-const ReferenceLayout = preload("res://world/generation/lk_safe_orbit_layout.gd")
-const CompiledCache = preload("res://world/debug/lk_flight_cpu_compiled_cache.gd")
+const ReferenceLayout = preload("res://game/world/generation/lk_safe_orbit_layout.gd")
+const CompiledCache = preload("res://game/debug/lk_flight_cpu_compiled_cache.gd")
 @export var cpu5_optimizations_enabled: bool = true
 # Fine-grained timing is intentionally off in normal A/B performance runs.
 @export var cpu5_profile_details: bool = false

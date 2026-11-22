@@ -1,7 +1,7 @@
 extends "res://scenes/world/test_catalog_frame_pacing.gd"
 
-const PressureMonitor = preload("res://world/debug/lk_render_pressure_monitor_v2.gd")
-const ThreadSchema = preload("res://world/debug/lk_voxel_thread_schema_v2.gd")
+const PressureMonitor = preload("res://game/debug/lk_render_pressure_monitor_v2.gd")
+const ThreadSchema = preload("res://game/debug/lk_voxel_thread_schema_v2.gd")
 
 @export var pacing2_optimizations_enabled: bool = true
 @export var pacing2_measure_render_times: bool = true

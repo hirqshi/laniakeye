@@ -1,7 +1,7 @@
 extends "res://scenes/world/test_catalog_flight_cpu_v5.gd"
 
-const PackedPool = preload("res://world/debug/lk_flight_sphere_pool_packed.gd")
-const PackedMath = preload("res://world/debug/lk_debug_flight_math_packed.gd")
+const PackedPool = preload("res://game/debug/lk_flight_sphere_pool_packed.gd")
+const PackedMath = preload("res://game/debug/lk_debug_flight_math_packed.gd")
 
 @export var cpu6_packed_spheres_enabled: bool = true
 @export var cpu6_fast_navigation_enabled: bool = true

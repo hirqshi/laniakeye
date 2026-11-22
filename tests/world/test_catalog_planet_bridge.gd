@@ -1,10 +1,10 @@
 extends SceneTree
 
-const Definition = preload("res://world/generation/lk_universe_definition.gd")
-const Context = preload("res://world/runtime/lk_body_context.gd")
-const BodyFrame = preload("res://world/runtime/lk_catalog_body_frame.gd")
-const Store = preload("res://world/runtime/lk_body_journal_store.gd")
-const Identity = preload("res://world/generation/lk_world_identity.gd")
+const Definition = preload("res://game/world/generation/lk_universe_definition.gd")
+const Context = preload("res://game/world/runtime/lk_body_context.gd")
+const BodyFrame = preload("res://game/world/runtime/lk_catalog_body_frame.gd")
+const Store = preload("res://game/world/runtime/lk_body_journal_store.gd")
+const Identity = preload("res://game/world/generation/lk_world_identity.gd")
 # Parse the visual scene script as part of this smoke test.
 const IntegrationScene = preload("res://scenes/world/test_catalog_planet.gd")
 

@@ -1,6 +1,6 @@
 extends SceneTree
 
-const Shell = preload("res://world/debug/lk_surface_shell_math.gd")
+const Shell = preload("res://game/debug/lk_surface_shell_math.gd")
 const SceneScript = preload("res://scenes/world/test_catalog_surface_boundary_fix.gd")
 var _failures: int = 0
 
@@ -40,8 +40,8 @@ func _initialize() -> void:
 	var normal: Vector3 = Vector3(sin(deg_to_rad(70.0)), cos(deg_to_rad(70.0)), 0.0)
 	_check(Shell.slope_degrees(normal, Vector3.UP) > 55.0, "actual steep landing support refused")
 	_check(not is_finite(Shell.slope_degrees(Vector3.ZERO, Vector3.UP)), "invalid support normal")
-	var far: String = FileAccess.get_file_as_string("res://world/rendering/lk_far_system_surface_shell.gdshader")
-	var stars: String = FileAccess.get_file_as_string("res://world/rendering/lk_star_sprites_surface_shell.gdshader")
+	var far: String = FileAccess.get_file_as_string("res://game/world/rendering/lk_far_system_surface_shell.gdshader")
+	var stars: String = FileAccess.get_file_as_string("res://game/world/rendering/lk_star_sprites_surface_shell.gdshader")
 	_check(not far.contains("|| active_inside") and not stars.contains("observer_inside ||"), "no global underground sky suppression")
 	_check(far.contains("hit = active_shell_c / denominator") and stars.contains("active_shell_c / denominator"), "shared stable active intersection")
 	_check(far.contains("IRRADIANCE") and far.contains("active_day_ambient"), "terminator fix retained")

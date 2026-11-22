@@ -1,11 +1,11 @@
 extends SceneTree
 
 const SHADERS = [
-	"res://world/rendering/lk_far_system.gdshader",
-	"res://world/rendering/lk_far_system_flight.gdshader",
-	"res://world/rendering/lk_far_system_surface_shell.gdshader",
+	"res://game/world/rendering/lk_far_system.gdshader",
+	"res://game/world/rendering/lk_far_system_flight.gdshader",
+	"res://game/world/rendering/lk_far_system_surface_shell.gdshader",
 ]
-const INCLUDE_PATH: String = "res://world/rendering/lk_far_system_common.gdshaderinc"
+const INCLUDE_PATH: String = "res://game/world/rendering/lk_far_system_common.gdshaderinc"
 var _failures: int = 0
 
 func _check(ok: bool, label: String) -> void:

@@ -1,9 +1,9 @@
 extends SceneTree
 
-const Nearby = preload("res://world/runtime/lk_nearby_stars.gd")
-const Spatial = preload("res://world/runtime/lk_universe_spatial.gd")
-const Definition = preload("res://world/generation/lk_universe_definition.gd")
-const Identity = preload("res://world/generation/lk_world_identity.gd")
+const Nearby = preload("res://game/world/runtime/lk_nearby_stars.gd")
+const Spatial = preload("res://game/world/runtime/lk_universe_spatial.gd")
+const Definition = preload("res://game/world/generation/lk_universe_definition.gd")
+const Identity = preload("res://game/world/generation/lk_world_identity.gd")
 
 var _failures: int = 0
 

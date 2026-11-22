@@ -1,9 +1,9 @@
 extends SceneTree
 
-const ReferenceMath = preload("res://world/debug/lk_debug_flight_math.gd")
-const PackedMath = preload("res://world/debug/lk_debug_flight_math_packed.gd")
-const ReferencePool = preload("res://world/debug/lk_flight_sphere_pool.gd")
-const PackedPool = preload("res://world/debug/lk_flight_sphere_pool_packed.gd")
+const ReferenceMath = preload("res://game/debug/lk_debug_flight_math.gd")
+const PackedMath = preload("res://game/debug/lk_debug_flight_math_packed.gd")
+const ReferencePool = preload("res://game/debug/lk_flight_sphere_pool.gd")
+const PackedPool = preload("res://game/debug/lk_flight_sphere_pool_packed.gd")
 
 func _initialize() -> void:
 	var star: Dictionary = {"id": "star", "radius_m": 1000000.0}

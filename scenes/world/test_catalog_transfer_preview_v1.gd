@@ -1,6 +1,6 @@
 extends "res://scenes/world/test_catalog_flight_cpu_v7.gd"
 
-const TransferModel1 = preload("res://world/debug/lk_transfer_target_model.gd")
+const TransferModel1 = preload("res://game/debug/lk_transfer_target_model.gd")
 var _transfer_model = TransferModel1.new()
 var _transfer_bound_far: MeshInstance3D
 var _transfer_hud_s: float = 1.0

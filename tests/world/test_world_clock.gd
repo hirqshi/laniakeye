@@ -1,13 +1,13 @@
 extends SceneTree
 
-const SharedClock = preload("res://world/runtime/lk_world_clock.gd")
-const ClockStore = preload("res://world/runtime/lk_world_clock_store.gd")
-const SharedFrame = preload("res://world/runtime/lk_clocked_body_frame.gd")
-const Context = preload("res://world/runtime/lk_body_context.gd")
-const Definition = preload("res://world/generation/lk_universe_definition.gd")
-const Identity = preload("res://world/generation/lk_world_identity.gd")
-const Motion = preload("res://world/generation/lk_kepler_motion.gd")
-const Lighting = preload("res://world/runtime/lk_stellar_lighting.gd")
+const SharedClock = preload("res://game/world/runtime/lk_world_clock.gd")
+const ClockStore = preload("res://game/world/runtime/lk_world_clock_store.gd")
+const SharedFrame = preload("res://game/world/runtime/lk_clocked_body_frame.gd")
+const Context = preload("res://game/world/runtime/lk_body_context.gd")
+const Definition = preload("res://game/world/generation/lk_universe_definition.gd")
+const Identity = preload("res://game/world/generation/lk_world_identity.gd")
+const Motion = preload("res://game/world/generation/lk_kepler_motion.gd")
+const Lighting = preload("res://game/world/runtime/lk_stellar_lighting.gd")
 const VisualScene = preload("res://scenes/world/test_catalog_world_clock.gd")
 
 var _failures: int = 0

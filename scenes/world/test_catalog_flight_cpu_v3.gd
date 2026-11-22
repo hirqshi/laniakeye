@@ -1,7 +1,7 @@
 extends "res://scenes/world/test_catalog_frame_pressure_v2.gd"
 
-const CpuStateCache = preload("res://world/debug/lk_flight_cpu_state_cache.gd")
-const CpuPolicy = preload("res://world/debug/lk_flight_cpu_policy.gd")
+const CpuStateCache = preload("res://game/debug/lk_flight_cpu_state_cache.gd")
+const CpuPolicy = preload("res://game/debug/lk_flight_cpu_policy.gd")
 
 @export var cpu3_optimizations_enabled: bool = true
 @export var cpu3_share_system_states: bool = true

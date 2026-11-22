@@ -1,7 +1,7 @@
 extends SceneTree
 
-const Policy4 = preload("res://world/debug/lk_auto_transfer_policy.gd")
-const Math4 = preload("res://world/debug/lk_debug_flight_math.gd")
+const Policy4 = preload("res://game/debug/lk_auto_transfer_policy.gd")
+const Math4 = preload("res://game/debug/lk_debug_flight_math.gd")
 const Scene4 = preload("res://scenes/world/test_catalog_auto_transfer_v4.gd")
 var _failures: int = 0
 

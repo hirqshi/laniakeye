@@ -1,6 +1,6 @@
 extends "res://scenes/world/test_catalog_flight_cpu_v3.gd"
 
-const SpherePool = preload("res://world/debug/lk_flight_sphere_pool.gd")
+const SpherePool = preload("res://game/debug/lk_flight_sphere_pool.gd")
 @export var cpu4_optimizations_enabled: bool = true
 var _cpu4_pool: SpherePool
 var _cpu4_bound_far: MeshInstance3D

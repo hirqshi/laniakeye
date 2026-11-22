@@ -1,6 +1,6 @@
 extends SceneTree
 
-const Data = preload("res://world/debug/lk_debug_navigation_data.gd")
+const Data = preload("res://game/debug/lk_debug_navigation_data.gd")
 const SceneScript = preload("res://scenes/world/test_catalog_debug_navigation.gd")
 var _failures: int = 0
 

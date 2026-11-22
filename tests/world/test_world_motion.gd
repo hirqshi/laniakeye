@@ -1,9 +1,9 @@
 extends SceneTree
 
-const Identity = preload("res://world/generation/lk_world_identity.gd")
-const Catalog = preload("res://world/generation/lk_world_catalog.gd")
-const Motion = preload("res://world/generation/lk_kepler_motion.gd")
-const SystemMotion = preload("res://world/generation/lk_system_motion.gd")
+const Identity = preload("res://game/world/generation/lk_world_identity.gd")
+const Catalog = preload("res://game/world/generation/lk_world_catalog.gd")
+const Motion = preload("res://game/world/generation/lk_kepler_motion.gd")
+const SystemMotion = preload("res://game/world/generation/lk_system_motion.gd")
 
 var _failures: int = 0
 var _worst_residual: float = 0.0

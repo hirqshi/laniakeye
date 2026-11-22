@@ -1,13 +1,13 @@
 extends SceneTree
 
-const Audit = preload("res://world/generation/lk_population_audit.gd")
-const Photo = preload("res://world/generation/lk_stellar_photometry.gd")
-const Definition = preload("res://world/generation/lk_universe_definition.gd")
-const Catalog = preload("res://world/generation/lk_world_catalog.gd")
-const Bodies = preload("res://world/generation/lk_body_catalog.gd")
-const Galaxies = preload("res://world/generation/lk_galaxy_placement.gd")
-const Spatial = preload("res://world/runtime/lk_universe_spatial.gd")
-const Nearby = preload("res://world/runtime/lk_nearby_stars.gd")
+const Audit = preload("res://game/world/generation/lk_population_audit.gd")
+const Photo = preload("res://game/world/generation/lk_stellar_photometry.gd")
+const Definition = preload("res://game/world/generation/lk_universe_definition.gd")
+const Catalog = preload("res://game/world/generation/lk_world_catalog.gd")
+const Bodies = preload("res://game/world/generation/lk_body_catalog.gd")
+const Galaxies = preload("res://game/world/generation/lk_galaxy_placement.gd")
+const Spatial = preload("res://game/world/runtime/lk_universe_spatial.gd")
+const Nearby = preload("res://game/world/runtime/lk_nearby_stars.gd")
 
 var _failures: int = 0
 

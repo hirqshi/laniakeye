@@ -1,7 +1,7 @@
 extends SceneTree
 
-const Reference = preload("res://world/generation/lk_safe_orbit_layout.gd")
-const Compiled = preload("res://world/debug/lk_compiled_orbit_layout.gd")
+const Reference = preload("res://game/world/generation/lk_safe_orbit_layout.gd")
+const Compiled = preload("res://game/debug/lk_compiled_orbit_layout.gd")
 const Fixture = preload("res://tests/world/flight_cpu5_fixture.gd")
 
 func _summary(values: Array[float]) -> Dictionary:

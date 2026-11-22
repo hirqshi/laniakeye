@@ -1,6 +1,6 @@
 extends "res://scenes/world/test_catalog_flight_visuals.gd"
 
-const ApproachForecast = preload("res://world/debug/lk_surface_approach_forecast.gd")
+const ApproachForecast = preload("res://game/debug/lk_surface_approach_forecast.gd")
 
 @export var approach_lead_s: float = 60.0
 @export var approach_max_height_m: float = 1000000.0

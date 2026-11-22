@@ -1,10 +1,10 @@
 extends SceneTree
 
-const StellarLighting = preload("res://world/runtime/lk_stellar_lighting.gd")
-const Kepler = preload("res://world/generation/lk_kepler_motion.gd")
-const BodyFrame = preload("res://world/runtime/lk_catalog_body_frame.gd")
-const Context = preload("res://world/runtime/lk_body_context.gd")
-const Definition = preload("res://world/generation/lk_universe_definition.gd")
+const StellarLighting = preload("res://game/world/runtime/lk_stellar_lighting.gd")
+const Kepler = preload("res://game/world/generation/lk_kepler_motion.gd")
+const BodyFrame = preload("res://game/world/runtime/lk_catalog_body_frame.gd")
+const Context = preload("res://game/world/runtime/lk_body_context.gd")
+const Definition = preload("res://game/world/generation/lk_universe_definition.gd")
 const VisualScene = preload("res://scenes/world/test_catalog_stellar_light.gd")
 
 var _failures: int = 0

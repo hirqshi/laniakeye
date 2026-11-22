@@ -1,7 +1,7 @@
 extends SceneTree
 
-const Forecast = preload("res://world/debug/lk_surface_approach_forecast.gd")
-const Carry = preload("res://world/debug/lk_debug_flight_carry.gd")
+const Forecast = preload("res://game/debug/lk_surface_approach_forecast.gd")
+const Carry = preload("res://game/debug/lk_debug_flight_carry.gd")
 const SceneScript = preload("res://scenes/world/test_catalog_seamless_approach.gd")
 var _failures: int = 0
 

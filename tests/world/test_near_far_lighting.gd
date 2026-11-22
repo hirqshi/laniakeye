@@ -1,6 +1,6 @@
 extends SceneTree
 
-const FarRenderer = preload("res://world/rendering/lk_catalog_far_mesh.gd")
+const FarRenderer = preload("res://game/world/rendering/lk_catalog_far_mesh.gd")
 const VisualScene = preload("res://scenes/world/test_catalog_far_mesh.gd")
 var _failures: int = 0
 
@@ -35,7 +35,7 @@ func _initialize() -> void:
 	_check(material.shading_mode == original, "normal shaded material restored")
 	_check(not node.is_albedo_debug(), "normal mode default")
 	node.free()
-	var file: FileAccess = FileAccess.open("res://world/rendering/lk_far_system.gdshader", FileAccess.READ)
+	var file: FileAccess = FileAccess.open("res://game/world/rendering/lk_far_system.gdshader", FileAccess.READ)
 	_check(file != null, "shader file readable")
 	if file != null:
 		var source: String = file.get_as_text()

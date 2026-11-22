@@ -1,8 +1,8 @@
 extends SceneTree
 
-const Placement = preload("res://world/generation/lk_galaxy_placement.gd")
-const Identity = preload("res://world/generation/lk_world_identity.gd")
-const Samples = preload("res://world/generation/lk_world_samples.gd")
+const Placement = preload("res://game/world/generation/lk_galaxy_placement.gd")
+const Identity = preload("res://game/world/generation/lk_world_identity.gd")
+const Samples = preload("res://game/world/generation/lk_world_samples.gd")
 const COUNT: int = 2048
 const TOLERANCE: float = 1.0e-12
 var _failures: int = 0

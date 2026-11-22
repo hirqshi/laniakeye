@@ -1,6 +1,6 @@
 extends SceneTree
 
-const PATH: String = "res://world/rendering/lk_far_body_snapshot.gd"
+const PATH: String = "res://game/world/rendering/lk_far_body_snapshot.gd"
 var _failures: int = 0
 
 func _check(ok: bool, label: String) -> void:
@@ -18,7 +18,7 @@ func _initialize() -> void:
 	_check(source.contains("if distance_squared <= 0.0:\n\t\t\tcontinue"), "zero-distance contract retained")
 	_check(source.contains("sun = [-float(p[0]) / length, -float(p[1]) / length, -float(p[2]) / length]"), "heliocentric sun contract retained")
 	# Catalog contract: physical bound includes terrain relief.
-	var catalog: String = FileAccess.get_file_as_string("res://world/generation/lk_body_catalog.gd")
+	var catalog: String = FileAccess.get_file_as_string("res://game/world/generation/lk_body_catalog.gd")
 	_check(catalog.contains("\"physical_bound_radius_m\": radius + relief,"), "physical bound includes relief")
 	_check(catalog.contains("relief = minf(200000.0, radius * 0.05)"), "relief can exceed base radius")
 	# Boundary reference, not a GPU/render test.
