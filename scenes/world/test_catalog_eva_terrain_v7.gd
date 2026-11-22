@@ -141,6 +141,10 @@ func _eva_surface_tick(delta: float) -> void:
 		return
 	if _player.is_on_floor() and not _auto_busy:
 		return
+	# Only this layer's own staging may block EVA AutoSurface. A walk-reanchor
+	# staging patch shares _pending but must not stop terrain provisioning.
+	if _auto_busy or _landing_preparing:
+		return
 	_landing_delta = delta
 	_flight_absolute = _frame.to_absolute(_player.global_position)
 	_auto_retry_s = maxf(0.0, _auto_retry_s - delta)
@@ -168,7 +172,7 @@ func _eva_surface_tick(delta: float) -> void:
 			return
 		_poll_auto_surface(delta)
 		return
-	if _landing_preparing or is_instance_valid(_pending):
+	if is_instance_valid(_pending):
 		return
 	if _auto_target != null and is_instance_valid(_auto_viewer) and AutoPolicy.in_target(target, _auto_target, 48.0):
 		return
