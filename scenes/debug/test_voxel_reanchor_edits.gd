@@ -20,6 +20,7 @@ var _stream_warned: bool = false
 var _ground_probe_log_usec: int = 0
 var _edit_ray_log_usec: int = 0
 
+
 class EditedGenerator:
 	extends VoxelGeneratorScript
 	const SnapshotCache = preload(
@@ -28,17 +29,17 @@ class EditedGenerator:
 
 	# Increment when generation semantics change outside the files
 	# included in the cache identity below.
-	const CACHE_SEMANTICS_VERSION: int = 2
+	const CACHE_SEMANTICS_VERSION: int = 3
 
 	const INDEX_LOD_COUNT: int = 5
 	const INDEX_CELL_SAMPLES: int = 64
-	
+
 	const TILE_LOCK_COUNT: int = 256
 
 	var _tile_locks: Array[Mutex] = []
-	
+
 	var _operation_index: Array[Dictionary] = []
-	
+
 	var _snapshot_cache: SnapshotCache
 	var surface: PlanetVoxelGenerator
 	var anchor: LkPosition64
@@ -58,13 +59,14 @@ class EditedGenerator:
 		anchor = patch_anchor.copy()
 		_records = records.duplicate()
 		_revision = revision
-		
+
 		_tile_locks.clear()
 
 		for i: int in range(TILE_LOCK_COUNT):
 			_tile_locks.append(Mutex.new())
-			
+
 		_build_operation_index()
+
 		var surface_script: Script = source.get_script() as Script
 		var surface_code_hash: String = ""
 
@@ -179,7 +181,11 @@ class EditedGenerator:
 				float(INDEX_CELL_SAMPLES) * stride
 			)
 
-			for index: int in range(0, _records.size(), 5):
+			for index: int in range(
+				0,
+				_records.size(),
+				LkVoxelEditJournal.RECORD_SIZE
+			):
 				var cx: float = _records[index] - anchor.x
 				var cy: float = _records[index + 1] - anchor.y
 				var cz: float = _records[index + 2] - anchor.z
@@ -226,7 +232,11 @@ class EditedGenerator:
 
 		# Safe fallback for requests outside the indexed LOD range.
 		if lod < 0 or lod >= _operation_index.size():
-			for index: int in range(0, _records.size(), 5):
+			for index: int in range(
+				0,
+				_records.size(),
+				LkVoxelEditJournal.RECORD_SIZE
+			):
 				result.append(index)
 
 			return result
@@ -438,21 +448,47 @@ class EditedGenerator:
 		var size: Vector3i = buffer.get_size()
 		var stride: float = float(1 << lod)
 
-		var cx: float = _records[index] - anchor.x - float(origin.x)
-		var cy: float = _records[index + 1] - anchor.y - float(origin.y)
-		var cz: float = _records[index + 2] - anchor.z - float(origin.z)
+		var cx: float = (
+			_records[index] - anchor.x - float(origin.x)
+		)
+		var cy: float = (
+			_records[index + 1] - anchor.y - float(origin.y)
+		)
+		var cz: float = (
+			_records[index + 2] - anchor.z - float(origin.z)
+		)
 
 		var radius: float = _records[index + 3]
 		var build: bool = _records[index + 4] > 0.5
+		var mode: int = int(_records[index + 5])
+		var amount_m: float = _records[index + 6]
 		var reach: float = radius + 4.0 * stride
 
-		var x0: int = maxi(0, int(ceil((cx - reach) / stride)))
-		var y0: int = maxi(0, int(ceil((cy - reach) / stride)))
-		var z0: int = maxi(0, int(ceil((cz - reach) / stride)))
+		var x0: int = maxi(
+			0,
+			int(ceil((cx - reach) / stride))
+		)
+		var y0: int = maxi(
+			0,
+			int(ceil((cy - reach) / stride))
+		)
+		var z0: int = maxi(
+			0,
+			int(ceil((cz - reach) / stride))
+		)
 
-		var x1: int = mini(size.x - 1, int(floor((cx + reach) / stride)))
-		var y1: int = mini(size.y - 1, int(floor((cy + reach) / stride)))
-		var z1: int = mini(size.z - 1, int(floor((cz + reach) / stride)))
+		var x1: int = mini(
+			size.x - 1,
+			int(floor((cx + reach) / stride))
+		)
+		var y1: int = mini(
+			size.y - 1,
+			int(floor((cy + reach) / stride))
+		)
+		var z1: int = mini(
+			size.z - 1,
+			int(floor((cz + reach) / stride))
+		)
 
 		if x0 > x1 or y0 > y1 or z0 > z1:
 			return
@@ -479,20 +515,45 @@ class EditedGenerator:
 					) / stride
 
 					var current: float = buffer.get_voxel_f(
-						x, y, z, VoxelBuffer.CHANNEL_SDF
+						x,
+						y,
+						z,
+						VoxelBuffer.CHANNEL_SDF
 					)
 
-					var result: float
+					var target: float
+
 					if build:
-						result = minf(current, sphere_sdf)
+						target = minf(current, sphere_sdf)
 					else:
-						result = maxf(current, -sphere_sdf)
+						target = maxf(current, -sphere_sdf)
+
+					var result: float = current
+
+					if mode == LkVoxelEditJournal.MODE_PARTIAL:
+						var maximum_change: float = (
+							amount_m / stride
+						)
+						var change: float = target - current
+
+						if absf(change) > maximum_change:
+							change = (
+								signf(change) * maximum_change
+							)
+
+						result = current + change
+					else:
+						result = target
 
 					buffer.set_voxel_f(
 						clampf(result, -4.0, 4.0),
-						x, y, z,
+						x,
+						y,
+						z,
 						VoxelBuffer.CHANNEL_SDF
 					)
+
+
 	func validate_operation_index(
 		origin: Vector3i,
 		lod: int
@@ -509,7 +570,11 @@ class EditedGenerator:
 		base.anchor = anchor
 		base._generate_block(reference, origin, lod)
 
-		for index: int in range(0, _records.size(), 5):
+		for index: int in range(
+			0,
+			_records.size(),
+			LkVoxelEditJournal.RECORD_SIZE
+		):
 			_apply_sphere(reference, origin, lod, index)
 
 		var worst: float = 0.0
@@ -521,10 +586,16 @@ class EditedGenerator:
 						worst,
 						absf(
 							indexed.get_voxel_f(
-								x, y, z, VoxelBuffer.CHANNEL_SDF
+								x,
+								y,
+								z,
+								VoxelBuffer.CHANNEL_SDF
 							)
 							- reference.get_voxel_f(
-								x, y, z, VoxelBuffer.CHANNEL_SDF
+								x,
+								y,
+								z,
+								VoxelBuffer.CHANNEL_SDF
 							)
 						)
 					)
@@ -556,7 +627,7 @@ func _ready() -> void:
 	_test_journal_snapshot()
 	super._ready()
 	_terrain.lod_distance = 32.0
-	
+
 	# Place the edit a short distance from spawn, not under the capsule.
 	var nearby: LkPosition64 = _q0.plus_local(Vector3(0.0, 0.0, -8.0))
 	_edit_up = nearby.direction()
@@ -576,7 +647,7 @@ func _ready() -> void:
 		int(roundf(_edit_center.y)),
 		int(roundf(_edit_center.z))
 	)
-	
+
 	if not _edit_journal.append_sphere(
 		_edit_center,
 		EDIT_RADIUS_M,
@@ -584,16 +655,19 @@ func _ready() -> void:
 	):
 		_edit_failure("failed to create initial journal operation")
 		return
-		
+
 	# Replace the initial generator before the first physics frame.
 	_terrain.generator = _make_patch_generator(_anchor)
 
-	print("VoxelEditReanchor: mode=%s center=(%.3f, %.3f, %.3f)" % [
-		_edit_mode(),
-		_edit_center.x,
-		_edit_center.y,
-		_edit_center.z,
-	])
+	print(
+		"VoxelEditReanchor: mode=%s center=(%.3f, %.3f, %.3f)"
+		% [
+			_edit_mode(),
+			_edit_center.x,
+			_edit_center.y,
+			_edit_center.z,
+		]
+	)
 
 
 func _edit_mode() -> String:
@@ -640,7 +714,10 @@ func _sample_voxel(q: Vector3i) -> Vector3i:
 
 func _edit_area() -> AABB:
 	var center: Vector3 = Vector3(_sample_voxel(_edit_grid))
-	return AABB(center - Vector3.ONE * 6.0, Vector3.ONE * 12.0)
+	return AABB(
+		center - Vector3.ONE * 6.0,
+		Vector3.ONE * 12.0
+	)
 
 
 func _read_edit_samples() -> PackedFloat64Array:
@@ -665,7 +742,11 @@ func _count_changed_samples(values: PackedFloat64Array) -> int:
 		for y: int in range(-3, 4):
 			for z: int in range(-3, 4):
 				var q: Vector3i = _edit_grid + Vector3i(x, y, z)
-				var q64: LkPosition64 = LkPosition64.new(q.x, q.y, q.z)
+				var q64: LkPosition64 = LkPosition64.new(
+					q.x,
+					q.y,
+					q.z
+				)
 
 				var base: float = clampf(
 					q64.length()
@@ -675,7 +756,11 @@ func _count_changed_samples(values: PackedFloat64Array) -> int:
 				)
 
 				var difference: float = values[index] - base
-				if (difference < -0.01) if build_mode else (difference > 0.01):
+
+				if (
+					(difference < -0.01) if build_mode
+					else (difference > 0.01)
+				):
 					changed += 1
 
 				index += 1
@@ -684,7 +769,10 @@ func _count_changed_samples(values: PackedFloat64Array) -> int:
 
 
 func _fixed_to_local(q: LkPosition64) -> Vector3:
-	var rotated: LkPosition64 = _rotation.rotate(q, _rotation.angle_rad)
+	var rotated: LkPosition64 = _rotation.rotate(
+		q,
+		_rotation.angle_rad
+	)
 	var local: LkPosition64 = (
 		_center.minus(_frame.get_origin()).plus(rotated)
 	)
@@ -926,8 +1014,13 @@ func _physics_process(delta: float) -> void:
 	if _edit_phase in ["PASS", "FAIL"]:
 		return
 
-	var edit_distance: float = _fixed_position().minus(_edit_center).length()
-	_max_edit_distance_m = maxf(_max_edit_distance_m, edit_distance)
+	var edit_distance: float = (
+		_fixed_position().minus(_edit_center).length()
+	)
+	_max_edit_distance_m = maxf(
+		_max_edit_distance_m,
+		edit_distance
+	)
 
 	if _edit_phase == "TRAVEL":
 		if (
@@ -940,12 +1033,15 @@ func _physics_process(delta: float) -> void:
 			_edit_phase = "VERIFY"
 			_edit_wait_s = 0.0
 			_edit_stable = 0
-			print("VoxelEditReanchor: returned; verifying actual SDF and colliders")
+			print(
+				"VoxelEditReanchor: returned; verifying actual SDF and colliders"
+			)
 		return
 
 	_edit_wait_s += delta
 
 	var area: AABB = _edit_area()
+
 	if (
 		not _voxel_tool.is_area_editable(area)
 		or not _terrain.is_area_meshed(area, 0)
@@ -959,6 +1055,7 @@ func _physics_process(delta: float) -> void:
 
 	if heights.size() != 9:
 		_edit_stable = 0
+
 		if _edit_wait_s > EDIT_WAIT_TIMEOUT_S:
 			_edit_failure("expected 9 physical ray hits")
 		return
@@ -969,6 +1066,7 @@ func _physics_process(delta: float) -> void:
 		# All nine hits must be on the edited side of the original
 		# spherical brush centre: mound above, cavity below.
 		var edited_profile: bool = true
+
 		for height: float in heights:
 			edited_profile = edited_profile and (
 				height > 0.5 if build_mode else height < -0.5
@@ -976,11 +1074,15 @@ func _physics_process(delta: float) -> void:
 
 		if _changed_samples == 0 or not edited_profile:
 			_edit_stable = 0
+
 			if _edit_wait_s > EDIT_WAIT_TIMEOUT_S:
-				_edit_failure("edit did not change both SDF and collision profile")
+				_edit_failure(
+					"edit did not change both SDF and collision profile"
+				)
 			return
 
 		_edit_stable += 1
+
 		if _edit_stable >= 10:
 			_sdf_reference = values
 			_height_reference = heights
@@ -1107,22 +1209,26 @@ func _test_journal_snapshot() -> void:
 	# Mutating the input object must not change a recorded operation.
 	source_center.x = 123.0
 
-	var added_second: bool = journal.append_sphere(
+	var added_second: bool = journal.append_partial_sdf(
 		LkPosition64.new(4505204.761, 4505204.761, -8.0),
 		1.0,
-		false
+		false,
+		0.25
 	)
 	var second: PackedFloat64Array = journal.copy_records()
 
 	var passed: bool = (
 		added_first
 		and added_second
-		and first.size() == 5
-		and second.size() == 10
+		and first.size() == LkVoxelEditJournal.RECORD_SIZE
+		and second.size() == LkVoxelEditJournal.RECORD_SIZE * 2
 		and first[0] == 4505204.761
 		and second[0] == 4505204.761
 		and first[4] == 1.0
-		and second[9] == 0.0
+		and first[5] == float(LkVoxelEditJournal.MODE_FULL)
+		and second[4] == 0.0
+		and second[5] == float(LkVoxelEditJournal.MODE_PARTIAL)
+		and second[6] == 0.25
 		and journal.get_revision() == 2
 		and journal.get_count() == 2
 	)
@@ -1143,7 +1249,9 @@ func _test_journal_snapshot() -> void:
 func _process(delta: float) -> void:
 	super._process(delta)
 
-	var edit_distance: float = _fixed_position().minus(_edit_center).length()
+	var edit_distance: float = (
+		_fixed_position().minus(_edit_center).length()
+	)
 	var toward: LkPosition64 = _edit_center.minus(_fixed_position())
 
 	_label.text += (
@@ -1162,8 +1270,11 @@ func _process(delta: float) -> void:
 		toward.y,
 		toward.z,
 	]
-	_label.text += "\nStream hold: %s | reason: %s | wait: %.1f s" % [
-		_stream_hold,
-		_stream_hold_reason,
-		_stream_hold_s,
-	]
+	_label.text += (
+		"\nStream hold: %s | reason: %s | wait: %.1f s"
+		% [
+			_stream_hold,
+			_stream_hold_reason,
+			_stream_hold_s,
+		]
+	)

@@ -8,7 +8,7 @@ const PUBLICATION_COLLIDER_SDF_TOLERANCE: float = 0.1
 const JOURNAL_SAVE_PATH: String = (
 	"user://voxel_edit_publication_journal.json"
 )
-const JOURNAL_FORMAT_VERSION: int = 1
+const JOURNAL_FORMAT_VERSION: int = 2
 const STREAM_DATABASE_PATH: String = (
 	"user://voxel_edit_publication_stream.sqlite"
 )
@@ -57,6 +57,7 @@ func _ready() -> void:
 				_edit_journal.get_count(),
 			]
 		)
+
 	print(
 		"VoxelPublication: LMB dig stamp, RMB build stamp. "
 		+ "Aim 6-14 m away. Journal-backed reanchor persistence."
@@ -86,7 +87,9 @@ func _unhandled_input(event: InputEvent) -> void:
 				return
 
 			_request_stamp = true
-			_request_build = button.button_index == MOUSE_BUTTON_RIGHT
+			_request_build = (
+				button.button_index == MOUSE_BUTTON_RIGHT
+			)
 			return
 
 	super._unhandled_input(event)
@@ -109,8 +112,10 @@ func _physics_process(delta: float) -> void:
 		):
 			_accept_stamp(_request_build)
 		else:
-			print("VoxelPublication: BUSY at physics boundary; click ignored")
-			
+			print(
+				"VoxelPublication: BUSY at physics boundary; click ignored"
+			)
+
 	_stream_autosave_s += delta
 
 	if _stream_autosave_s >= STREAM_AUTOSAVE_INTERVAL_S:
@@ -121,7 +126,9 @@ func _physics_process(delta: float) -> void:
 func _accept_stamp(build: bool) -> void:
 	var camera: Camera3D = _player.player_camera
 	var from: Vector3 = camera.global_position
-	var forward: Vector3 = -camera.global_basis.z.normalized()
+	var forward: Vector3 = (
+		-camera.global_basis.z.normalized()
+	)
 
 	var query: PhysicsRayQueryParameters3D = (
 		PhysicsRayQueryParameters3D.create(
@@ -143,7 +150,9 @@ func _accept_stamp(build: bool) -> void:
 	var point: Vector3 = hit["position"]
 
 	if point.distance_to(_player.global_position) < MIN_STAMP_DISTANCE_M:
-		print("VoxelPublication: TOO CLOSE; aim at least 6 m away")
+		print(
+			"VoxelPublication: TOO CLOSE; aim at least 6 m away"
+		)
 		return
 
 	var relative: LkPosition64 = _rotation.relative_position(
@@ -155,6 +164,22 @@ func _accept_stamp(build: bool) -> void:
 		-_rotation.angle_rad
 	)
 
+	var changed: int = _apply_local_stamp(
+		_publication_center,
+		STAMP_RADIUS_M,
+		build,
+		LkVoxelEditJournal.MODE_FULL,
+		0.0
+	)
+
+	if changed < 0:
+		_fail_gate("local stamp area is not editable")
+		return
+
+	if changed == 0:
+		print("VoxelPublication: NO SDF CHANGE")
+		return
+
 	if ENABLE_JOURNAL:
 		if not _edit_journal.append_sphere(
 			_publication_center,
@@ -164,24 +189,17 @@ func _accept_stamp(build: bool) -> void:
 			_fail_gate("journal rejected stamp")
 			return
 
-	if not _apply_local_stamp(
-		_publication_center,
-		STAMP_RADIUS_M,
-		build
-	):
-		_fail_gate("local stamp area is not editable")
-		return
-
 	if not _save_journal():
 		_fail_gate("failed to save journal after local stamp")
 		return
 
 	print(
-		"VoxelPublication: LOCAL %s revision=%d operations=%d"
+		"VoxelPublication: LOCAL %s revision=%d operations=%d changed=%d"
 		% [
 			"DIG" if not build else "BUILD",
 			_edit_journal.get_revision(),
 			_edit_journal.get_count(),
+			changed,
 		]
 	)
 
@@ -195,7 +213,9 @@ func _choose_anchor(fixed: LkPosition64) -> LkPosition64:
 
 
 func _check_pending() -> bool:
-	var generator: EditedGenerator = _pending.generator as EditedGenerator
+	var generator: EditedGenerator = (
+		_pending.generator as EditedGenerator
+	)
 
 	if generator == null:
 		_build_reason = "INVALID GENERATOR"
@@ -307,9 +327,15 @@ func _check_publication_samples(
 	tool: VoxelToolLodTerrain
 ) -> bool:
 	var center_voxel: Vector3i = Vector3i(
-		int(roundf(_publication_center.x - _pending_anchor.x)),
-		int(roundf(_publication_center.y - _pending_anchor.y)),
-		int(roundf(_publication_center.z - _pending_anchor.z))
+		int(roundf(
+			_publication_center.x - _pending_anchor.x
+		)),
+		int(roundf(
+			_publication_center.y - _pending_anchor.y
+		)),
+		int(roundf(
+			_publication_center.z - _pending_anchor.z
+		))
 	)
 
 	var expected: VoxelBuffer = VoxelBuffer.new()
@@ -320,15 +346,23 @@ func _check_publication_samples(
 	for x: int in [-2, 0, 2]:
 		for y: int in [-2, 0, 2]:
 			for z: int in [-2, 0, 2]:
-				var voxel: Vector3i = center_voxel + Vector3i(x, y, z)
+				var voxel: Vector3i = (
+					center_voxel + Vector3i(x, y, z)
+				)
 
 				generator._generate_block(expected, voxel, 0)
 
 				var reference: float = expected.get_voxel_f(
-					0, 0, 0, VoxelBuffer.CHANNEL_SDF
+					0,
+					0,
+					0,
+					VoxelBuffer.CHANNEL_SDF
 				)
 				var actual: float = tool.get_voxel_f(voxel)
-				worst = maxf(worst, absf(actual - reference))
+				worst = maxf(
+					worst,
+					absf(actual - reference)
+				)
 
 	if worst > PUBLICATION_SDF_TOLERANCE:
 		return false
@@ -344,7 +378,9 @@ func _planet_point_to_local(q: LkPosition64) -> Vector3:
 	return _fixed_to_local(q)
 
 
-func _check_publication_colliders(tool: VoxelToolLodTerrain) -> bool:
+func _check_publication_colliders(
+	tool: VoxelToolLodTerrain
+) -> bool:
 	var up: Vector3 = _publication_center.direction()
 	var axes: Basis = _basis_for_up(up)
 
@@ -354,7 +390,9 @@ func _check_publication_colliders(tool: VoxelToolLodTerrain) -> bool:
 				axes.x * (x + 0.00137)
 				+ axes.z * (z + 0.00219)
 			)
-			var q: LkPosition64 = _publication_center.plus_local(offset)
+			var q: LkPosition64 = _publication_center.plus_local(
+				offset
+			)
 
 			var top: Vector3 = _planet_point_to_local(
 				q.plus_local(up * 8.0)
@@ -373,7 +411,9 @@ func _check_publication_colliders(tool: VoxelToolLodTerrain) -> bool:
 			)
 
 			var hit: Dictionary = (
-				get_world_3d().direct_space_state.intersect_ray(query)
+				get_world_3d().direct_space_state.intersect_ray(
+					query
+				)
 			)
 
 			if hit.is_empty():
@@ -393,7 +433,9 @@ func _check_publication_colliders(tool: VoxelToolLodTerrain) -> bool:
 
 
 func _commit_patch() -> void:
-	var generator: EditedGenerator = _pending.generator as EditedGenerator
+	var generator: EditedGenerator = (
+		_pending.generator as EditedGenerator
+	)
 
 	if (
 		generator == null
@@ -401,17 +443,17 @@ func _commit_patch() -> void:
 	):
 		_fail_gate("refusing stale patch at commit")
 		return
-		
+
 	if _publishing and not _publication_capsule_is_clear():
 		_pending_stable_ticks = 0
 		_build_reason = "PUBLICATION PLAYER OVERLAPS NEW TERRAIN"
 		return
-		
+
 	var was_publication: bool = _publishing
 	super._commit_patch()
-	
+
 	_print_snapshot_cache_stats("SWAP", generator)
-	
+
 	if was_publication:
 		_publishing = false
 
@@ -427,8 +469,10 @@ func _commit_patch() -> void:
 func _apply_local_stamp(
 	center: LkPosition64,
 	radius: float,
-	build: bool
-) -> bool:
+	build: bool,
+	mode: int = LkVoxelEditJournal.MODE_FULL,
+	amount_m: float = 0.0
+) -> int:
 	var local_center: Vector3 = Vector3(
 		center.x - float(_anchor.x),
 		center.y - float(_anchor.y),
@@ -458,7 +502,9 @@ func _apply_local_stamp(
 	tool.channel = VoxelBuffer.CHANNEL_SDF
 
 	if not tool.is_area_editable(area):
-		return false
+		return -1
+
+	var changed: int = 0
 
 	for x: int in range(min_corner.x, max_corner.x + 1):
 		for y: int in range(min_corner.y, max_corner.y + 1):
@@ -470,18 +516,39 @@ func _apply_local_stamp(
 				var sphere_sdf: float = distance - radius
 				var current: float = tool.get_voxel_f(position)
 
-				var result: float
+				var target: float
+
 				if build:
-					result = minf(current, sphere_sdf)
+					target = minf(current, sphere_sdf)
 				else:
-					result = maxf(current, -sphere_sdf)
+					target = maxf(current, -sphere_sdf)
+
+				var result: float = current
+
+				if mode == LkVoxelEditJournal.MODE_PARTIAL:
+					var maximum_change: float = amount_m
+					var change: float = target - current
+
+					if absf(change) > maximum_change:
+						change = (
+							signf(change) * maximum_change
+						)
+
+					result = current + change
+				else:
+					result = target
+
+				var clamped: float = clampf(result, -4.0, 4.0)
+
+				if not is_equal_approx(clamped, current):
+					changed += 1
 
 				tool.set_voxel_f(
 					position,
-					clampf(result, -4.0, 4.0)
+					clamped
 				)
 
-	return true
+	return changed
 
 
 func _publication_capsule_is_clear() -> bool:
@@ -516,7 +583,9 @@ func _process(delta: float) -> void:
 	super._process(delta)
 
 	var active_revision: int = -1
-	var active: EditedGenerator = _terrain.generator as EditedGenerator
+	var active: EditedGenerator = (
+		_terrain.generator as EditedGenerator
+	)
 
 	if active != null:
 		active_revision = active.get_revision()
@@ -533,6 +602,7 @@ func _process(delta: float) -> void:
 		_edit_journal.get_count(),
 		_publishing,
 	]
+
 	if active != null:
 		var cache_stats: Dictionary = active.get_cache_stats()
 
@@ -601,21 +671,27 @@ func _print_snapshot_cache_stats(
 func _save_journal() -> bool:
 	var records: PackedFloat64Array = _edit_journal.copy_records()
 
-	if records.size() % 5 != 0:
+	if records.size() % LkVoxelEditJournal.RECORD_SIZE != 0:
 		push_error(
-			"VoxelPublication: journal record size is not a multiple of 5"
+			"VoxelPublication: journal record size is invalid"
 		)
 		return false
 
 	var operations: Array = []
 
-	for index: int in range(0, records.size(), 5):
+	for index: int in range(
+		0,
+		records.size(),
+		LkVoxelEditJournal.RECORD_SIZE
+	):
 		operations.append([
 			records[index],
 			records[index + 1],
 			records[index + 2],
 			records[index + 3],
 			records[index + 4] > 0.5,
+			int(records[index + 5]),
+			records[index + 6],
 		])
 
 	var document: Dictionary = {
@@ -663,14 +739,16 @@ func _load_journal() -> bool:
 	var document: Variant = JSON.parse_string(text)
 
 	if typeof(document) != TYPE_DICTIONARY:
-		push_warning("VoxelPublication: journal save file is not valid JSON")
+		push_warning(
+			"VoxelPublication: journal save file is not valid JSON"
+		)
 		return false
 
 	var saved_version: int = int(document.get("version", -1))
 	var saved_revision: int = int(document.get("revision", -1))
 	var entries: Variant = document.get("operations", null)
 
-	if saved_version != JOURNAL_FORMAT_VERSION:
+	if saved_version not in [1, 2]:
 		push_warning(
 			"VoxelPublication: unsupported journal format version %d"
 			% saved_version
@@ -678,7 +756,9 @@ func _load_journal() -> bool:
 		return false
 
 	if typeof(entries) != TYPE_ARRAY:
-		push_warning("VoxelPublication: journal operations are missing")
+		push_warning(
+			"VoxelPublication: journal operations are missing"
+		)
 		return false
 
 	if saved_revision != entries.size():
@@ -690,7 +770,7 @@ func _load_journal() -> bool:
 	var journal: LkVoxelEditJournal = LkVoxelEditJournal.new()
 
 	for entry: Variant in entries:
-		if typeof(entry) != TYPE_ARRAY or entry.size() != 5:
+		if typeof(entry) != TYPE_ARRAY:
 			push_warning(
 				"VoxelPublication: invalid journal operation entry"
 			)
@@ -701,12 +781,52 @@ func _load_journal() -> bool:
 			float(entry[1]),
 			float(entry[2])
 		)
+		var radius: float = float(entry[3])
+		var build: bool = bool(entry[4])
+		var added: bool
 
-		if not journal.append_sphere(
-			center,
-			float(entry[3]),
-			bool(entry[4])
-		):
+		if saved_version == 1:
+			if entry.size() != 5:
+				push_warning(
+					"VoxelPublication: invalid legacy operation"
+				)
+				return false
+
+			added = journal.append_sphere(
+				center,
+				radius,
+				build
+			)
+		else:
+			if entry.size() != 7:
+				push_warning(
+					"VoxelPublication: invalid version 2 operation"
+				)
+				return false
+
+			var mode: int = int(entry[5])
+			var amount: float = float(entry[6])
+
+			if mode == LkVoxelEditJournal.MODE_FULL:
+				added = journal.append_sphere(
+					center,
+					radius,
+					build
+				)
+			elif mode == LkVoxelEditJournal.MODE_PARTIAL:
+				added = journal.append_partial_sdf(
+					center,
+					radius,
+					build,
+					amount
+				)
+			else:
+				push_warning(
+					"VoxelPublication: invalid operation mode"
+				)
+				return false
+
+		if not added:
 			push_warning(
 				"VoxelPublication: journal rejected a saved operation"
 			)
