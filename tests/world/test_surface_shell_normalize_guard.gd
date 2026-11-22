@@ -1,6 +1,6 @@
 extends SceneTree
 
-const PATH: String = "res://world/rendering/lk_far_system_surface_shell.gdshader"
+const PATH: String = "res://game/world/rendering/lk_far_system_surface_shell.gdshader"
 var _failures: int = 0
 
 func _check(ok: bool, label: String) -> void:

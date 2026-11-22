@@ -1,6 +1,6 @@
 extends SceneTree
 
-const Policy = preload("res://world/debug/lk_auto_surface_policy.gd")
+const Policy = preload("res://game/debug/lk_auto_surface_policy.gd")
 const AutoScene = preload("res://scenes/world/test_catalog_auto_surface.gd")
 var _failures: int = 0
 

@@ -1,10 +1,10 @@
 extends "res://scenes/world/test_catalog_far_mesh.gd"
 
-const NearbyQuery = preload("res://world/runtime/lk_nearby_stars.gd")
-const SpatialStars = preload("res://world/runtime/lk_universe_spatial.gd")
-const SpriteData = preload("res://world/rendering/lk_star_sprite_data.gd")
-const StarSpriteBatch = preload("res://world/rendering/lk_star_sprites.gd")
-const StarDiskCache = preload("res://world/runtime/lk_star_candidate_cache.gd")
+const NearbyQuery = preload("res://game/world/runtime/lk_nearby_stars.gd")
+const SpatialStars = preload("res://game/world/runtime/lk_universe_spatial.gd")
+const SpriteData = preload("res://game/world/rendering/lk_star_sprite_data.gd")
+const StarSpriteBatch = preload("res://game/world/rendering/lk_star_sprites.gd")
+const StarDiskCache = preload("res://game/world/runtime/lk_star_candidate_cache.gd")
 
 @export_range(1.0, 128.0, 1.0) var star_search_radius_ly: float = 128.0
 @export var star_magnitude_limit: float = 6.0

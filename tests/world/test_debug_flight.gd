@@ -1,6 +1,6 @@
 extends SceneTree
 
-const FlightMath = preload("res://world/debug/lk_debug_flight_math.gd")
+const FlightMath = preload("res://game/debug/lk_debug_flight_math.gd")
 const FlightScene = preload("res://scenes/world/test_catalog_debug_flight.gd")
 var _failures: int = 0
 

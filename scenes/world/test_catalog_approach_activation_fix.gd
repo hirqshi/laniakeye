@@ -1,6 +1,6 @@
 extends "res://scenes/world/test_catalog_seamless_approach.gd"
 
-const WarmPolicy = preload("res://world/debug/lk_warm_activation_policy.gd")
+const WarmPolicy = preload("res://game/debug/lk_warm_activation_policy.gd")
 
 @export var activation_recovery_grace_s: float = 0.25
 var _warm_follow_actual: bool = false

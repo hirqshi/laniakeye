@@ -1,6 +1,6 @@
 extends "res://scenes/world/test_catalog_surface_control_v5.gd"
 
-const ContactPolicy6 = preload("res://world/debug/lk_surface_contact_policy.gd")
+const ContactPolicy6 = preload("res://game/debug/lk_surface_contact_policy.gd")
 @export var contact_timeout_s: float = 2.0
 @export var contact_clearance_m: float = 0.03
 var _contact6_active: bool = false

@@ -1,10 +1,10 @@
 extends SceneTree
 
-const OldPool = preload("res://world/debug/lk_flight_sphere_pool.gd")
-const FusedPool = preload("res://world/debug/lk_flight_sphere_pool_fused.gd")
-const Occlusion = preload("res://world/debug/lk_navigation_occlusion_scalar.gd")
-const Snapshot = preload("res://world/rendering/lk_far_body_snapshot.gd")
-const Math = preload("res://world/debug/lk_debug_flight_math.gd")
+const OldPool = preload("res://game/debug/lk_flight_sphere_pool.gd")
+const FusedPool = preload("res://game/debug/lk_flight_sphere_pool_fused.gd")
+const Occlusion = preload("res://game/debug/lk_navigation_occlusion_scalar.gd")
+const Snapshot = preload("res://game/world/rendering/lk_far_body_snapshot.gd")
+const Math = preload("res://game/debug/lk_debug_flight_math.gd")
 const SceneScript = preload("res://scenes/world/test_catalog_flight_cpu_v7.gd")
 var _failures: int = 0
 

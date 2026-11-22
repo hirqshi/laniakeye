@@ -1,6 +1,6 @@
 extends SceneTree
 
-const Book3 = preload("res://world/debug/lk_transfer_route_book.gd")
+const Book3 = preload("res://game/debug/lk_transfer_route_book.gd")
 const Scene3 = preload("res://scenes/world/test_catalog_transfer_roundtrip_v3.gd")
 var _failures: int = 0
 

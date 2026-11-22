@@ -1,9 +1,9 @@
 extends SceneTree
 
-const Identity = preload("res://world/generation/lk_world_identity.gd")
-const Samples = preload("res://world/generation/lk_world_samples.gd")
-const Definition = preload("res://world/generation/lk_universe_definition.gd")
-const Catalog = preload("res://world/generation/lk_world_catalog.gd")
+const Identity = preload("res://game/world/generation/lk_world_identity.gd")
+const Samples = preload("res://game/world/generation/lk_world_samples.gd")
+const Definition = preload("res://game/world/generation/lk_universe_definition.gd")
+const Catalog = preload("res://game/world/generation/lk_world_catalog.gd")
 
 var _failures: int = 0
 var _seen: Dictionary = {}

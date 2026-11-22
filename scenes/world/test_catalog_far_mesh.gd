@@ -1,6 +1,6 @@
 extends "res://scenes/world/test_catalog_world_clock.gd"
 
-const CatalogFarMesh = preload("res://world/rendering/lk_catalog_far_mesh.gd")
+const CatalogFarMesh = preload("res://game/world/rendering/lk_catalog_far_mesh.gd")
 var _catalog_far_node: CatalogFarMesh
 var _catalog_far_report_s: float = 0.0
 

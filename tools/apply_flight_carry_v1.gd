@@ -27,7 +27,7 @@ func _initialize() -> void:
 	new_export += "@export var debug_flight_adaptive_carry: bool = true\n"
 	new_export += "@export var debug_flight_carry_override_m: float = 0.0\n"
 	new_export += "var _flight_carry_band: Dictionary = {}\nvar _flight_carry_weight: float = 0.0"
-	var const_anchor: String = "const FlightMath = preload(\"res://world/debug/lk_debug_flight_math.gd\")"
+	var const_anchor: String = "const FlightMath = preload(\"res://game/debug/lk_debug_flight_math.gd\")"
 	var hud_anchor: String = "\t\t_label.text += \"\\n\" + _flight_status"
 	var hud: String = "\t\tif _flight_active and _flight_carry_band.get(\"ok\", false):\n"
 	hud += "\t\t\t_label.text += \"\\nSurface carry %.1f%% | transition %.2f..%.2f km | active body\" % [_flight_carry_weight * 100.0, float(_flight_carry_band[\"inner_m\"]) / 1000.0, float(_flight_carry_band[\"outer_m\"]) / 1000.0]\n"
@@ -40,7 +40,7 @@ func _initialize() -> void:
 			return
 	var changed: String = source.replace(old_carry, new_carry).replace(old_apply, new_apply)
 	changed = changed.replace(old_export, new_export)
-	changed = changed.replace(const_anchor, const_anchor + "\nconst FlightCarry = preload(\"res://world/debug/lk_debug_flight_carry.gd\")")
+	changed = changed.replace(const_anchor, const_anchor + "\nconst FlightCarry = preload(\"res://game/debug/lk_debug_flight_carry.gd\")")
 	changed = changed.replace(hud_anchor, hud)
 	var backup: String = path + ".pre_adaptive_carry.bak"
 	if not FileAccess.file_exists(backup) and not _write(backup, source):

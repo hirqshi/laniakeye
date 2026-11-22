@@ -1,7 +1,7 @@
 extends SceneTree
 
-const Bridge = preload("res://world/rendering/lk_surface_shell_bridge.gd")
-const Shell = preload("res://world/rendering/lk_surface_shell_math.gd")
+const Bridge = preload("res://game/world/rendering/lk_surface_shell_bridge.gd")
+const Shell = preload("res://game/world/rendering/lk_surface_shell_math.gd")
 var _failures: int = 0
 
 func _check(ok: bool, label: String) -> void:

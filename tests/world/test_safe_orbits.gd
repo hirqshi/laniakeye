@@ -1,10 +1,10 @@
 extends SceneTree
 
-const Identity = preload("res://world/generation/lk_world_identity.gd")
-const Catalog = preload("res://world/generation/lk_world_catalog.gd")
-const Bodies = preload("res://world/generation/lk_body_catalog.gd")
-const Layout = preload("res://world/generation/lk_safe_orbit_layout.gd")
-const Validator = preload("res://world/generation/lk_orbit_layout_validator.gd")
+const Identity = preload("res://game/world/generation/lk_world_identity.gd")
+const Catalog = preload("res://game/world/generation/lk_world_catalog.gd")
+const Bodies = preload("res://game/world/generation/lk_body_catalog.gd")
+const Layout = preload("res://game/world/generation/lk_safe_orbit_layout.gd")
+const Validator = preload("res://game/world/generation/lk_orbit_layout_validator.gd")
 
 var _failures: int = 0
 var _systems: int = 0

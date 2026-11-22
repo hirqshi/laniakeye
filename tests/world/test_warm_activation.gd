@@ -1,6 +1,6 @@
 extends SceneTree
 
-const Policy = preload("res://world/debug/lk_warm_activation_policy.gd")
+const Policy = preload("res://game/debug/lk_warm_activation_policy.gd")
 const SceneScript = preload("res://scenes/world/test_catalog_approach_activation_fix.gd")
 var _failures: int = 0
 

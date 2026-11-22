@@ -2,10 +2,10 @@ extends "res://scenes/world/test_catalog_planet.gd"
 
 # Two isolated catalog-body worlds. Switching restarts the local body world;
 # it is NOT spaceflight, shared physics, or a live cross-body transition.
-const Catalog = preload("res://world/generation/lk_world_catalog.gd")
-const Bodies = preload("res://world/generation/lk_body_catalog.gd")
-const Layout = preload("res://world/generation/lk_safe_orbit_layout.gd")
-const Validator = preload("res://world/generation/lk_orbit_layout_validator.gd")
+const Catalog = preload("res://game/world/generation/lk_world_catalog.gd")
+const Bodies = preload("res://game/world/generation/lk_body_catalog.gd")
+const Layout = preload("res://game/world/generation/lk_safe_orbit_layout.gd")
+const Validator = preload("res://game/world/generation/lk_orbit_layout_validator.gd")
 
 @export var second_body_slot: int = -1
 

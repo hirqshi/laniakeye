@@ -1,6 +1,6 @@
 extends SceneTree
 
-const Samples = preload("res://world/debug/lk_frame_pacing_samples.gd")
+const Samples = preload("res://game/debug/lk_frame_pacing_samples.gd")
 const SceneScript = preload("res://scenes/world/test_catalog_frame_pacing.gd")
 var _failures: int = 0
 

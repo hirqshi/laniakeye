@@ -1,8 +1,8 @@
 extends "res://scenes/world/test_catalog_stellar_light.gd"
 
-const SharedClock = preload("res://world/runtime/lk_world_clock.gd")
-const SharedClockStore = preload("res://world/runtime/lk_world_clock_store.gd")
-const SharedBodyFrame = preload("res://world/runtime/lk_clocked_body_frame.gd")
+const SharedClock = preload("res://game/world/runtime/lk_world_clock.gd")
+const SharedClockStore = preload("res://game/world/runtime/lk_world_clock_store.gd")
+const SharedBodyFrame = preload("res://game/world/runtime/lk_clocked_body_frame.gd")
 
 var _universe_clock
 var _clock_universe_id: String = ""

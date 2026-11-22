@@ -1,10 +1,10 @@
 extends SceneTree
 
-const Placement = preload("res://world/generation/lk_galaxy_placement.gd")
-const Validator = preload("res://world/generation/lk_galaxy_placement_validator.gd")
-const Catalog = preload("res://world/generation/lk_world_catalog.gd")
-const Definition = preload("res://world/generation/lk_universe_definition.gd")
-const Identity = preload("res://world/generation/lk_world_identity.gd")
+const Placement = preload("res://game/world/generation/lk_galaxy_placement.gd")
+const Validator = preload("res://game/world/generation/lk_galaxy_placement_validator.gd")
+const Catalog = preload("res://game/world/generation/lk_world_catalog.gd")
+const Definition = preload("res://game/world/generation/lk_universe_definition.gd")
+const Identity = preload("res://game/world/generation/lk_world_identity.gd")
 
 var _failures: int = 0
 

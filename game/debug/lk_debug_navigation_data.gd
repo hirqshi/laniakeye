@@ -1,0 +1,88 @@
+class_name LkDebugNavigationData
+extends RefCounted
+
+const MAX_MARKS: int = 64
+const MAGIC: String = "LK_DEBUG_MARKS_1"
+
+static func validate(scope: String, marks: Array, next_id: int) -> bool:
+	if scope.is_empty() or marks.size() > MAX_MARKS or next_id < 1:
+		return false
+	var seen: Dictionary = {}
+	for item in marks:
+		if not item is Dictionary:
+			return false
+		if not item.has_all(["serial", "body_id", "q", "name"]):
+			return false
+		if typeof(item["serial"]) != TYPE_INT or item["serial"] < 1 or item["serial"] >= next_id or seen.has(item["serial"]):
+			return false
+		seen[item["serial"]] = true
+		if typeof(item["body_id"]) != TYPE_STRING or String(item["body_id"]).length() != 32:
+			return false
+		if typeof(item["name"]) != TYPE_STRING or String(item["name"]).length() > 80:
+			return false
+		if not item["q"] is Array or item["q"].size() != 3:
+			return false
+		for value in item["q"]:
+			if typeof(value) not in [TYPE_INT, TYPE_FLOAT] or not is_finite(float(value)):
+				return false
+	return true
+
+static func save_marks(path: String, scope: String, marks: Array, next_id: int) -> bool:
+	if not validate(scope, marks, next_id):
+		return false
+	if DirAccess.make_dir_recursive_absolute(path.get_base_dir()) != OK:
+		return false
+	var bytes: PackedByteArray = var_to_bytes({"magic": MAGIC, "scope": scope, "marks": marks, "next_id": next_id})
+	var file: FileAccess = FileAccess.open(path + ".tmp", FileAccess.WRITE)
+	if file == null:
+		return false
+	file.store_buffer(_digest(bytes))
+	file.store_buffer(bytes)
+	file.flush()
+	var error: Error = file.get_error()
+	file.close()
+	if error != OK:
+		return false
+	# Never remove the old file first: failed replacement must not erase it.
+	return DirAccess.rename_absolute(path + ".tmp", path) == OK
+
+static func load_marks(path: String, scope: String) -> Dictionary:
+	if not FileAccess.file_exists(path):
+		return {"ok": true, "marks": [], "next_id": 1, "found": false}
+	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+	if file == null or file.get_length() > 1048576:
+		return {"ok": false, "error": "cannot read marker store or store too large"}
+	var bytes: PackedByteArray = file.get_buffer(file.get_length())
+	file.close()
+	if bytes.size() < 33:
+		return {"ok": false, "error": "empty/truncated marker store"}
+	var payload: PackedByteArray = bytes.slice(32)
+	if _digest(payload) != bytes.slice(0, 32):
+		return {"ok": false, "error": "marker store checksum mismatch"}
+	var value: Variant = bytes_to_var(payload)
+	if not value is Dictionary or not value.has_all(["magic", "scope", "marks", "next_id"]):
+		return {"ok": false, "error": "invalid marker store"}
+	if value["magic"] != MAGIC or value["scope"] != scope or not value["marks"] is Array or typeof(value["next_id"]) != TYPE_INT:
+		return {"ok": false, "error": "marker store identity/schema mismatch"}
+	if not validate(scope, value["marks"], value["next_id"]):
+		return {"ok": false, "error": "invalid marker records"}
+	return {"ok": true, "marks": value["marks"], "next_id": value["next_id"], "found": true}
+
+static func distance_text(meters: float) -> String:
+	if meters < 1000.0:
+		return "%.1f m" % meters
+	if meters < 1.0e9:
+		return "%.2f km" % (meters / 1000.0)
+	return "%.4f AU" % (meters / 149597870700.0)
+
+static func project_direction(camera: Camera3D, direction: Vector3, viewport: Vector2) -> Dictionary:
+	# NAV_PROJECTION_SAFE_V1
+	const SafeProjection = preload("res://game/debug/lk_debug_navigation_projection.gd")
+	return SafeProjection.project_direction(camera, direction, viewport)
+
+
+static func _digest(bytes: PackedByteArray) -> PackedByteArray:
+	var hash_context: HashingContext = HashingContext.new()
+	hash_context.start(HashingContext.HASH_SHA256)
+	hash_context.update(bytes)
+	return hash_context.finish()

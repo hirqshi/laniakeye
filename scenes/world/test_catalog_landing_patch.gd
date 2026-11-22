@@ -1,6 +1,6 @@
 extends "res://scenes/world/test_catalog_debug_flight.gd"
 
-const LandingPolicy = preload("res://world/debug/lk_landing_patch_policy.gd")
+const LandingPolicy = preload("res://game/debug/lk_landing_patch_policy.gd")
 
 @export var landing_patch_timeout_s: float = 90.0
 var _landing_preparing: bool = false

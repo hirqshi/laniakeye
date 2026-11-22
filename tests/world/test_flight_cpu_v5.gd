@@ -1,8 +1,8 @@
 extends SceneTree
 
-const Reference = preload("res://world/generation/lk_safe_orbit_layout.gd")
-const Compiled = preload("res://world/debug/lk_compiled_orbit_layout.gd")
-const Cache = preload("res://world/debug/lk_flight_cpu_compiled_cache.gd")
+const Reference = preload("res://game/world/generation/lk_safe_orbit_layout.gd")
+const Compiled = preload("res://game/debug/lk_compiled_orbit_layout.gd")
+const Cache = preload("res://game/debug/lk_flight_cpu_compiled_cache.gd")
 const Fixture = preload("res://tests/world/flight_cpu5_fixture.gd")
 const SceneScript = preload("res://scenes/world/test_catalog_flight_cpu_v5.gd")
 var _failures: int = 0

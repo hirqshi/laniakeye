@@ -1,16 +1,16 @@
 extends SceneTree
 
-const Identity = preload("res://world/generation/lk_world_identity.gd")
-const Samples = preload("res://world/generation/lk_world_samples.gd")
-const Rotation = preload("res://world/generation/lk_rotation_periods.gd")
-const Catalog = preload("res://world/generation/lk_world_catalog.gd")
-const Bodies = preload("res://world/generation/lk_body_catalog.gd")
-const Layout = preload("res://world/generation/lk_safe_orbit_layout.gd")
-const Validator = preload("res://world/generation/lk_orbit_layout_validator.gd")
-const Motion = preload("res://world/generation/lk_kepler_motion.gd")
-const BodyFrame = preload("res://world/runtime/lk_catalog_body_frame.gd")
-const Definition = preload("res://world/generation/lk_universe_definition.gd")
-const Context = preload("res://world/runtime/lk_body_context.gd")
+const Identity = preload("res://game/world/generation/lk_world_identity.gd")
+const Samples = preload("res://game/world/generation/lk_world_samples.gd")
+const Rotation = preload("res://game/world/generation/lk_rotation_periods.gd")
+const Catalog = preload("res://game/world/generation/lk_world_catalog.gd")
+const Bodies = preload("res://game/world/generation/lk_body_catalog.gd")
+const Layout = preload("res://game/world/generation/lk_safe_orbit_layout.gd")
+const Validator = preload("res://game/world/generation/lk_orbit_layout_validator.gd")
+const Motion = preload("res://game/world/generation/lk_kepler_motion.gd")
+const BodyFrame = preload("res://game/world/runtime/lk_catalog_body_frame.gd")
+const Definition = preload("res://game/world/generation/lk_universe_definition.gd")
+const Context = preload("res://game/world/runtime/lk_body_context.gd")
 
 var _failures: int = 0
 var _worst_inverse: float = 0.0

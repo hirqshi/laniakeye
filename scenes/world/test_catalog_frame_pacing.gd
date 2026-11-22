@@ -1,7 +1,7 @@
 extends "res://scenes/world/test_catalog_surface_boundary_fix.gd"
 
-const PacingMonitor = preload("res://world/debug/lk_frame_pacing_monitor.gd")
-const PacingSamples = preload("res://world/debug/lk_frame_pacing_samples.gd")
+const PacingMonitor = preload("res://game/debug/lk_frame_pacing_monitor.gd")
+const PacingSamples = preload("res://game/debug/lk_frame_pacing_samples.gd")
 
 @export var frame_pacing_enabled: bool = true
 @export var pacing_target_fps: float = 60.0

@@ -1,8 +1,8 @@
 extends SceneTree
 
 const PATHS = [
-	"res://world/rendering/lk_far_system.gdshader",
-	"res://world/rendering/lk_far_system_flight.gdshader",
+	"res://game/world/rendering/lk_far_system.gdshader",
+	"res://game/world/rendering/lk_far_system_flight.gdshader",
 ]
 var _failures: int = 0
 

@@ -1,11 +1,11 @@
 extends SceneTree
 
-const SpriteData = preload("res://world/rendering/lk_star_sprite_data.gd")
-const SpriteRenderer = preload("res://world/rendering/lk_star_sprites.gd")
+const SpriteData = preload("res://game/world/rendering/lk_star_sprite_data.gd")
+const SpriteRenderer = preload("res://game/world/rendering/lk_star_sprites.gd")
 const VisualScene = preload("res://scenes/world/test_catalog_star_sprites.gd")
-const Identity = preload("res://world/generation/lk_world_identity.gd")
-const Photo = preload("res://world/generation/lk_stellar_photometry.gd")
-const FarSnapshot = preload("res://world/rendering/lk_far_body_snapshot.gd")
+const Identity = preload("res://game/world/generation/lk_world_identity.gd")
+const Photo = preload("res://game/world/generation/lk_stellar_photometry.gd")
+const FarSnapshot = preload("res://game/world/rendering/lk_far_body_snapshot.gd")
 
 var _failures: int = 0
 
@@ -50,7 +50,7 @@ func _initialize() -> void:
 	var body: Dictionary = {"direction": [0.0, 0.0, -1.0], "radius_relative": 0.1, "distance_m": 1000.0}
 	_check(FarSnapshot.ray_distance(body, [0.0, 0.0, -1.0]) > 0.0, "foreground body blocks star ray")
 	_check(FarSnapshot.ray_distance(body, [1.0, 0.0, 0.0]) < 0.0, "open sky ray")
-	var source: String = FileAccess.get_file_as_string("res://world/rendering/lk_star_sprites.gdshader")
+	var source: String = FileAccess.get_file_as_string("res://game/world/rendering/lk_star_sprites.gdshader")
 	_check(source.contains("scene_depth") and source.contains("occluder_spheres[64]"), "depth and FarMesh mask shader contract")
 	_check(source.contains("INSTANCE_CUSTOM.xyz") and source.contains("radius_px"), "directional procedural sprite shader contract")
 	print("StarSprites: CPU/contract tests only; GPU image and loading-time need visual test")

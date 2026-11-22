@@ -1,7 +1,7 @@
 extends "res://scenes/world/test_catalog_transfer_preview_v1.gd"
 
-const TransferFrameMath2 = preload("res://world/debug/lk_transfer_frame_math.gd")
-const TransferPool2 = preload("res://world/debug/lk_flight_sphere_pool_fused.gd")
+const TransferFrameMath2 = preload("res://game/debug/lk_transfer_frame_math.gd")
+const TransferPool2 = preload("res://game/debug/lk_flight_sphere_pool_fused.gd")
 var _handover_requested: bool = false
 var _handover_is_moon: bool = false
 var _handover_status: String = "Ctrl+Enter: change reference body in space; no teleport"

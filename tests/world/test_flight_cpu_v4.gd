@@ -1,7 +1,7 @@
 extends SceneTree
 
-const Pool = preload("res://world/debug/lk_flight_sphere_pool.gd")
-const FlightMath = preload("res://world/debug/lk_debug_flight_math.gd")
+const Pool = preload("res://game/debug/lk_flight_sphere_pool.gd")
+const FlightMath = preload("res://game/debug/lk_debug_flight_math.gd")
 const SceneScript = preload("res://scenes/world/test_catalog_flight_cpu_v4.gd")
 var _failures: int = 0
 

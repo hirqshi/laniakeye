@@ -1,6 +1,6 @@
 extends "res://scenes/world/test_catalog_landing_patch.gd"
 
-const AutoPolicy = preload("res://world/debug/lk_auto_surface_policy.gd")
+const AutoPolicy = preload("res://game/debug/lk_auto_surface_policy.gd")
 
 @export var auto_surface_enabled: bool = true
 @export var auto_surface_horizon_s: float = 30.0

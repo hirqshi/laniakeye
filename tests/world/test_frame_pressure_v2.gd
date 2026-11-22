@@ -1,6 +1,6 @@
 extends SceneTree
 
-const Schema = preload("res://world/debug/lk_voxel_thread_schema_v2.gd")
+const Schema = preload("res://game/debug/lk_voxel_thread_schema_v2.gd")
 const SceneScript = preload("res://scenes/world/test_catalog_frame_pressure_v2.gd")
 var _failures: int = 0
 
@@ -27,7 +27,7 @@ func _initialize() -> void:
 	_check(source.contains("64 if pacing2_optimizations_enabled else 80"), "smaller initial request with baseline")
 	var base: String = FileAccess.get_file_as_string("res://scenes/world/test_catalog_auto_surface.gd")
 	_check(base.contains("PACING_SANDBOX_HOOK_V2"), "hook installed")
-	var monitor: String = FileAccess.get_file_as_string("res://world/debug/lk_render_pressure_monitor_v2.gd")
+	var monitor: String = FileAccess.get_file_as_string("res://game/debug/lk_render_pressure_monitor_v2.gd")
 	_check(monitor.contains("viewport_get_measured_render_time_cpu") and monitor.contains("viewport_get_measured_render_time_gpu"), "viewport timing methods gated")
 	_check(not monitor.contains('call("force_sync"') and not monitor.contains('call("force_draw"'), "no explicit rendering synchronization")
 	if _failures == 0:

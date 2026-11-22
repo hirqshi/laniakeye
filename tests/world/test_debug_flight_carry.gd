@@ -1,6 +1,6 @@
 extends SceneTree
 
-const Carry = preload("res://world/debug/lk_debug_flight_carry.gd")
+const Carry = preload("res://game/debug/lk_debug_flight_carry.gd")
 const Frame = preload("res://core/refactor_v1/rotating_frame.gd")
 const FlightScene = preload("res://scenes/world/test_catalog_debug_flight.gd")
 var _failures: int = 0

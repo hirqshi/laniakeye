@@ -1,7 +1,7 @@
 extends SceneTree
 
-const Policy5 = preload("res://world/debug/lk_surface_control_policy.gd")
-const FlightMath5 = preload("res://world/debug/lk_debug_flight_math.gd")
+const Policy5 = preload("res://game/debug/lk_surface_control_policy.gd")
+const FlightMath5 = preload("res://game/debug/lk_debug_flight_math.gd")
 const Scene5 = preload("res://scenes/world/test_catalog_surface_control_v5.gd")
 var _failures: int = 0
 

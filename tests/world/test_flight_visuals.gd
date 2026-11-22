@@ -1,8 +1,8 @@
 extends SceneTree
 
-const Bridge = preload("res://world/rendering/lk_flight_visual_bridge.gd")
+const Bridge = preload("res://game/world/rendering/lk_flight_visual_bridge.gd")
 const SceneScript = preload("res://scenes/world/test_catalog_flight_visuals.gd")
-const ShaderResource = preload("res://world/rendering/lk_far_system_flight.gdshader")
+const ShaderResource = preload("res://game/world/rendering/lk_far_system_flight.gdshader")
 var _failures: int = 0
 
 func _check(ok: bool, label: String) -> void:
@@ -11,8 +11,8 @@ func _check(ok: bool, label: String) -> void:
 		push_error("FlightVisuals: FAIL " + label)
 
 func _initialize() -> void:
-	var shader: String = FileAccess.get_file_as_string("res://world/rendering/lk_far_system_flight.gdshader")
-	var bridge: String = FileAccess.get_file_as_string("res://world/rendering/lk_flight_visual_bridge.gd")
+	var shader: String = FileAccess.get_file_as_string("res://game/world/rendering/lk_far_system_flight.gdshader")
+	var bridge: String = FileAccess.get_file_as_string("res://game/world/rendering/lk_flight_visual_bridge.gd")
 	_check(not shader.contains("nearest <= active_cutoff_m"), "no blind active distance cutout")
 	_check(not shader.contains("opacity = smoothstep"), "no empty near-distance fade")
 	_check(shader.contains("texture(scene_depth, SCREEN_UV).r > 0.0"), "opaque terrain wins per pixel")

@@ -1,14 +1,14 @@
 extends SceneTree
 
-const Snapshot = preload("res://world/rendering/lk_far_body_snapshot.gd")
-const FarRenderer = preload("res://world/rendering/lk_catalog_far_mesh.gd")
+const Snapshot = preload("res://game/world/rendering/lk_far_body_snapshot.gd")
+const FarRenderer = preload("res://game/world/rendering/lk_catalog_far_mesh.gd")
 const VisualScene = preload("res://scenes/world/test_catalog_far_mesh.gd")
-const Definition = preload("res://world/generation/lk_universe_definition.gd")
-const Catalog = preload("res://world/generation/lk_world_catalog.gd")
-const Bodies = preload("res://world/generation/lk_body_catalog.gd")
-const Layout = preload("res://world/generation/lk_safe_orbit_layout.gd")
-const Validator = preload("res://world/generation/lk_orbit_layout_validator.gd")
-const BodyFrame = preload("res://world/runtime/lk_catalog_body_frame.gd")
+const Definition = preload("res://game/world/generation/lk_universe_definition.gd")
+const Catalog = preload("res://game/world/generation/lk_world_catalog.gd")
+const Bodies = preload("res://game/world/generation/lk_body_catalog.gd")
+const Layout = preload("res://game/world/generation/lk_safe_orbit_layout.gd")
+const Validator = preload("res://game/world/generation/lk_orbit_layout_validator.gd")
+const BodyFrame = preload("res://game/world/runtime/lk_catalog_body_frame.gd")
 
 var _failures: int = 0
 

@@ -2,12 +2,12 @@ extends "res://scenes/debug/test_voxel_edit_publication.gd"
 
 # Integration harness, NOT a new production scene built on legacy gameplay.
 # Reuses only the validated refactor-era voxel reanchor/publication test machinery.
-const Definition = preload("res://world/generation/lk_universe_definition.gd")
-const Context = preload("res://world/runtime/lk_body_context.gd")
-const CatalogFrame = preload("res://world/runtime/lk_catalog_body_frame.gd")
-const BodyStore = preload("res://world/runtime/lk_body_journal_store.gd")
-const Identity = preload("res://world/generation/lk_world_identity.gd")
-const OrbitMotion = preload("res://world/generation/lk_kepler_motion.gd")
+const Definition = preload("res://game/world/generation/lk_universe_definition.gd")
+const Context = preload("res://game/world/runtime/lk_body_context.gd")
+const CatalogFrame = preload("res://game/world/runtime/lk_catalog_body_frame.gd")
+const BodyStore = preload("res://game/world/runtime/lk_body_journal_store.gd")
+const Identity = preload("res://game/world/generation/lk_world_identity.gd")
+const OrbitMotion = preload("res://game/world/generation/lk_kepler_motion.gd")
 
 # A walk reanchor builds a +-256 m patch around the player. It is a surface-
 # support operation: start it only while the player has floor contact.

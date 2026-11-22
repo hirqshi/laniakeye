@@ -1,7 +1,7 @@
 extends "res://scenes/world/test_catalog_debug_navigation.gd"
 
-const FlightMath = preload("res://world/debug/lk_debug_flight_math.gd")
-const FlightCarry = preload("res://world/debug/lk_debug_flight_carry.gd")
+const FlightMath = preload("res://game/debug/lk_debug_flight_math.gd")
+const FlightCarry = preload("res://game/debug/lk_debug_flight_carry.gd")
 
 @export var debug_flight_mouse_sensitivity: float = 0.003
 # Earth-reference midpoint; adaptive sizing enabled by default.

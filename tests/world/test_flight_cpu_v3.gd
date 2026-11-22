@@ -1,9 +1,9 @@
 extends SceneTree
 
-const Cache = preload("res://world/debug/lk_flight_cpu_state_cache.gd")
-const Policy = preload("res://world/debug/lk_flight_cpu_policy.gd")
-const Layout = preload("res://world/generation/lk_safe_orbit_layout.gd")
-const Snapshot = preload("res://world/rendering/lk_far_body_snapshot.gd")
+const Cache = preload("res://game/debug/lk_flight_cpu_state_cache.gd")
+const Policy = preload("res://game/debug/lk_flight_cpu_policy.gd")
+const Layout = preload("res://game/world/generation/lk_safe_orbit_layout.gd")
+const Snapshot = preload("res://game/world/rendering/lk_far_body_snapshot.gd")
 const SceneScript = preload("res://scenes/world/test_catalog_flight_cpu_v3.gd")
 var _failures: int = 0
 
@@ -45,7 +45,7 @@ func _initialize() -> void:
 	_check(not cache.matches(changed), "same system id with changed orbit rejected at bind")
 	_check(Policy.navigation_due(0.0, 30.0, true), "marker action forces update")
 	_check(not Policy.navigation_due(0.01, 30.0, false) and Policy.navigation_due(0.034, 30.0, false), "cosmetic cadence")
-	var paths: Dictionary = {"res://scenes/world/test_catalog_debug_flight.gd": "FLIGHT_CPU3_HOOKS_V1", "res://scenes/world/test_catalog_debug_navigation.gd": "NAV_CPU3_PROVIDER_V1", "res://world/rendering/lk_far_body_snapshot.gd": "SNAPSHOT_CPU3_OPTIONAL_STATES_V1", "res://world/rendering/lk_catalog_far_mesh.gd": "FARMESH_CPU3_PROVIDER_V1"}
+	var paths: Dictionary = {"res://scenes/world/test_catalog_debug_flight.gd": "FLIGHT_CPU3_HOOKS_V1", "res://scenes/world/test_catalog_debug_navigation.gd": "NAV_CPU3_PROVIDER_V1", "res://game/world/rendering/lk_far_body_snapshot.gd": "SNAPSHOT_CPU3_OPTIONAL_STATES_V1", "res://game/world/rendering/lk_catalog_far_mesh.gd": "FARMESH_CPU3_PROVIDER_V1"}
 	for path: String in paths:
 		_check(FileAccess.get_file_as_string(path).contains(paths[path]), "installed hook " + path)
 	if _failures == 0:

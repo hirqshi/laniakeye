@@ -1,7 +1,7 @@
 extends SceneTree
 
 func _initialize() -> void:
-	var path: String = "res://world/debug/lk_debug_navigation_data.gd"
+	var path: String = "res://game/debug/lk_debug_navigation_data.gd"
 	var source: String = FileAccess.get_file_as_string(path)
 	if source.contains("NAV_PROJECTION_SAFE_V1"):
 		print("NavProjectionHotfix: already installed")
@@ -22,7 +22,7 @@ func _initialize() -> void:
 		quit(1)
 		return
 	var replacement: String = signature + "\n\t# NAV_PROJECTION_SAFE_V1\n"
-	replacement += "\tconst SafeProjection = preload(\"res://world/debug/lk_debug_navigation_projection.gd\")\n"
+	replacement += "\tconst SafeProjection = preload(\"res://game/debug/lk_debug_navigation_projection.gd\")\n"
 	replacement += "\treturn SafeProjection.project_direction(camera, direction, viewport)\n\n"
 	var changed: String = source.substr(0, start) + replacement + source.substr(end)
 	var backup: String = path + ".pre_projection_hotfix.bak"

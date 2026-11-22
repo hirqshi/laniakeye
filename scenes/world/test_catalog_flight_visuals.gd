@@ -1,6 +1,6 @@
 extends "res://scenes/world/test_catalog_auto_surface.gd"
 
-const VisualBridge = preload("res://world/rendering/lk_flight_visual_bridge.gd")
+const VisualBridge = preload("res://game/world/rendering/lk_flight_visual_bridge.gd")
 var _flight_visual_bridge: VisualBridge
 
 func _load_target(index: int) -> void:

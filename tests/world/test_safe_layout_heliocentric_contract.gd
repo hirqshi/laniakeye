@@ -1,6 +1,6 @@
 extends SceneTree
 
-const SafeLayout = preload("res://world/generation/lk_safe_orbit_layout.gd")
+const SafeLayout = preload("res://game/world/generation/lk_safe_orbit_layout.gd")
 var _failures: int = 0
 
 func _check(ok: bool, label: String) -> void:
