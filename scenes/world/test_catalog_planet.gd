@@ -26,6 +26,22 @@ var _diagnostic_s: float = 0.0
 var _orbit_position: Array = [0.0, 0.0, 0.0]
 var _initialised: bool = false
 
+# Continuous editing state.
+var _holding_dig: bool = false
+var _holding_build: bool = false
+var _stamp_cooldown_s: float = 0.0
+var _stamp_elapsed_s: float = 0.0
+var _stamp_count: int = 0
+var _last_stamp_center: LkPosition64 = null
+var _journal_save_pending: bool = false
+var _journal_save_delay_s: float = 0.0
+var _journal_autosave_s: float = 0.0
+
+# Future material hook: all materials currently use the same edit rate.
+# A material system will replace this with a per-material rate multiplier.
+func _edit_rate_multiplier() -> float:
+	return 1.0
+
 
 class BodyGenerator:
 	extends EditedGenerator
@@ -253,32 +269,118 @@ func _save_journal() -> bool:
 	return BodyStore.write_journal(_manifest, _edit_journal)
 
 
+func _camera_sdf() -> float:
+	var camera: Camera3D = _player.player_camera
+	var local: Vector3 = _terrain.to_local(camera.global_position)
+	return _voxel_tool.get_voxel_f_interpolated(local)
+
+
+func _stamp_radius() -> float:
+	# Grow smoothly during the first half-second of a held edit.
+	var t: float = clampf(_stamp_elapsed_s / 0.5, 0.0, 1.0)
+	return lerpf(0.5, STAMP_RADIUS_M, t)
+
+
 func _accept_stamp(build: bool) -> void:
 	var camera: Camera3D = _player.player_camera
-	var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(
-		camera.global_position, camera.global_position - camera.global_basis.z * STAMP_REACH_M,
-		ACTIVE_LAYER, [_player.get_rid()]
-	)
-	var hit: Dictionary = get_world_3d().direct_space_state.intersect_ray(query)
-	if hit.is_empty():
-		return
-	var point: Vector3 = hit["position"]
-	if point.distance_to(_player.global_position) < MIN_STAMP_DISTANCE_M:
-		print("CatalogPlanet: TOO CLOSE; aim 6-14 m away")
-		return
-	_publication_center = _catalog_frame.inertial_to_body(_frame.to_absolute(point))
-	var local: Vector3 = Vector3(_publication_center.x - _anchor.x, _publication_center.y - _anchor.y, _publication_center.z - _anchor.z)
-	var extent: float = STAMP_RADIUS_M + 6.0
+	var origin: Vector3 = camera.global_position
+	var forward: Vector3 = -camera.global_basis.z.normalized()
+	var point: Vector3
+
+	# If the camera is embedded in solid terrain, a collider ray cannot help.
+	# Place the first dig stamp just ahead of the camera instead.
+	if not build and _camera_sdf() < 0.0:
+		point = origin + forward * 1.0
+	else:
+		var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(
+			origin, origin + forward * STAMP_REACH_M,
+			ACTIVE_LAYER, [_player.get_rid()]
+		)
+		var hit: Dictionary = get_world_3d().direct_space_state.intersect_ray(query)
+		if hit.is_empty():
+			return
+		point = hit["position"]
+
+	var center: LkPosition64 = _catalog_frame.inertial_to_body(_frame.to_absolute(point))
+	var radius: float = _stamp_radius()
+
+	# Avoid recording many identical operations while the aim is stationary.
+	if _last_stamp_center != null:
+		var previous: Vector3 = Vector3(
+			float(_last_stamp_center.x), float(_last_stamp_center.y), float(_last_stamp_center.z)
+		)
+		var current: Vector3 = Vector3(float(center.x), float(center.y), float(center.z))
+		if previous.distance_to(current) < radius * 0.5:
+			return
+
+	var local: Vector3 = Vector3(center.x - _anchor.x, center.y - _anchor.y, center.z - _anchor.z)
+	var extent: float = radius + 6.0
 	if not _voxel_tool.is_area_editable(AABB(local - Vector3.ONE * extent, Vector3.ONE * extent * 2.0)):
 		return
-	if not _apply_local_stamp(_publication_center, STAMP_RADIUS_M, build):
+
+	if not _apply_local_stamp(center, radius, build):
 		return
-	if not _edit_journal.append_sphere(_publication_center, STAMP_RADIUS_M, build) or not _save_journal():
-		_fail_gate("cannot persist body stamp")
+	if not _edit_journal.append_sphere(center, radius, build):
+		_fail_gate("cannot record body stamp")
 		return
-	print("CatalogPlanet: STAMP body=%s mode=%s revision=%d" % [
-		_context["body"]["id"], "BUILD" if build else "DIG", _edit_journal.get_revision(),
+
+	_publication_center = center
+	_last_stamp_center = center
+	_stamp_count += 1
+	_journal_save_pending = true
+	_journal_save_delay_s = 0.3
+
+	if build:
+		_resolve_build_overlap(center, radius, point)
+
+
+func _resolve_build_overlap(center: LkPosition64, radius: float, surface_point: Vector3) -> void:
+	var up: Vector3 = _player.up_direction.normalized()
+	if up.length_squared() < 0.5:
+		return
+
+	var center_v: Vector3 = Vector3(float(center.x), float(center.y), float(center.z))
+	var player_v: Vector3 = _player.global_position
+	var axis: Vector3 = _player.global_basis.y.normalized()
+	var half_segment: float = maxf(_capsule.height * 0.5 - _capsule.radius, 0.0)
+	var axial: float = clampf((player_v - center_v).dot(axis), -half_segment, half_segment)
+	var closest: Vector3 = center_v + axis * axial
+	var overlap: float = radius + _capsule.radius - player_v.distance_to(closest)
+
+	if overlap <= 0.0:
+		return
+
+	var outward: Vector3 = (player_v - center_v).normalized()
+	if outward.length_squared() < 0.5:
+		outward = up
+	var shift: float = overlap + 0.2
+	_player.global_position += outward * shift
+	var along: float = _player.velocity.dot(outward)
+	if along < 0.0:
+		_player.velocity -= outward * along
+
+	# The collider may still be stale after the local stamp. Verify the SDF
+	# directly and lift the player along up if the new terrain still overlaps.
+	for attempt: int in range(4):
+		var local: Vector3 = _terrain.to_local(_player.global_position)
+		var sdf: float = _voxel_tool.get_voxel_f_interpolated(local)
+		if not is_finite(sdf) or sdf >= 0.0:
+			break
+		_player.global_position += up * 0.25
+		_player.velocity -= up * _player.velocity.dot(up)
+
+
+func _finish_edit_stroke() -> void:
+	if _stamp_count <= 0:
+		return
+	print("CatalogPlanet: EDIT_STROKE body=%s stamps=%d seconds=%.2f revision=%d" % [
+		_context["body"]["id"], _stamp_count, _stamp_elapsed_s, _edit_journal.get_revision(),
 	])
+	_stamp_count = 0
+	_stamp_elapsed_s = 0.0
+	_last_stamp_center = null
+	_journal_save_pending = true
+	_journal_save_delay_s = 0.0
 
 
 func _cancel_pending_patch(reason: String) -> void:
@@ -348,10 +450,36 @@ func _physics_process(delta: float) -> void:
 					_fail_gate("catalog patch timeout: " + _build_reason)
 	if _failed or not _update_stream_guard(delta):
 		return
-	if _request_stamp:
-		_request_stamp = false
-		if not is_instance_valid(_pending) and not _movement_paused:
-			_accept_stamp(_request_build)
+
+	# Continuous editing: hold LMB to dig or RMB to build.
+	_stamp_cooldown_s = maxf(0.0, _stamp_cooldown_s - delta)
+	var digging: bool = _holding_dig and not _holding_build
+	var building: bool = _holding_build and not _holding_dig
+
+	if digging or building:
+		_stamp_elapsed_s += delta
+		if _stamp_cooldown_s <= 0.0 and not is_instance_valid(_pending) and not _movement_paused:
+			_accept_stamp(building)
+			_stamp_cooldown_s = 0.1 / maxf(_edit_rate_multiplier(), 0.0001)
+	else:
+		_finish_edit_stroke()
+
+	# Defer the relatively expensive full-journal file write until the stroke
+	# pauses or a short autosave interval passes.
+	if _journal_save_pending:
+		_journal_save_delay_s -= delta
+		if _journal_save_delay_s <= 0.0:
+			_journal_save_pending = false
+			if not _save_journal():
+				_fail_gate("cannot save body journal")
+
+	_journal_autosave_s += delta
+	if _journal_autosave_s >= 1.5:
+		_journal_autosave_s = 0.0
+		if _holding_dig or _holding_build:
+			if not _save_journal():
+				_fail_gate("cannot autosave body journal")
+
 	_diagnostic_s += delta
 	if _diagnostic_s >= 5.0:
 		_diagnostic_s = 0.0
@@ -368,12 +496,35 @@ func _unhandled_input(event: InputEvent) -> void:
 		if event.keycode == KEY_ESCAPE:
 			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED else Input.MOUSE_MODE_CAPTURED
 		elif event.keycode == KEY_F5:
+			_journal_save_pending = false
 			print("CatalogPlanet: SAVE ok=%s" % _save_journal())
 		return
-	if event is InputEventMouseButton and event.pressed and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
-		if event.button_index in [MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT] and not _waiting and not _failed and not is_instance_valid(_pending):
-			_request_stamp = true
-			_request_build = event.button_index == MOUSE_BUTTON_RIGHT
+
+	if event is InputEventMouseButton and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			_holding_dig = event.pressed
+			if event.pressed:
+				_holding_build = false
+				_stamp_elapsed_s = 0.0
+				_stamp_count = 0
+				_last_stamp_center = null
+			else:
+				_finish_edit_stroke()
+			get_viewport().set_input_as_handled()
+			return
+		if event.button_index == MOUSE_BUTTON_RIGHT:
+			_holding_build = event.pressed
+			if event.pressed:
+				_holding_dig = false
+				_stamp_elapsed_s = 0.0
+				_stamp_count = 0
+				_last_stamp_center = null
+			else:
+				_finish_edit_stroke()
+			get_viewport().set_input_as_handled()
+			return
+
+	super._unhandled_input(event)
 
 
 func _process(_delta: float) -> void:
@@ -384,7 +535,7 @@ func _process(_delta: float) -> void:
 		+ "\nBody-following local frame | epoch %.1f s"
 		+ "\nWaiting %s | failed %s | swaps %d | shifts %d"
 		+ "\nRevision %d | anchor distance %.1f m"
-		+ "\nWASD / Shift / Space | LMB DIG / RMB BUILD | Esc mouse | F5 save"
+		+ "\nHold LMB DIG / RMB BUILD | Esc mouse | F5 save"
 		+ "\nNo spaceflight or other-body gravity in this integration slice") % [
 		body["id"], float(body["radius_m"]) / 1000.0, body["surface_gravity_m_s2"],
 		float(_context["spin"]["period_s"]) / 3600.0, _catalog_frame.world_time_s,
