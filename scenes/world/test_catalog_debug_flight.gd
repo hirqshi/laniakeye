@@ -250,22 +250,11 @@ func _try_flight_landing() -> void:
 	_flight_status = "WALK restored after five collision-ready ticks"
 	print("DebugFlight: LANDED body=%s revision=%d" % [_context["body"]["id"], _edit_journal.get_revision()])
 
-# G exits Debug Flight anywhere ONLY when the active terrain is actually meshed
-# below the player. After auto-handover the live terrain may still be inactive
-# (collision_layer=0, visible=false) if AutoSurface cancelled; exiting then
-# leaves the player with no collision and they fall through the planet.
-# A downward raycast against ACTIVE_LAYER gates the exit; if no mesh is found,
-# Debug Flight stays active with a clear status instead of dropping the player
-# into a void.
+# G exits Debug Flight anywhere. EVA remains available in open space; the
+# surface guard below prevents radial fall-through only while nearby terrain
+# collision is not yet published. It does not require a terrain hit to exit.
 func _exit_flight_direct() -> void:
 	var up: Vector3 = _flight_absolute.direction()
-	var point: Vector3 = _player.global_position
-	var ray: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(point + up * 0.1, point - up * 64.0, ACTIVE_LAYER, [_player.get_rid()])
-	var hit: Dictionary = get_world_3d().direct_space_state.intersect_ray(ray)
-	if hit.is_empty():
-		_flight_status = "EXIT refused: no active terrain mesh below; keep flying or wait for surface"
-		print("DebugFlight: EXIT_REFUSED body=%s no terrain below" % _context["body"]["id"])
-		return
 	_player.camera_pivot.transform = _flight_saved_pivot
 	_player.player_camera.transform = _flight_saved_camera
 	_player.velocity = Vector3.ZERO
@@ -286,6 +275,26 @@ func _exit_flight_direct() -> void:
 	_flight_status = "EXIT: walk/EVA by local gravity"
 	print("DebugFlight: EXIT_DIRECT body=%s" % _context["body"]["id"])
 
+# EVA_SURFACE_GUARD_V1: keep EVA usable in space, but do not let an unready
+# nearby voxel patch swallow the player. Only the inward radial component is
+# stopped; lateral and outward EVA motion remain available.
+func _guard_eva_surface() -> void:
+	if _failed or not is_instance_valid(_player):
+		return
+	var absolute: LkPosition64 = _frame.to_absolute(_player.global_position)
+	var up: Vector3 = absolute.direction()
+	var height: float = absolute.length() - float(_context["body"]["radius_m"])
+	if height >= 16.0:
+		return
+	var ray: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(_player.global_position + up * 0.1, _player.global_position - up * 64.0, ACTIVE_LAYER, [_player.get_rid()])
+	var hit: Dictionary = get_world_3d().direct_space_state.intersect_ray(ray)
+	if not hit.is_empty():
+		return
+	var inward: float = _player.velocity.dot(up)
+	if inward < 0.0:
+		_player.velocity -= up * inward
+		_flight_status = "EVA surface guard: waiting for nearby terrain collision"
+
 func _physics_process(delta: float) -> void:
 	if _flight_toggle_requested:
 		_flight_toggle_requested = false
@@ -297,6 +306,8 @@ func _physics_process(delta: float) -> void:
 		if not _failed:
 			_tick_flight(delta)
 		return
+	if not _failed:
+		_guard_eva_surface()
 	super._physics_process(delta)
 
 func _unhandled_input(event: InputEvent) -> void:
