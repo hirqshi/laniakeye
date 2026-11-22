@@ -100,6 +100,27 @@ func _promote_landing_patch() -> void:
 			_player.set_physics_process(true)
 
 
+# Open space has no nearby terrain to stream. The inherited guard would freeze
+# EVA there, while Flight skips the guard entirely — which is why switching to
+# Debug Flight used to "unfreeze" and load terrain.
+func _eva_open_space() -> bool:
+	if not is_instance_valid(_player) or not _context.has("body") or _frame == null or _catalog_frame == null:
+		return false
+	var absolute: LkPosition64 = _frame.to_absolute(_player.global_position)
+	var height: float = absolute.length() - float(_context["body"]["radius_m"])
+	if height >= EVA_GATE_HEIGHT_M:
+		return true
+	return _catalog_frame.inertial_to_body(absolute).minus(_anchor).length() >= EVA_GATE_ANCHOR_M
+
+
+func _update_stream_guard(delta: float) -> bool:
+	if not _flight_active and _eva_open_space():
+		if _stream_hold:
+			_release_stale_state()
+		return true
+	return super._update_stream_guard(delta)
+
+
 func _physics_process(delta: float) -> void:
 	# A pause flag without a pending patch is stale and blocks handover.
 	if _movement_paused and not is_instance_valid(_pending) and not _failed:
