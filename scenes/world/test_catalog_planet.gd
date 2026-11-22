@@ -126,6 +126,7 @@ func _ready() -> void:
 	add_child(_terrain)
 	_voxel_tool = _terrain.get_voxel_tool()
 	_voxel_tool.channel = VoxelBuffer.CHANNEL_SDF
+	_voxel_tool.set_raycast_binary_search_iterations(8)
 	_player = LkPlayerController.new()
 	_player.name = "CatalogPlayer"
 	_player.collision_layer = 2
@@ -277,6 +278,32 @@ func _accept_stamp(build: bool) -> void:
 	])
 
 
+func _cancel_pending_patch(reason: String) -> void:
+	if not is_instance_valid(_pending):
+		return
+
+	remove_child(_pending)
+	_pending.queue_free()
+	_pending = null
+	_pending_stable_ticks = 0
+	_pending_time_s = 0.0
+	_build_reason = ""
+
+	# A cancelled walk reanchor must not retain the movement pause.
+	# The player remains airborne and must be able to resume EVA control.
+	if _movement_paused:
+		_resume_movement()
+
+	print("CatalogPlanet: PATCH CANCELLED reason=%s; flight available" % reason)
+
+
+func _grounded_for_reanchor() -> bool:
+	# Walk reanchor is a surface-support operation. It must not start while
+	# the player is airborne after Debug Flight/EVA, because the old collider
+	# may already be far below and the staging patch cannot be validated.
+	return _player.is_on_floor()
+
+
 func _physics_process(delta: float) -> void:
 	if not _initialised or _failed:
 		return
@@ -288,7 +315,7 @@ func _physics_process(delta: float) -> void:
 	_player.carry_with_frame(_rotation, step, float(_context["body"]["physical_bound_radius_m"]) + 1000.0)
 	var distance: float = _anchor_distance_m()
 	if not is_instance_valid(_pending):
-		if distance >= REANCHOR_DISTANCE_M:
+		if distance >= REANCHOR_DISTANCE_M and _grounded_for_reanchor():
 			_start_build()
 	else:
 		_pending_time_s += delta
@@ -304,13 +331,12 @@ func _physics_process(delta: float) -> void:
 			if _build_reason == "OLD COLLIDER RAY MISSED":
 				# Player flew away in EVA; old patch no longer under player.
 				# Cancel staging instead of failing; Debug Flight remains available.
-				remove_child(_pending)
-				_pending.queue_free()
-				_pending = null
-				_pending_stable_ticks = 0
-				_pending_time_s = 0.0
-				_build_reason = ""
-				print("CatalogPlanet: PATCH CANCELLED old collider ray missed; flight available")
+				_cancel_pending_patch("old collider ray missed")
+			elif _build_reason == "WAITING FOR MESH" and not _grounded_for_reanchor():
+				# The player left the surface after a walk reanchor began.
+				# Keep the old terrain and release EVA rather than waiting for
+				# a staging patch that is no longer the relevant support patch.
+				_cancel_pending_patch("player airborne during walk reanchor")
 			else:
 				_fail_gate("catalog patch timeout: " + _build_reason)
 	if _failed or not _update_stream_guard(delta):
