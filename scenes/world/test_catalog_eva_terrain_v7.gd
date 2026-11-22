@@ -114,6 +114,15 @@ func _eva_open_space() -> bool:
 
 
 func _update_stream_guard(delta: float) -> bool:
+	# While AutoSurface is preparing its staging patch, the player is airborne
+	# and the live terrain under them is intentionally not ready yet. The
+	# inherited guard would set _stream_hold and disable player physics — the
+	# EVA freeze. Flight skips this guard in _tick_flight, which is why it does
+	# not freeze. Let EVA keep flying; terrain activation still gates walking.
+	if not _flight_active and (_auto_busy or _landing_preparing):
+		if _stream_hold:
+			_release_stale_state()
+		return true
 	if not _flight_active and _eva_open_space():
 		if _stream_hold:
 			_release_stale_state()
