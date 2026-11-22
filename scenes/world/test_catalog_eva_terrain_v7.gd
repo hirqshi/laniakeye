@@ -64,20 +64,25 @@ func _update_terrain_transform() -> void:
 
 
 # Same near-patch rule Debug Flight applies, so a handed-over or flight-disabled
-# terrain becomes live for EVA too (enable only; never hides terrain).
+# terrain becomes live for EVA too. Enable near the player; hide and disable
+# collisions when the player has moved away. This mirrors Flight's near/far
+# behaviour without destroying a handed-over patch.
 func _eva_terrain_gate() -> void:
 	if not is_instance_valid(_terrain) or _frame == null or _catalog_frame == null or not _context.has("body"):
 		return
 	var absolute: LkPosition64 = _frame.to_absolute(_player.global_position)
 	var height: float = absolute.length() - float(_context["body"]["radius_m"])
-	if height >= EVA_GATE_HEIGHT_M:
-		return
-	if _catalog_frame.inertial_to_body(absolute).minus(_anchor).length() >= EVA_GATE_ANCHOR_M:
-		return
-	if not _terrain.visible:
-		_terrain.visible = true
-	if _terrain.collision_layer != ACTIVE_LAYER:
-		_terrain.collision_layer = ACTIVE_LAYER
+	var near: bool = height < EVA_GATE_HEIGHT_M and _catalog_frame.inertial_to_body(absolute).minus(_anchor).length() < EVA_GATE_ANCHOR_M
+	if near:
+		if not _terrain.visible:
+			_terrain.visible = true
+		if _terrain.collision_layer != ACTIVE_LAYER:
+			_terrain.collision_layer = ACTIVE_LAYER
+	else:
+		if _terrain.visible:
+			_terrain.visible = false
+		if _terrain.collision_layer != 0:
+			_terrain.collision_layer = 0
 
 
 # EVA has no flight basis or input forecast; use the actual footpoint.
@@ -150,10 +155,6 @@ func _eva_surface_tick(delta: float) -> void:
 		return
 	if _player.is_on_floor() and not _auto_busy:
 		return
-	# Only this layer's own staging may block EVA AutoSurface. A walk-reanchor
-	# staging patch shares _pending but must not stop terrain provisioning.
-	if _auto_busy or _landing_preparing:
-		return
 	_landing_delta = delta
 	_flight_absolute = _frame.to_absolute(_player.global_position)
 	_auto_retry_s = maxf(0.0, _auto_retry_s - delta)
@@ -169,6 +170,9 @@ func _eva_surface_tick(delta: float) -> void:
 		return
 	var target: LkPosition64 = target_result["point"]
 	if _auto_busy:
+		# Continue the already-started EVA staging every tick. The previous
+		# early return stopped _poll_auto_surface, so the patch never became
+		# active and could not be edited in EVA.
 		if _prefetch_target_invalid(target, height):
 			if height <= _auto_limit() and closing > 0.0 and _auto_retarget_s <= 0.0:
 				_cancel_landing_patch("retarget for new approach point")
@@ -182,6 +186,8 @@ func _eva_surface_tick(delta: float) -> void:
 		_poll_auto_surface(delta)
 		return
 	if is_instance_valid(_pending):
+		# A walk-reanchor staging patch shares _pending. Do not overwrite it;
+		# wait for it to complete before starting EVA AutoSurface.
 		return
 	if _auto_target != null and is_instance_valid(_auto_viewer) and AutoPolicy.in_target(target, _auto_target, 48.0):
 		return
