@@ -39,8 +39,8 @@ var _journal_autosave_s: float = 0.0
 
 # Each held-button stamp moves the SDF by at most this amount, in metres.
 # The operation remains bounded by the original spherical brush target.
-const STAMP_AMOUNT_M: float = 0.05
-const STAMP_INTERVAL_S: float = 0.016
+const STAMP_AMOUNT_M: float = 0.25
+const STAMP_INTERVAL_S: float = 0.25
 
 # Future material hook: all materials currently use the same edit rate.
 # A material system will replace this with a per-material rate multiplier.
