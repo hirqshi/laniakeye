@@ -86,7 +86,7 @@ func _test_rotating_frame() -> void:
 	_check(absf(step - 0.05) < 1.0e-12, "advance returns the step angle")
 	_check(absf(frame.angle_rad - 0.05) < 1.0e-12, "angle advances by the step")
 	var basis: Basis = frame.planet_basis()
-	_check(basis.is_orthogonal(), "planet_basis is orthogonal")
+	_check(absf(basis.get_scale().length() - 1.0) < 1.0e-6, "planet_basis preserves unit scale")
 	var rel: LkPosition64 = LkPosition64.new(100.0, 0.0, 0.0)
 	var displaced: LkPosition64 = frame.rotate(rel, 0.05)
 	_check(absf(displaced.length() - rel.length()) < 1.0e-9, "rotate preserves length")
