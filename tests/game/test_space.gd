@@ -116,7 +116,7 @@ func _test_gravity_service() -> void:
 	_check(sample["has_up"], "single body has up")
 	_check(sample["dominant_id"] == &"planet", "single body is dominant")
 	_check(absf(sample["acceleration"].length() - 1.0e12 / (2000.0 * 2000.0)) < 1.0e-6, "acceleration follows inverse square law")
-	_check(sample["up"].x < 0.0, "up points toward the body")
+	_check(sample["up"].x > 0.0, "up points away from the body")
 	var center_b: LkPosition64 = LkPosition64.new(10000.0, 0.0, 0.0)
 	var body_b: LkGravityBody = LkGravityBody.new(&"moon", center_b, 500.0, 1.0e13)
 	service.bodies.append(body_b)
