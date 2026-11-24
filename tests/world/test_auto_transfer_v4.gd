@@ -51,6 +51,7 @@ func _initialize() -> void:
 	_check(parent_source.contains("TRANSFER4_MOTION_HOOK_V1") and parent_source.contains("if not _handover_motion_allowed():"), "installer applied")
 	_check(ResourceLoader.load("res://scenes/world/test_catalog_auto_transfer_v4.tscn") is PackedScene, "scene resource parses")
 	var instance = Scene4.new()
+	instance.set("_flight_active", true)
 	instance.set("_flight_actual_speed", 0.0)
 	_check(instance._handover_motion_allowed(), "manual stopped gate preserved")
 	instance.set("_flight_actual_speed", 10.0)

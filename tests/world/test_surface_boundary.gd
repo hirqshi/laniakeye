@@ -1,6 +1,6 @@
 extends SceneTree
 
-const Shell = preload("res://game/debug/lk_surface_shell_math.gd")
+const Shell = preload("res://game/world/rendering/lk_surface_shell_math.gd")
 const SceneScript = preload("res://scenes/world/test_catalog_surface_boundary_fix.gd")
 var _failures: int = 0
 

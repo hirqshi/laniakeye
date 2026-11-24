@@ -1,7 +1,7 @@
 class_name LkPlayerController
 extends CharacterBody3D
 
-## Player controller for the coordinate/gravity foundation (core/refactor_v1).
+## Player controller for the coordinate/gravity foundation (game/space).
 ## Gravity and "up" come from LkGravityService sampled at the player's
 ## ABSOLUTE position - no gravity zones, no gravity_source nodes, no ground
 ## raycast lock. Movement is plain move_and_slide() + floor snap.

@@ -1,5 +1,5 @@
 class_name LkCatalogBodyFrame
-extends "res://core/refactor_v1/rotating_frame.gd"
+extends LkRotatingFrame
 
 const Motion = preload("res://game/world/generation/lk_kepler_motion.gd")
 var _spin: Dictionary

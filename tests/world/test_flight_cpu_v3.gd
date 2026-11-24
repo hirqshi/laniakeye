@@ -14,8 +14,8 @@ func _check(ok: bool, label: String) -> void:
 
 func _fixture() -> Dictionary:
 	return {"layout_version": 1, "system_id": "cpu-cache-fixture", "epoch_s": 0.0,
-		"star": {"id": "star", "kind": "star", "radius_m": 1000000.0},
-		"planets": [{"body": {"id": "planet", "parent_id": "star", "kind": "planet", "radius_m": 1000.0, "family": "rocky"},
+		"star": {"id": "star", "kind": "star", "radius_m": 1000000.0, "physical_bound_radius_m": 1000000.0},
+		"planets": [{"body": {"id": "planet", "parent_id": "star", "kind": "planet", "radius_m": 1000.0, "physical_bound_radius_m": 1000.0, "family": "rocky"},
 		"orbit": {"semi_major_axis_m": 100000000.0, "eccentricity": 0.1, "primary_mu_m3_s2": 1.0e15, "inclination_rad": 0.1, "ascending_node_rad": 0.3, "argument_of_periapsis_rad": 0.2, "mean_anomaly_at_epoch_rad": 0.7},
 		"spin": {"period_s": 1000.0, "direction": 1.0, "axis_tilt_to_system_y_rad": 0.2, "pole_azimuth_rad": 0.3, "phase_at_epoch_rad": 0.4}, "moons": []}]}
 
