@@ -12,14 +12,16 @@ var world: LkWorldService
 
 func _init() -> void:
 	world = LkWorldService.new(LkUniverseDefinition.new(), clock)
-
-
-func _ready() -> void:
+	# The object graph is wired at construction, so it already works before the node
+	# enters the scene tree (tests, tools) and does not depend on _ready() timing.
 	player_mode.changed.connect(_on_player_mode_changed)
 	terrain_session.changed.connect(_on_terrain_state_changed)
 	clock.failed.connect(_on_clock_failed)
 	world.activated.connect(_on_body_activated)
 	world.failed.connect(_on_world_failed)
+
+
+func _ready() -> void:
 	print("Game: READY skeleton player_mode=%s terrain=%s" % [LkPlayerMode.mode_name(player_mode.current), LkTerrainSession.state_name(terrain_session.current)])
 
 
