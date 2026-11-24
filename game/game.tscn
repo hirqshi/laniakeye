@@ -1,18 +1,18 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://o3i7xngya3qn"]
 
-[ext_resource type="Script" path="res://game/game.gd" id="1_game"]
+[ext_resource type="Script" uid="uid://bajkg5xvueho7" path="res://game/game.gd" id="1_game"]
 
-[node name="Game" type="Node3D"]
+[node name="Game" type="Node3D" unique_id=936798056]
 script = ExtResource("1_game")
 
-[node name="World" type="Node3D" parent="."]
+[node name="World" type="Node3D" parent="." unique_id=910922934]
 
-[node name="Terrain" type="Node3D" parent="."]
+[node name="Terrain" type="Node3D" parent="." unique_id=993319615]
 
-[node name="Player" type="Node3D" parent="."]
+[node name="Player" type="Node3D" parent="." unique_id=637559182]
 
-[node name="CameraRig" type="Node3D" parent="."]
+[node name="CameraRig" type="Node3D" parent="." unique_id=2092879392]
 
-[node name="Hud" type="CanvasLayer" parent="."]
+[node name="Hud" type="CanvasLayer" parent="." unique_id=199747267]
 
-[node name="Debug" type="CanvasLayer" parent="."]
+[node name="Debug" type="CanvasLayer" parent="." unique_id=998039948]
