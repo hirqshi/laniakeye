@@ -1,19 +1,36 @@
 class_name LkGame
 extends Node3D
-## Composition root. Owns the shared state machines, the event bus and the world clock.
+## Composition root. Owns the shared state machines, the event bus, the world clock and the world.
 ## Systems live in child components and talk through LkGameEvents, not direct references.
 
 var events: LkGameEvents = LkGameEvents.new()
 var player_mode: LkPlayerMode = LkPlayerMode.new()
 var terrain_session: LkTerrainSession = LkTerrainSession.new()
 var clock: LkClockService = LkClockService.new()
+var world: LkWorldService
+
+
+func _init() -> void:
+	world = LkWorldService.new(LkUniverseDefinition.new(), clock)
 
 
 func _ready() -> void:
 	player_mode.changed.connect(_on_player_mode_changed)
 	terrain_session.changed.connect(_on_terrain_state_changed)
 	clock.failed.connect(_on_clock_failed)
+	world.activated.connect(_on_body_activated)
+	world.failed.connect(_on_world_failed)
 	print("Game: READY skeleton player_mode=%s terrain=%s" % [LkPlayerMode.mode_name(player_mode.current), LkTerrainSession.state_name(terrain_session.current)])
+
+
+## Opens the clock of the world's own universe and activates the body at `address`.
+func start(address: Dictionary) -> bool:
+	if not open_universe(world.definition.get_universe_id()):
+		return false
+	if not world.activate(address):
+		clock.close()
+		return false
+	return true
 
 
 ## Opens (loads or starts) the persistent clock of one universe. Call before gameplay starts.
@@ -24,10 +41,12 @@ func open_universe(universe_id: String) -> bool:
 	return true
 
 
-# One owner advances time exactly once per physics tick. Frames and bodies only read it.
+# One owner advances time exactly once per physics tick, then the world syncs to it.
 func _physics_process(delta: float) -> void:
-	if clock.is_open():
-		clock.advance(delta)
+	if not clock.is_open():
+		return
+	if clock.advance(delta):
+		world.tick(delta)
 
 
 func _notification(what: int) -> void:
@@ -39,6 +58,15 @@ func _notification(what: int) -> void:
 func _on_clock_failed(reason: String) -> void:
 	push_error("Game: CLOCK " + reason)
 	set_physics_process(false)
+
+
+func _on_world_failed(reason: String) -> void:
+	push_error("Game: WORLD " + reason)
+
+
+func _on_body_activated(body_id: StringName) -> void:
+	events.body_activated.emit(body_id)
+	print("Game: BODY active=%s epoch=%.6f" % [String(body_id).left(8), clock.now_s()])
 
 
 func _on_player_mode_changed(from_mode: int, to_mode: int, why: String) -> void:
