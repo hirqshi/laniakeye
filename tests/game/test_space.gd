@@ -11,7 +11,7 @@ const GravityServiceScript = preload("res://game/space/gravity_service.gd")
 var _failures: int = 0
 
 
-func _init() -> void:
+func _initialize() -> void:
 	_test_position64()
 	_test_coordinate_frame()
 	_test_rotating_frame()
@@ -59,11 +59,14 @@ func _test_coordinate_frame() -> void:
 	_check(back == local, "to_local inverts to_absolute")
 	var root: Node3D = Node3D.new()
 	root.name = "SpaceTestRoot"
+	root.set_as_top_level(true)
 	get_root().add_child(root)
+	await process_frame
 	_check(frame.register_root(root), "register_root accepts a live root")
 	_check(frame.register_root(root), "register_root is idempotent")
 	var child: Node3D = Node3D.new()
 	root.add_child(child)
+	await process_frame
 	_check(not frame.register_root(child), "register_root rejects a child of a registered root")
 	root.global_position = Vector3(600.0, 0.0, 0.0)
 	var shifts: Array = []
@@ -86,7 +89,10 @@ func _test_rotating_frame() -> void:
 	_check(absf(step - 0.05) < 1.0e-12, "advance returns the step angle")
 	_check(absf(frame.angle_rad - 0.05) < 1.0e-12, "angle advances by the step")
 	var basis: Basis = frame.planet_basis()
-	_check(absf(basis.get_scale().length() - 1.0) < 1.0e-6, "planet_basis preserves unit scale")
+	var x_axis: Vector3 = basis.x
+	var y_axis: Vector3 = basis.y
+	var z_axis: Vector3 = basis.z
+	_check(absf(x_axis.length() - 1.0) < 1.0e-6 and absf(y_axis.length() - 1.0) < 1.0e-6 and absf(z_axis.length() - 1.0) < 1.0e-6, "planet_basis preserves unit scale")
 	var rel: LkPosition64 = LkPosition64.new(100.0, 0.0, 0.0)
 	var displaced: LkPosition64 = frame.rotate(rel, 0.05)
 	_check(absf(displaced.length() - rel.length()) < 1.0e-9, "rotate preserves length")
